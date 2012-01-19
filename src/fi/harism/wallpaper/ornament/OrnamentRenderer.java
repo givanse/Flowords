@@ -8,9 +8,11 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.content.Context;
+import android.graphics.PointF;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.widget.Toast;
 
 public class OrnamentRenderer implements GLSurfaceView.Renderer {
@@ -25,6 +27,13 @@ public class OrnamentRenderer implements GLSurfaceView.Renderer {
 	private OrnamentFbo mOrnamentFbo = new OrnamentFbo();
 	private ByteBuffer mScreenVertices;
 	private FloatBuffer mBackgroundColors;
+	private OrnamentPlantRenderer mOrnamentAnimation = new OrnamentPlantRenderer(OrnamentConstants.SPLINE_SPLIT_COUNT);
+	private OrnamentPlant mOrnamentPlant1 = new OrnamentPlant(OrnamentConstants.COLOR_PLANT1);
+	private OrnamentPlant mOrnamentPlant2 = new OrnamentPlant(OrnamentConstants.COLOR_PLANT2);
+	
+	private PointF mOffset = new PointF(), mOffsetScroll = new PointF();
+	private PointF mOffsetSrc = new PointF(), mOffsetDst = new PointF();
+	private long mOffsetTime;
 
 	public OrnamentRenderer(Context context) {
 		mContext = context;
@@ -45,6 +54,17 @@ public class OrnamentRenderer implements GLSurfaceView.Renderer {
 
 	@Override
 	public void onDrawFrame(GL10 unused) {
+		long time = SystemClock.uptimeMillis();
+		if (time - mOffsetTime > 5000) {
+			mOffsetTime = time;
+			mOffsetSrc.set(mOffsetDst);
+			OrnamentUtils.rand(mOffsetDst, -.2f, -.2f, .2f, .2f);
+		}
+		float t = (float)(time - mOffsetTime) / 5000;
+		t = t * t * (3 - 2 * t);
+		mOffset.x = mOffsetScroll.x + mOffsetSrc.x + t * (mOffsetDst.x - mOffsetSrc.x);
+		mOffset.y = mOffsetScroll.y + mOffsetSrc.y + t * (mOffsetDst.y - mOffsetSrc.y);		
+		
 		// Disable unneeded rendering flags.
 		GLES20.glDisable(GLES20.GL_CULL_FACE);
 		GLES20.glDisable(GLES20.GL_BLEND);
@@ -67,6 +87,8 @@ public class OrnamentRenderer implements GLSurfaceView.Renderer {
 		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
 		// Render scene.
+		mOrnamentAnimation.onDrawFrame(mOrnamentPlant1, mOffset);
+		mOrnamentAnimation.onDrawFrame(mOrnamentPlant2, mOffset);
 
 		// Copy FBO to screen buffer.
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
@@ -88,6 +110,10 @@ public class OrnamentRenderer implements GLSurfaceView.Renderer {
 		mWidth = width;
 		mHeight = height;
 		mOrnamentFbo.init(width, height, 1);
+		mOrnamentAnimation.onSurfaceChanged(width, height);
+		
+		mOrnamentPlant1.reset();
+		mOrnamentPlant2.reset();
 	}
 
 	@Override
@@ -108,10 +134,12 @@ public class OrnamentRenderer implements GLSurfaceView.Renderer {
 					mContext.getString(R.string.shader_copy_fs));
 			mShaderFill.setProgram(mContext.getString(R.string.shader_fill_vs),
 					mContext.getString(R.string.shader_fill_fs));
+			mOrnamentAnimation.onSurfaceCreated(mContext);
 		}
 	}
 
-	public void setXOffset(float offset) {
+	public void setOffset(float xOffset, float yOffset) {
+		mOffsetScroll.set(xOffset, yOffset);
 	}
 
 }

@@ -35,4 +35,50 @@
             gl_FragColor.rgb *= uBrightness - brightness * brightness;
         }
     </string>
+    <string name="shader_spline_vs">
+        uniform vec2 uControl0;
+        uniform vec2 uControl1;
+        uniform vec2 uControl2;
+        uniform vec2 uControl3;
+        uniform vec2 uWidth;
+        uniform vec2 uBounds;
+        attribute vec4 aSplinePosition;
+        varying vec2 vLineCoord;
+        void main() {
+            float t1 = aSplinePosition.y;
+            float t2 = aSplinePosition.z;
+            float t3 = aSplinePosition.w;
+            float tBounded = clamp(t1, uBounds.x, uBounds.y);
+            if (t1 != tBounded) {
+                t1 = tBounded;
+                t2 = t1 * t1;
+                t3 = t1 * t2;
+            }
+            
+            vec2 pos = uControl0;
+            pos += uControl1 * t1;
+            pos += uControl2 * t2;
+            pos += uControl3 * t3;
+            pos *= 0.5;
+            
+            vec2 normalVec = uControl1;
+            normalVec += 2.0 * uControl2 * t1;
+            normalVec += 3.0 * uControl3 * t2;
+            normalVec = normalize(vec2(-normalVec.y, normalVec.x));
+            
+            float width = uWidth.x + t1 * (uWidth.y - uWidth.x);
+            pos += aSplinePosition.x * normalVec * width * 0.5;
+            
+            gl_Position = vec4(pos, 0.0, 1.0);
+            vLineCoord = aSplinePosition.yx;
+        }
+    </string>
+    <string name="shader_spline_fs">
+        precision mediump float;
+        uniform vec3 uColor;
+        varying vec2 vLineCoord;
+        void main() {
+            gl_FragColor = vec4(uColor, 1.0);
+        }
+    </string>
 </resources>

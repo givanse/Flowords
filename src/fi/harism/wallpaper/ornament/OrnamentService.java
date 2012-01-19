@@ -54,7 +54,7 @@ public class OrnamentService extends WallpaperService {
 				int yPixelOffset) {
 			super.onOffsetsChanged(xOffset, yOffset, xOffsetStep, yOffsetStep,
 					xPixelOffset, yPixelOffset);
-			mRenderer.setXOffset(xOffset);
+			mRenderer.setOffset(xOffset, yOffset);
 		}
 
 		@Override
