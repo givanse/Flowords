@@ -12,11 +12,11 @@ import android.os.SystemClock;
 
 public class OrnamentPlantRenderer {
 
-	private OrnamentShader mShaderSpline = new OrnamentShader();
-	private int mSplineVertexCount;
-
 	private FloatBuffer mBufferSpline;
+	private OrnamentShader mShaderSpline = new OrnamentShader();
+
 	private Vector<OrnamentSpline> mSplines = new Vector<OrnamentSpline>();
+	private int mSplineVertexCount;
 
 	public OrnamentPlantRenderer(int splineSplitCount) {
 		mSplineVertexCount = splineSplitCount + 2;
@@ -32,7 +32,7 @@ public class OrnamentPlantRenderer {
 		}
 		mBufferSpline.position(0);
 	}
-	
+
 	public void onDrawFrame(OrnamentPlant plant, PointF offset) {
 		float[] color = plant.getColor();
 		long renderTime = SystemClock.uptimeMillis();
@@ -48,8 +48,9 @@ public class OrnamentPlantRenderer {
 		mShaderSpline.setProgram(context.getString(R.string.shader_spline_vs),
 				context.getString(R.string.shader_spline_fs));
 	}
-	
-	public void renderSplines(Vector<OrnamentSpline> splines, float[] color, PointF offset) {
+
+	public void renderSplines(Vector<OrnamentSpline> splines, float[] color,
+			PointF offset) {
 		mShaderSpline.useProgram();
 		int uControl0 = mShaderSpline.getHandle("uControl0");
 		int uControl1 = mShaderSpline.getHandle("uControl1");
@@ -66,14 +67,14 @@ public class OrnamentPlantRenderer {
 		GLES20.glEnableVertexAttribArray(aSplinePosition);
 
 		for (OrnamentSpline spline : splines) {
-			final float Px0 = spline.mCtrlPoints[0].x + offset.x;
-			final float Py0 = spline.mCtrlPoints[0].y + offset.y;
-			final float Px1 = spline.mCtrlPoints[1].x + offset.x;
-			final float Py1 = spline.mCtrlPoints[1].y + offset.y;
-			final float Px2 = spline.mCtrlPoints[2].x + offset.x;
-			final float Py2 = spline.mCtrlPoints[2].y + offset.y;
-			final float Px3 = spline.mCtrlPoints[3].x + offset.x;
-			final float Py3 = spline.mCtrlPoints[3].y + offset.y;
+			final float Px0 = spline.mCtrlPoints[0].x - offset.x;
+			final float Py0 = spline.mCtrlPoints[0].y - offset.y;
+			final float Px1 = spline.mCtrlPoints[1].x - offset.x;
+			final float Py1 = spline.mCtrlPoints[1].y - offset.y;
+			final float Px2 = spline.mCtrlPoints[2].x - offset.x;
+			final float Py2 = spline.mCtrlPoints[2].y - offset.y;
+			final float Px3 = spline.mCtrlPoints[3].x - offset.x;
+			final float Py3 = spline.mCtrlPoints[3].y - offset.y;
 
 			GLES20.glUniform2f(uControl0, 2 * Px1, 2 * Py1);
 			GLES20.glUniform2f(uControl1, -Px0 + Px2, -Py0 + Py2);
@@ -89,7 +90,7 @@ public class OrnamentPlantRenderer {
 			GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, startIdx, endIdx
 					- startIdx);
 		}
-		
+
 	}
 
 }

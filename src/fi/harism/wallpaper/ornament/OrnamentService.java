@@ -1,11 +1,8 @@
 package fi.harism.wallpaper.ornament;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.opengl.GLSurfaceView;
-import android.preference.PreferenceManager;
 import android.service.wallpaper.WallpaperService;
-import android.service.wallpaper.WallpaperService.Engine;
 import android.view.SurfaceHolder;
 
 public class OrnamentService extends WallpaperService {
@@ -14,11 +11,11 @@ public class OrnamentService extends WallpaperService {
 	public Engine onCreateEngine() {
 		return new WallpaperEngine();
 	}
-	
+
 	/**
 	 * Private wallpaper engine implementation.
 	 */
-	private final class WallpaperEngine extends Engine  {
+	private final class WallpaperEngine extends Engine {
 
 		// Slightly modified GLSurfaceView.
 		private WallpaperGLSurfaceView mGLSurfaceView;
@@ -34,8 +31,8 @@ public class OrnamentService extends WallpaperService {
 			mRenderer = new OrnamentRenderer(OrnamentService.this);
 			mGLSurfaceView = new WallpaperGLSurfaceView(OrnamentService.this);
 			mGLSurfaceView.setEGLContextClientVersion(2);
-			mGLSurfaceView
-					.setEGLConfigChooser(new OrnamentEGLConfigChooser(false));
+			mGLSurfaceView.setEGLConfigChooser(new OrnamentEGLConfigChooser(
+					false));
 			mGLSurfaceView.setRenderer(mRenderer);
 			mGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
 		}
@@ -94,6 +91,5 @@ public class OrnamentService extends WallpaperService {
 			}
 		}
 	}
-	
-	
+
 }
