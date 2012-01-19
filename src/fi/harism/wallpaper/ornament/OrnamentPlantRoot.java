@@ -6,12 +6,45 @@ import android.graphics.PointF;
 
 public final class OrnamentPlantRoot {
 
+	private int mRootSplineCount;
 	private Vector<OrnamentSpline> mRootSplines = new Vector<OrnamentSpline>();
 	private long mStartTime, mDuration;
 
-	public OrnamentPlantRoot(long startTime, long duration) {
-		mStartTime = startTime;
-		mDuration = duration;
+	public OrnamentPlantRoot() {
+		for (int i = 0; i < 11; ++i) {
+			OrnamentSpline spline = new OrnamentSpline();
+			spline.mWidthStart = spline.mWidthEnd = .03f;
+			mRootSplines.add(spline);
+		}
+	}
+
+	private OrnamentSpline addLoop(OrnamentSpline root, PointF dir,
+			PointF normal, int side) {
+		PointF start = root.mCtrlPoints[3];
+		float dirLen = dir.length();
+		float normalX = normal.x * side * dirLen;
+		float normalY = normal.y * side * dirLen;
+		float xTop = start.x + normalX;
+		float yTop = start.y + normalY;
+		float xRight = start.x + (normalX / 2) + (dir.x / 2);
+		float yRight = start.y + (normalY / 2) + (dir.y / 2);
+		float xLeft = start.x + (normalX / 2) - (dir.x / 2);
+		float yLeft = start.y + (normalY / 2) - (dir.y / 2);
+
+		OrnamentSpline prev = addSpline(root, xRight, yRight);
+		prev = addSpline(prev, xTop, yTop);
+		prev = addSpline(prev, xLeft, yLeft);
+		prev = addSpline(prev, start.x, start.y);
+		return prev;
+	}
+
+	private OrnamentSpline addSpline(OrnamentSpline previous, float x3, float y3) {
+		OrnamentSpline spline = mRootSplines.get(mRootSplineCount++);
+		spline.mCtrlPoints[0].set(previous.mCtrlPoints[1]);
+		spline.mCtrlPoints[1].set(previous.mCtrlPoints[2]);
+		spline.mCtrlPoints[2].set(previous.mCtrlPoints[3]);
+		spline.mCtrlPoints[3].set(x3, y3);
+		return spline;
 	}
 
 	public long getDuration() {
@@ -19,13 +52,13 @@ public final class OrnamentPlantRoot {
 	}
 
 	public OrnamentSpline getLastSpline() {
-		return mRootSplines.lastElement();
+		return mRootSplines.get(mRootSplineCount - 1);
 	}
 
 	public void getSplines(Vector<OrnamentSpline> splines, float t1, float t2) {
-		for (int i = 0; i < mRootSplines.size(); ++i) {
-			float startT = (float) i / mRootSplines.size();
-			float endT = (float) (i + 1) / mRootSplines.size();
+		for (int i = 0; i < mRootSplineCount; ++i) {
+			float startT = (float) i / mRootSplineCount;
+			float endT = (float) (i + 1) / mRootSplineCount;
 			OrnamentSpline spline = mRootSplines.get(i);
 			if (startT >= t1 && endT <= t2) {
 				spline.mStartT = 0f;
@@ -47,37 +80,30 @@ public final class OrnamentPlantRoot {
 		return mStartTime;
 	}
 
-	public void init(OrnamentSpline previous, PointF dir, PointF normal) {
-		PointF P0, P1, P2;
-		if (previous == null) {
-			P0 = P1 = P2 = new PointF(-1, -1);
-		} else {
-			P0 = previous.mCtrlPoints[1];
-			P1 = previous.mCtrlPoints[2];
-			P2 = previous.mCtrlPoints[3];
+	public void setDuration(long duration) {
+		mDuration = duration;
+	}
+
+	public void setStartTime(long startTime) {
+		mStartTime = startTime;
+	}
+
+	public void setTarget(OrnamentSpline previous, PointF dir, PointF normal) {
+		mRootSplineCount = 0;
+		final PointF start = previous.mCtrlPoints[3];
+		final float t[] = { 0.33f, 0.66f };
+		for (int i = 0; i < 2; ++i) {
+			float randLen = OrnamentUtils.randF(-.05f, .05f);
+			float x = (start.x + t[i] * dir.x) + (normal.x * randLen);
+			float y = (start.y + t[i] * dir.y) + (normal.y * randLen);
+			previous = addSpline(previous, x, y);
+
+			int loopRand = OrnamentUtils.randI(-1, 6);
+			if (loopRand == -1 || loopRand == 1) {
+				previous = addLoop(previous, dir, normal, loopRand);
+			}
 		}
-
-		float t1 = 0.3f;
-		float t2 = 0.7f;
-
-		PointF P3 = new PointF(P2.x + t1 * dir.x, P2.y + t1 * dir.y);
-		PointF P4 = new PointF(P2.x + t2 * dir.x, P2.y + t2 * dir.y);
-		PointF P5 = new PointF(P2.x + dir.x, P2.y + dir.y);
-
-		float randLen = OrnamentUtils.randF(-.05f, .05f);
-		P3.offset(normal.x * randLen, normal.y * randLen);
-		randLen = OrnamentUtils.randF(-.05f, .05f);
-		P4.offset(normal.x * randLen, normal.y * randLen);
-
-		OrnamentSpline spline = OrnamentUtils.genSpline(P0, P1, P2, P3);
-		spline.mWidthStart = spline.mWidthEnd = .03f;
-		mRootSplines.add(spline);
-		spline = OrnamentUtils.genSpline(P1, P2, P3, P4);
-		spline.mWidthStart = spline.mWidthEnd = .03f;
-		mRootSplines.add(spline);
-		spline = OrnamentUtils.genSpline(P2, P3, P4, P5);
-		spline.mWidthStart = spline.mWidthEnd = .03f;
-		mRootSplines.add(spline);
+		addSpline(previous, start.x + dir.x, start.y + dir.y);
 	}
 
 }

@@ -120,11 +120,15 @@ public class OrnamentRenderer implements GLSurfaceView.Renderer {
 	public void onSurfaceChanged(GL10 unused, int width, int height) {
 		mWidth = width;
 		mHeight = height;
-		mOrnamentFbo.init(width, height, 1);
-		mOrnamentAnimation.onSurfaceChanged(width, height);
+		mOrnamentFbo.init(mWidth, mHeight, 1);
+		mOrnamentAnimation.onSurfaceChanged(mWidth, mHeight);
 
+		float aspectX = (float) Math.min(mWidth, mHeight) / mWidth;
+		float aspectY = (float) Math.min(mWidth, height) / mHeight;
 		mOrnamentPlant1.reset();
+		mOrnamentPlant1.setAspectRatio(aspectX, aspectY);
 		mOrnamentPlant2.reset();
+		mOrnamentPlant2.setAspectRatio(aspectX, aspectY);
 	}
 
 	@Override

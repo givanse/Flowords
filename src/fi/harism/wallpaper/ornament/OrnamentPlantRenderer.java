@@ -17,6 +17,7 @@ public class OrnamentPlantRenderer {
 
 	private Vector<OrnamentSpline> mSplines = new Vector<OrnamentSpline>();
 	private int mSplineVertexCount;
+	private int mWidth, mHeight;
 
 	public OrnamentPlantRenderer(int splineSplitCount) {
 		mSplineVertexCount = splineSplitCount + 2;
@@ -42,6 +43,8 @@ public class OrnamentPlantRenderer {
 	}
 
 	public void onSurfaceChanged(int width, int height) {
+		mWidth = width;
+		mHeight = height;
 	}
 
 	public void onSurfaceCreated(Context context) {
@@ -59,8 +62,12 @@ public class OrnamentPlantRenderer {
 		int uWidth = mShaderSpline.getHandle("uWidth");
 		int uBounds = mShaderSpline.getHandle("uBounds");
 		int uColor = mShaderSpline.getHandle("uColor");
+		int uAspectRatio = mShaderSpline.getHandle("uAspectRatio");
 		int aSplinePosition = mShaderSpline.getHandle("aSplinePosition");
 
+		float aspectX = (float) Math.max(mWidth, mHeight) / mWidth;
+		float aspectY = (float) Math.max(mWidth, mHeight) / mHeight;
+		GLES20.glUniform2f(uAspectRatio, aspectX, aspectY);
 		GLES20.glUniform3fv(uColor, 1, color, 0);
 		GLES20.glVertexAttribPointer(aSplinePosition, 4, GLES20.GL_FLOAT,
 				false, 0, mBufferSpline);

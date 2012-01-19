@@ -50,6 +50,7 @@
         uniform vec2 uControl3;
         uniform vec2 uWidth;
         uniform vec2 uBounds;
+        uniform vec2 uAspectRatio;
         attribute vec4 aSplinePosition;
         varying vec2 vLineCoord;
         void main() {
@@ -74,8 +75,8 @@
             normalVec += 3.0 * uControl3 * t2;
             normalVec = normalize(vec2(-normalVec.y, normalVec.x));
             
-            float width = uWidth.x + t1 * (uWidth.y - uWidth.x);
-            pos += aSplinePosition.x * normalVec * width * 0.5;
+            float width = (uWidth.x + t1 * (uWidth.y - uWidth.x)) * 0.5;
+            pos += (aSplinePosition.x * width) * normalVec * uAspectRatio;
             
             gl_Position = vec4(pos, 0.0, 1.0);
             vLineCoord = aSplinePosition.yx;
