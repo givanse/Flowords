@@ -107,7 +107,16 @@ public final class OrnamentPlants {
 		final int[] controlIds = { uControl0, uControl1, uControl2, uControl3 };
 
 		for (Spline spline : splines) {
-			if (renderSplinesSetControlPoints(controlIds, spline, offset)) {
+			int visiblePointCount = 0;
+			for (int i = 0; i < 4; ++i) {
+				float x = spline.mCtrlPoints[i].x - offset.x;
+				float y = spline.mCtrlPoints[i].y - offset.y;
+				GLES20.glUniform2f(controlIds[i], x, y);
+				if (x > -1f && x < 1f && y > -1f && y < 1f) {
+					++visiblePointCount;
+				}
+			}
+			if (visiblePointCount != 0) {
 				GLES20.glUniform2f(uWidth, spline.mWidthStart, spline.mWidthEnd);
 				GLES20.glUniform2f(uBounds, spline.mStartT, spline.mEndT);
 
@@ -120,20 +129,6 @@ public final class OrnamentPlants {
 		}
 
 		GLES20.glDisable(GLES20.GL_BLEND);
-	}
-
-	private boolean renderSplinesSetControlPoints(int[] ids, Spline spline,
-			PointF offset) {
-		int ret = 0;
-		for (int i = 0; i < 4; ++i) {
-			float x = spline.mCtrlPoints[i].x - offset.x;
-			float y = spline.mCtrlPoints[i].y - offset.y;
-			GLES20.glUniform2f(ids[i], x, y);
-			if (x > -1f && x < 1f && y > -1f && y < 1f) {
-				++ret;
-			}
-		}
-		return ret != 0;
 	}
 
 	private final class Plant {
