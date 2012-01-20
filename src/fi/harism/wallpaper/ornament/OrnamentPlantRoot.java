@@ -11,9 +11,9 @@ public final class OrnamentPlantRoot {
 	private long mStartTime, mDuration;
 
 	public OrnamentPlantRoot() {
-		for (int i = 0; i < 11; ++i) {
+		for (int i = 0; i < 6; ++i) {
 			OrnamentSpline spline = new OrnamentSpline();
-			spline.mWidthStart = spline.mWidthEnd = .03f;
+			spline.mWidthStart = spline.mWidthEnd = .04f;
 			mRootSplines.add(spline);
 		}
 	}
@@ -80,6 +80,42 @@ public final class OrnamentPlantRoot {
 		return mStartTime;
 	}
 
+	private boolean intersection(PointF ret, PointF A, PointF B, float Cx,
+			float Cy, float Dx, float Dy) {
+		float Ax = A.x, Ay = A.y;
+		float Bx = B.x, By = B.y;
+
+		if (Ax == Bx && Ay == By || Cx == Dx && Cy == Dy) {
+			return false;
+		}
+
+		Bx -= Ax;
+		By -= Ay;
+		Cx -= Ax;
+		Cy -= Ay;
+		Dx -= Ax;
+		Dy -= Ay;
+
+		float distAB = (float) Math.sqrt(Bx * Bx + By * By);
+		float cos = Bx / distAB;
+		float sin = By / distAB;
+		float newX = Cx * cos + Cy * sin;
+		Cy = Cy * cos - Cx * sin;
+		Cx = newX;
+		newX = Dx * cos + Dy * sin;
+		Dy = Dy * cos - Dx * sin;
+		Dx = newX;
+
+		if (Cy == Dy) {
+			return false;
+		}
+
+		float ABpos = Dx + (Cx - Dx) * Dy / (Dy - Cy);
+		ret.x = Ax + ABpos * cos;
+		ret.y = Ay + ABpos * sin;
+		return true;
+	}
+
 	public void setDuration(long duration) {
 		mDuration = duration;
 	}
@@ -91,19 +127,35 @@ public final class OrnamentPlantRoot {
 	public void setTarget(OrnamentSpline previous, PointF dir, PointF normal) {
 		mRootSplineCount = 0;
 		final PointF start = previous.mCtrlPoints[3];
-		final float t[] = { 0.33f, 0.66f };
 		for (int i = 0; i < 2; ++i) {
-			float randLen = OrnamentUtils.randF(-.05f, .05f);
-			float x = (start.x + t[i] * dir.x) + (normal.x * randLen);
-			float y = (start.y + t[i] * dir.y) + (normal.y * randLen);
-			previous = addSpline(previous, x, y);
+			OrnamentSpline spline = mRootSplines.get(mRootSplineCount++);
+			spline.mCtrlPoints[0].set(previous.mCtrlPoints[3]);
+			for (int j = 1; j < 4; ++j) {
+				float t = ((float) i / 3) + ((float) j / 9);
+				float randLen = OrnamentUtils.randF(-.1f, .1f);
+				float x1 = start.x + t * dir.x;
+				float y1 = start.y + t * dir.y;
+				float x2 = normal.x * randLen;
+				float y2 = normal.y * randLen;
+				spline.mCtrlPoints[j].set(x1 + x2, y1 + y2);
 
-			int loopRand = OrnamentUtils.randI(-1, 6);
-			if (loopRand == -1 || loopRand == 1) {
-				previous = addLoop(previous, dir, normal, loopRand);
+				if (j == 1) {
+					intersection(spline.mCtrlPoints[j],
+							previous.mCtrlPoints[2], previous.mCtrlPoints[3],
+							x1, y1, x1 + x2, y1 + y2);
+				}
 			}
+			if (i == 1) {
+				spline.mCtrlPoints[3].set(start.x + dir.x, start.y + dir.y);
+			}
+			previous = spline;
+
+			/*
+			 * int loopRand = OrnamentUtils.randI(-1, 6); if (loopRand == -1 ||
+			 * loopRand == 1) { previous = addLoop(previous, dir, normal,
+			 * loopRand); }
+			 */
 		}
-		addSpline(previous, start.x + dir.x, start.y + dir.y);
 	}
 
 }

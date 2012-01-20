@@ -22,14 +22,12 @@ public class OrnamentPlantRenderer {
 	public OrnamentPlantRenderer(int splineSplitCount) {
 		mSplineVertexCount = splineSplitCount + 2;
 		ByteBuffer bBuffer = ByteBuffer
-				.allocateDirect(2 * 4 * 4 * mSplineVertexCount);
+				.allocateDirect(4 * 4 * mSplineVertexCount);
 		mBufferSpline = bBuffer.order(ByteOrder.nativeOrder()).asFloatBuffer();
 		for (int i = 0; i < mSplineVertexCount; ++i) {
-			float t1 = (float) i / (mSplineVertexCount - 1);
-			float t2 = t1 * t1;
-			float t3 = t1 * t2;
-			mBufferSpline.put(1).put(t1).put(t2).put(t3).put(-1).put(t1)
-					.put(t2).put(t3);
+			float t = (float) i / (mSplineVertexCount - 1);
+			mBufferSpline.put(t).put(1);
+			mBufferSpline.put(t).put(-1);
 		}
 		mBufferSpline.position(0);
 	}
@@ -63,32 +61,29 @@ public class OrnamentPlantRenderer {
 		int uBounds = mShaderSpline.getHandle("uBounds");
 		int uColor = mShaderSpline.getHandle("uColor");
 		int uAspectRatio = mShaderSpline.getHandle("uAspectRatio");
-		int aSplinePosition = mShaderSpline.getHandle("aSplinePosition");
+		int aSplinePos = mShaderSpline.getHandle("aSplinePos");
 
 		float aspectX = (float) Math.max(mWidth, mHeight) / mWidth;
 		float aspectY = (float) Math.max(mWidth, mHeight) / mHeight;
 		GLES20.glUniform2f(uAspectRatio, aspectX, aspectY);
 		GLES20.glUniform3fv(uColor, 1, color, 0);
-		GLES20.glVertexAttribPointer(aSplinePosition, 4, GLES20.GL_FLOAT,
-				false, 0, mBufferSpline);
-		GLES20.glEnableVertexAttribArray(aSplinePosition);
+		GLES20.glVertexAttribPointer(aSplinePos, 2, GLES20.GL_FLOAT, false, 0,
+				mBufferSpline);
+		GLES20.glEnableVertexAttribArray(aSplinePos);
+
+		GLES20.glEnable(GLES20.GL_BLEND);
+		GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 
 		for (OrnamentSpline spline : splines) {
-			final float Px0 = spline.mCtrlPoints[0].x - offset.x;
-			final float Py0 = spline.mCtrlPoints[0].y - offset.y;
-			final float Px1 = spline.mCtrlPoints[1].x - offset.x;
-			final float Py1 = spline.mCtrlPoints[1].y - offset.y;
-			final float Px2 = spline.mCtrlPoints[2].x - offset.x;
-			final float Py2 = spline.mCtrlPoints[2].y - offset.y;
-			final float Px3 = spline.mCtrlPoints[3].x - offset.x;
-			final float Py3 = spline.mCtrlPoints[3].y - offset.y;
+			GLES20.glUniform2f(uControl0, spline.mCtrlPoints[0].x - offset.x,
+					spline.mCtrlPoints[0].y - offset.y);
+			GLES20.glUniform2f(uControl1, spline.mCtrlPoints[1].x - offset.x,
+					spline.mCtrlPoints[1].y - offset.y);
+			GLES20.glUniform2f(uControl2, spline.mCtrlPoints[2].x - offset.x,
+					spline.mCtrlPoints[2].y - offset.y);
+			GLES20.glUniform2f(uControl3, spline.mCtrlPoints[3].x - offset.x,
+					spline.mCtrlPoints[3].y - offset.y);
 
-			GLES20.glUniform2f(uControl0, 2 * Px1, 2 * Py1);
-			GLES20.glUniform2f(uControl1, -Px0 + Px2, -Py0 + Py2);
-			GLES20.glUniform2f(uControl2, 2 * Px0 - 5 * Px1 + 4 * Px2 - Px3, 2
-					* Py0 - 5 * Py1 + 4 * Py2 - Py3);
-			GLES20.glUniform2f(uControl3, -Px0 + 3 * Px1 - 3 * Px2 + Px3, -Py0
-					+ 3 * Py1 - 3 * Py2 + Py3);
 			GLES20.glUniform2f(uWidth, spline.mWidthStart, spline.mWidthEnd);
 			GLES20.glUniform2f(uBounds, spline.mStartT, spline.mEndT);
 
@@ -98,6 +93,7 @@ public class OrnamentPlantRenderer {
 					- startIdx);
 		}
 
+		GLES20.glDisable(GLES20.GL_BLEND);
 	}
 
 }

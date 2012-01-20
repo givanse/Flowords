@@ -51,35 +51,26 @@
         uniform vec2 uWidth;
         uniform vec2 uBounds;
         uniform vec2 uAspectRatio;
-        attribute vec4 aSplinePosition;
+        attribute vec2 aSplinePos;
         varying vec2 vLineCoord;
         void main() {
-            float t1 = aSplinePosition.y;
-            float t2 = aSplinePosition.z;
-            float t3 = aSplinePosition.w;
-            float tBounded = clamp(t1, uBounds.x, uBounds.y);
-            if (t1 != tBounded) {
-                t1 = tBounded;
-                t2 = t1 * t1;
-                t3 = t1 * t2;
-            }
+            float t = clamp(aSplinePos.x, uBounds.x, uBounds.y);
+            vec2 q0 = uControl0 + t * (uControl1 - uControl0);
+            vec2 q1 = uControl1 + t * (uControl2 - uControl1);
+            vec2 q2 = uControl2 + t * (uControl3 - uControl2);
+            vec2 r0 = q0 + t * (q1 - q0);
+            vec2 r1 = q1 + t * (q2 - q1);
+                        
+            vec2 pos = r0 + t * (r1 - r0);
             
-            vec2 pos = uControl0;
-            pos += uControl1 * t1;
-            pos += uControl2 * t2;
-            pos += uControl3 * t3;
-            pos *= 0.5;
-            
-            vec2 normalVec = uControl1;
-            normalVec += 2.0 * uControl2 * t1;
-            normalVec += 3.0 * uControl3 * t2;
+            vec2 normalVec = r1 - r0;
             normalVec = normalize(vec2(-normalVec.y, normalVec.x));
             
-            float width = (uWidth.x + t1 * (uWidth.y - uWidth.x)) * 0.5;
-            pos += (aSplinePosition.x * width) * normalVec * uAspectRatio;
+            float width = (uWidth.x + aSplinePos.x * (uWidth.y - uWidth.x)) * 0.5;
+            pos += (aSplinePos.y * width) * normalVec * uAspectRatio;
             
             gl_Position = vec4(pos, 0.0, 1.0);
-            vLineCoord = aSplinePosition.yx;
+            vLineCoord = aSplinePos;
         }
     </string>
     <string name="shader_spline_fs">
@@ -87,7 +78,11 @@
         uniform vec3 uColor;
         varying vec2 vLineCoord;
         void main() {
-            gl_FragColor = vec4(uColor, 1.0);
+            gl_FragColor = vec4(uColor, 0.3);
+            float a = abs(vLineCoord.y);
+            if (a > 0.6) {
+                gl_FragColor.a = 0.2;
+            }
         }
     </string>
 </resources>

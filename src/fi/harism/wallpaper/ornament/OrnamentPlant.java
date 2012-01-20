@@ -39,7 +39,7 @@ public class OrnamentPlant {
 
 			mCurrentDirIndex = OrnamentUtils.randI(0, 8);
 			mCurrentDir.set(mDirections[mCurrentDirIndex]);
-			float randLen = OrnamentUtils.randF(.3f, 1f);
+			float randLen = OrnamentUtils.randF(.5f, .8f);
 			mCurrentDir.x *= randLen;
 			mCurrentDir.y *= randLen;
 
@@ -87,7 +87,7 @@ public class OrnamentPlant {
 				}
 
 				mCurrentDir.set(mDirections[mCurrentDirIndex]);
-				float randLen = OrnamentUtils.randF(.3f, 1f);
+				float randLen = OrnamentUtils.randF(.5f, .8f);
 				mCurrentDir.x *= randLen;
 				mCurrentDir.y *= randLen;
 				mCurrentPosition.offset(mCurrentDir.x, mCurrentDir.y);
