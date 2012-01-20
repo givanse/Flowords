@@ -9,6 +9,7 @@ public final class OrnamentConstants {
 			{ .4f, .6f, .4f, .4f } };
 	public static final int PLANT_COUNT = 2;
 
+	public static final float SPLINE_BRANCH_WIDTH = 0.03f;
 	public static final float SPLINE_ROOT_WIDTH = 0.04f;
 	public static final int SPLINE_SPLIT_COUNT = 10;
 
