@@ -13,7 +13,7 @@ public final class OrnamentPlantRoot {
 	public OrnamentPlantRoot() {
 		for (int i = 0; i < 5; ++i) {
 			OrnamentSpline spline = new OrnamentSpline();
-			spline.mWidthStart = spline.mWidthEnd = .04f;
+			spline.mWidthStart = spline.mWidthEnd = OrnamentConstants.SPLINE_ROOT_WIDTH;
 			mRootSplines.add(spline);
 		}
 	}

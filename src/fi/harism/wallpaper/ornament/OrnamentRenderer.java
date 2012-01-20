@@ -47,12 +47,12 @@ public class OrnamentRenderer implements GLSurfaceView.Renderer {
 		mScreenVertices.put(SCREEN_COORDS).position(0);
 
 		// Create background color float buffer.
-		final float BG_COLOR_TOP[] = { .8f, .6f, .2f };
-		final float BG_COLOR_BOTTOM[] = { .7f, .7f, .1f };
 		ByteBuffer bBuf = ByteBuffer.allocateDirect(3 * 4 * 4);
 		mBackgroundColors = bBuf.order(ByteOrder.nativeOrder()).asFloatBuffer();
-		mBackgroundColors.put(BG_COLOR_TOP).put(BG_COLOR_BOTTOM)
-				.put(BG_COLOR_TOP).put(BG_COLOR_BOTTOM).position(0);
+		mBackgroundColors.put(OrnamentConstants.COLOR_BG_TOP)
+				.put(OrnamentConstants.COLOR_BG_BOTTOM)
+				.put(OrnamentConstants.COLOR_BG_TOP)
+				.put(OrnamentConstants.COLOR_BG_BOTTOM).position(0);
 	}
 
 	@Override
