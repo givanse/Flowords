@@ -5,7 +5,7 @@ import android.opengl.GLSurfaceView;
 import android.service.wallpaper.WallpaperService;
 import android.view.SurfaceHolder;
 
-public class OrnamentService extends WallpaperService {
+public final class OrnamentService extends WallpaperService {
 
 	@Override
 	public Engine onCreateEngine() {

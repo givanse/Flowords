@@ -15,20 +15,15 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.widget.Toast;
 
-public class OrnamentRenderer implements GLSurfaceView.Renderer {
+public final class OrnamentRenderer implements GLSurfaceView.Renderer {
 
 	private FloatBuffer mBackgroundColors;
 	private Context mContext;
 	private PointF mOffset = new PointF(), mOffsetScroll = new PointF();
 	private PointF mOffsetSrc = new PointF(), mOffsetDst = new PointF();
 	private long mOffsetTime;
-	private OrnamentPlantRenderer mOrnamentAnimation = new OrnamentPlantRenderer(
-			OrnamentConstants.SPLINE_SPLIT_COUNT);
 	private OrnamentFbo mOrnamentFbo = new OrnamentFbo();
-	private OrnamentPlant mOrnamentPlant1 = new OrnamentPlant(
-			OrnamentConstants.COLOR_PLANT1);
-	private OrnamentPlant mOrnamentPlant2 = new OrnamentPlant(
-			OrnamentConstants.COLOR_PLANT2);
+	private OrnamentPlants mOrnamentPlants = new OrnamentPlants();
 	private ByteBuffer mScreenVertices;
 
 	// Shader for rendering background gradient.
@@ -70,9 +65,6 @@ public class OrnamentRenderer implements GLSurfaceView.Renderer {
 		mOffset.y = mOffsetScroll.y + mOffsetSrc.y + t
 				* (mOffsetDst.y - mOffsetSrc.y);
 
-		mOrnamentPlant1.setOffset(mOffset);
-		mOrnamentPlant2.setOffset(mOffset);
-
 		// Disable unneeded rendering flags.
 		GLES20.glDisable(GLES20.GL_CULL_FACE);
 		GLES20.glDisable(GLES20.GL_BLEND);
@@ -98,8 +90,7 @@ public class OrnamentRenderer implements GLSurfaceView.Renderer {
 		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
 		// Render scene.
-		mOrnamentAnimation.onDrawFrame(mOrnamentPlant1, mOffset);
-		mOrnamentAnimation.onDrawFrame(mOrnamentPlant2, mOffset);
+		mOrnamentPlants.onDrawFrame(mOffset);
 
 		// Copy FBO to screen buffer.
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
@@ -121,14 +112,7 @@ public class OrnamentRenderer implements GLSurfaceView.Renderer {
 		mWidth = width;
 		mHeight = height;
 		mOrnamentFbo.init(mWidth, mHeight, 1);
-		mOrnamentAnimation.onSurfaceChanged(mWidth, mHeight);
-
-		float aspectX = (float) Math.min(mWidth, mHeight) / mWidth;
-		float aspectY = (float) Math.min(mWidth, height) / mHeight;
-		mOrnamentPlant1.reset();
-		mOrnamentPlant1.setAspectRatio(aspectX, aspectY);
-		mOrnamentPlant2.reset();
-		mOrnamentPlant2.setAspectRatio(aspectX, aspectY);
+		mOrnamentPlants.onSurfaceChanged(mWidth, mHeight);
 	}
 
 	@Override
@@ -150,7 +134,7 @@ public class OrnamentRenderer implements GLSurfaceView.Renderer {
 			mShaderBackground.setProgram(
 					mContext.getString(R.string.shader_background_vs),
 					mContext.getString(R.string.shader_background_fs));
-			mOrnamentAnimation.onSurfaceCreated(mContext);
+			mOrnamentPlants.onSurfaceCreated(mContext);
 		}
 	}
 
