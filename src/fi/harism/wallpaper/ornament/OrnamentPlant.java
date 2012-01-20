@@ -9,7 +9,6 @@ public class OrnamentPlant {
 	private static final float[] DIRECTIONS = { 0, 1, 1, 1, 1, 0, 1, -1, 0, -1,
 			-1, -1, -1, 0, -1, 1 };
 	private final float[] mColor;
-	private final PointF mCurrentDir = new PointF();
 	private int mCurrentDirIndex;
 	private final PointF mCurrentPosition = new PointF();
 	private final PointF[] mDirections = new PointF[8];
@@ -33,26 +32,20 @@ public class OrnamentPlant {
 
 	public void getSplines(Vector<OrnamentSpline> splines, long time) {
 		if (mRootElementCount == 0) {
-			OrnamentPlantRoot rootElement = mRootElements.get(0);
+			OrnamentPlantRoot rootElement = mRootElements
+					.get(mRootElementCount++);
 			rootElement.setStartTime(time);
 			rootElement.setDuration(OrnamentUtils.randI(500, 2000));
+			rootElement.reset();
 
-			mCurrentDirIndex = OrnamentUtils.randI(0, 8);
-			mCurrentDir.set(mDirections[mCurrentDirIndex]);
+			OrnamentUtils.rand(mCurrentPosition, -.7f, -.7f, .7f, .7f);
+			mCurrentPosition.offset(mOffset.x, mOffset.y);
+
 			float randLen = OrnamentUtils.randF(.5f, .8f);
-			mCurrentDir.x *= randLen;
-			mCurrentDir.y *= randLen;
-
-			PointF startPos = new PointF();
-			OrnamentUtils.rand(startPos, -.5f, -.5f, .5f, .5f);
-			OrnamentSpline startSpline = new OrnamentSpline();
-			startSpline.mCtrlPoints[0] = startSpline.mCtrlPoints[1] = startSpline.mCtrlPoints[2] = startSpline.mCtrlPoints[3] = startPos;
-			mCurrentPosition.set(startPos);
-			mCurrentPosition.offset(mCurrentDir.x, mCurrentDir.y);
-
-			rootElement.setTarget(startSpline, mCurrentDir,
-					mDirections[(mCurrentDirIndex + 2) % 8]);
-			++mRootElementCount;
+			mCurrentDirIndex = OrnamentUtils.randI(0, 8);
+			PointF dir = mDirections[mCurrentDirIndex];
+			PointF normal = mDirections[(mCurrentDirIndex + 2) % 8];
+			rootElement.addLine(mCurrentPosition, dir, randLen, normal, 1);
 		} else {
 			OrnamentPlantRoot lastElement = mRootElements
 					.get(mRootElementCount - 1);
@@ -69,31 +62,51 @@ public class OrnamentPlant {
 				}
 				element.setStartTime(additionTime);
 				element.setDuration(OrnamentUtils.randI(500, 2000));
+				element.reset();
 
 				PointF targetPos = new PointF();
-				OrnamentUtils.rand(targetPos, -.5f, -.5f, .5f, .5f);
+				OrnamentUtils.rand(targetPos, -.7f, -.7f, .7f, .7f);
 				targetPos.offset(mOffset.x, mOffset.y);
 
 				float minDist = OrnamentUtils.dist(mCurrentPosition,
 						mDirections[mCurrentDirIndex], targetPos);
-				for (int i = 1; i <= 7; i += 6) {
+				int minDirIndex = mCurrentDirIndex;
+				for (int i = 1; i < 8; ++i) {
 					PointF dir = mDirections[(mCurrentDirIndex + i) % 8];
 					float dist = OrnamentUtils.dist(mCurrentPosition, dir,
 							targetPos);
 					if (dist < minDist) {
 						minDist = dist;
-						mCurrentDirIndex = (mCurrentDirIndex + i) % 8;
+						minDirIndex = (mCurrentDirIndex + i) % 8;
 					}
 				}
 
-				mCurrentDir.set(mDirections[mCurrentDirIndex]);
-				float randLen = OrnamentUtils.randF(.5f, .8f);
-				mCurrentDir.x *= randLen;
-				mCurrentDir.y *= randLen;
-				mCurrentPosition.offset(mCurrentDir.x, mCurrentDir.y);
+				float randLen = OrnamentUtils.randF(.3f, .5f);
+				randLen = Math.max(randLen,
+						OrnamentUtils.dist(mCurrentPosition, targetPos) / 2f);
 
-				element.setTarget(lastElement.getLastSpline(), mCurrentDir,
-						mDirections[(mCurrentDirIndex + 2) % 8]);
+				if (minDirIndex != mCurrentDirIndex) {
+					// 2 * (sqrt(2) - 1) / 3
+					float normalLen = 0.27614237f * randLen;
+					int k = minDirIndex > mCurrentDirIndex ? 1 : -1;
+					for (int i = mCurrentDirIndex + k; i * k <= minDirIndex * k; i += 2 * k) {
+						PointF dir = mDirections[i];
+						PointF normal = mDirections[(8 + i - 2 * k) % 8];
+						element.addArc(mCurrentPosition, dir, randLen, normal,
+								normalLen, randLen - normalLen,
+								i == minDirIndex);
+					}
+					mCurrentDirIndex = minDirIndex;
+				} else {
+					PointF dir = mDirections[mCurrentDirIndex];
+					PointF normal = mDirections[(mCurrentDirIndex + 2) % 8];
+					if (element.getSplineCount() == 0) {
+						element.addLine(mCurrentPosition, dir, randLen, normal,
+								2);
+					}
+
+				}
+
 				lastElement = element;
 				additionTime += lastElement.getDuration();
 			}

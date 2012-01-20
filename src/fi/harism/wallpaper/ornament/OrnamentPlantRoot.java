@@ -11,40 +11,59 @@ public final class OrnamentPlantRoot {
 	private long mStartTime, mDuration;
 
 	public OrnamentPlantRoot() {
-		for (int i = 0; i < 6; ++i) {
+		for (int i = 0; i < 5; ++i) {
 			OrnamentSpline spline = new OrnamentSpline();
 			spline.mWidthStart = spline.mWidthEnd = .04f;
 			mRootSplines.add(spline);
 		}
 	}
 
-	private OrnamentSpline addLoop(OrnamentSpline root, PointF dir,
-			PointF normal, int side) {
-		PointF start = root.mCtrlPoints[3];
-		float dirLen = dir.length();
-		float normalX = normal.x * side * dirLen;
-		float normalY = normal.y * side * dirLen;
-		float xTop = start.x + normalX;
-		float yTop = start.y + normalY;
-		float xRight = start.x + (normalX / 2) + (dir.x / 2);
-		float yRight = start.y + (normalY / 2) + (dir.y / 2);
-		float xLeft = start.x + (normalX / 2) - (dir.x / 2);
-		float yLeft = start.y + (normalY / 2) - (dir.y / 2);
+	public void addArc(PointF start, PointF dir, float length, PointF normal,
+			float normalPos1, float normalPos2, boolean flatEnd) {
+		OrnamentSpline spline = mRootSplines.get(mRootSplineCount++);
+		spline.mCtrlPoints[0].set(start);
 
-		OrnamentSpline prev = addSpline(root, xRight, yRight);
-		prev = addSpline(prev, xTop, yTop);
-		prev = addSpline(prev, xLeft, yLeft);
-		prev = addSpline(prev, start.x, start.y);
-		return prev;
+		float Px = start.x + dir.x * normalPos1 + normal.x * normalPos1;
+		float Py = start.y + dir.y * normalPos1 + normal.y * normalPos1;
+		float Qx = start.x + dir.x * normalPos2;
+		float Qy = start.y + dir.y * normalPos2;
+
+		if (!flatEnd) {
+			Qx += normal.x * (length - normalPos2);
+			Qy += normal.y * (length - normalPos2);
+		}
+
+		spline.mCtrlPoints[1].set(Px, Py);
+		spline.mCtrlPoints[2].set(Qx, Qy);
+
+		start.offset(dir.x * length, dir.y * length);
+		spline.mCtrlPoints[3].set(start);
 	}
 
-	private OrnamentSpline addSpline(OrnamentSpline previous, float x3, float y3) {
-		OrnamentSpline spline = mRootSplines.get(mRootSplineCount++);
-		spline.mCtrlPoints[0].set(previous.mCtrlPoints[1]);
-		spline.mCtrlPoints[1].set(previous.mCtrlPoints[2]);
-		spline.mCtrlPoints[2].set(previous.mCtrlPoints[3]);
-		spline.mCtrlPoints[3].set(x3, y3);
-		return spline;
+	public void addLine(PointF start, PointF dir, float length, PointF normal,
+			int count) {
+		float randLen = 0, offsetX = 0, offsetY = 0;
+		for (int i = 0; i < count; ++i) {
+			OrnamentSpline spline = mRootSplines.get(mRootSplineCount++);
+			for (int j = 0; j < 4; ++j) {
+				PointF P = spline.mCtrlPoints[j];
+				P.set(start);
+				P.offset(length * dir.x * (j / 3f), length * dir.y * (j / 3f));
+				P.offset(offsetX, offsetY);
+
+				if (j == 1) {
+					if (i < count - 1) {
+						randLen = OrnamentUtils.randF(-.1f, .1f);
+						offsetX = normal.x * randLen;
+						offsetY = normal.y * randLen;
+					} else {
+						randLen = offsetX = offsetY = 0;
+					}
+				}
+			}
+			start.set(spline.mCtrlPoints[3]);
+			start.offset(-offsetX, -offsetY);
+		}
 	}
 
 	public long getDuration() {
@@ -53,6 +72,10 @@ public final class OrnamentPlantRoot {
 
 	public OrnamentSpline getLastSpline() {
 		return mRootSplines.get(mRootSplineCount - 1);
+	}
+
+	public int getSplineCount() {
+		return mRootSplineCount;
 	}
 
 	public void getSplines(Vector<OrnamentSpline> splines, float t1, float t2) {
@@ -80,40 +103,8 @@ public final class OrnamentPlantRoot {
 		return mStartTime;
 	}
 
-	private boolean intersection(PointF ret, PointF A, PointF B, float Cx,
-			float Cy, float Dx, float Dy) {
-		float Ax = A.x, Ay = A.y;
-		float Bx = B.x, By = B.y;
-
-		if (Ax == Bx && Ay == By || Cx == Dx && Cy == Dy) {
-			return false;
-		}
-
-		Bx -= Ax;
-		By -= Ay;
-		Cx -= Ax;
-		Cy -= Ay;
-		Dx -= Ax;
-		Dy -= Ay;
-
-		float distAB = (float) Math.sqrt(Bx * Bx + By * By);
-		float cos = Bx / distAB;
-		float sin = By / distAB;
-		float newX = Cx * cos + Cy * sin;
-		Cy = Cy * cos - Cx * sin;
-		Cx = newX;
-		newX = Dx * cos + Dy * sin;
-		Dy = Dy * cos - Dx * sin;
-		Dx = newX;
-
-		if (Cy == Dy) {
-			return false;
-		}
-
-		float ABpos = Dx + (Cx - Dx) * Dy / (Dy - Cy);
-		ret.x = Ax + ABpos * cos;
-		ret.y = Ay + ABpos * sin;
-		return true;
+	public void reset() {
+		mRootSplineCount = 0;
 	}
 
 	public void setDuration(long duration) {
@@ -122,40 +113,6 @@ public final class OrnamentPlantRoot {
 
 	public void setStartTime(long startTime) {
 		mStartTime = startTime;
-	}
-
-	public void setTarget(OrnamentSpline previous, PointF dir, PointF normal) {
-		mRootSplineCount = 0;
-		final PointF start = previous.mCtrlPoints[3];
-		for (int i = 0; i < 2; ++i) {
-			OrnamentSpline spline = mRootSplines.get(mRootSplineCount++);
-			spline.mCtrlPoints[0].set(previous.mCtrlPoints[3]);
-			for (int j = 1; j < 4; ++j) {
-				float t = ((float) i / 3) + ((float) j / 9);
-				float randLen = OrnamentUtils.randF(-.1f, .1f);
-				float x1 = start.x + t * dir.x;
-				float y1 = start.y + t * dir.y;
-				float x2 = normal.x * randLen;
-				float y2 = normal.y * randLen;
-				spline.mCtrlPoints[j].set(x1 + x2, y1 + y2);
-
-				if (j == 1) {
-					intersection(spline.mCtrlPoints[j],
-							previous.mCtrlPoints[2], previous.mCtrlPoints[3],
-							x1, y1, x1 + x2, y1 + y2);
-				}
-			}
-			if (i == 1) {
-				spline.mCtrlPoints[3].set(start.x + dir.x, start.y + dir.y);
-			}
-			previous = spline;
-
-			/*
-			 * int loopRand = OrnamentUtils.randI(-1, 6); if (loopRand == -1 ||
-			 * loopRand == 1) { previous = addLoop(previous, dir, normal,
-			 * loopRand); }
-			 */
-		}
 	}
 
 }

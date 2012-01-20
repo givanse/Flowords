@@ -55,13 +55,13 @@
         varying vec2 vLineCoord;
         void main() {
             float t = clamp(aSplinePos.x, uBounds.x, uBounds.y);
-            vec2 q0 = uControl0 + t * (uControl1 - uControl0);
-            vec2 q1 = uControl1 + t * (uControl2 - uControl1);
-            vec2 q2 = uControl2 + t * (uControl3 - uControl2);
-            vec2 r0 = q0 + t * (q1 - q0);
-            vec2 r1 = q1 + t * (q2 - q1);
-                        
-            vec2 pos = r0 + t * (r1 - r0);
+            vec2 q0 = mix(uControl0, uControl1, t);
+            vec2 q1 = mix(uControl1, uControl2, t);
+            vec2 q2 = mix(uControl2, uControl3, t);
+            vec2 r0 = mix(q0, q1, t);
+            vec2 r1 = mix(q1, q2, t);
+            
+            vec2 pos = mix(r0, r1, t);
             
             vec2 normalVec = r1 - r0;
             normalVec = normalize(vec2(-normalVec.y, normalVec.x));
