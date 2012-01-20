@@ -112,7 +112,8 @@ public final class OrnamentRenderer implements GLSurfaceView.Renderer {
 		mWidth = width;
 		mHeight = height;
 		mOrnamentFbo.init(mWidth, mHeight, 1);
-		mOrnamentPlants.onSurfaceChanged(mWidth, mHeight);
+		mOrnamentPlants.onSurfaceChanged(mOrnamentFbo.getWidth(),
+				mOrnamentFbo.getHeight());
 	}
 
 	@Override

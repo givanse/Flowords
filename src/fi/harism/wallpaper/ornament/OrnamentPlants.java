@@ -177,7 +177,7 @@ public final class OrnamentPlants {
 
 		private int mCurrentDirIndex;
 		private final PointF mCurrentPosition = new PointF();
-		private int mRootElementCount;
+		public int mRootElementCount;
 		private final Vector<RootElement> mRootElements = new Vector<RootElement>();
 
 		public Plant() {
@@ -391,9 +391,9 @@ public final class OrnamentPlants {
 	private final class RootElement {
 
 		private final Branch[] mBranches = new Branch[5];
-		private int mRootSplineCount;
+		public int mRootSplineCount;
 		private final Spline[] mRootSplines = new Spline[5];
-		private long mStartTime, mDuration;
+		public long mStartTime, mDuration;
 
 		public RootElement() {
 			for (int i = 0; i < 5; ++i) {
@@ -441,10 +441,10 @@ public final class OrnamentPlants {
 	}
 
 	private final class Spline {
-		final PointF mCtrlPoints[] = new PointF[] { new PointF(), new PointF(),
-				new PointF(), new PointF() };
-		float mStartT = 0f, mEndT = 1f;
-		float mWidthStart, mWidthEnd;
+		public final PointF mCtrlPoints[] = new PointF[] { new PointF(),
+				new PointF(), new PointF(), new PointF() };
+		public float mStartT = 0f, mEndT = 1f;
+		public float mWidthStart, mWidthEnd;
 	}
 
 }
