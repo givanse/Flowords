@@ -76,7 +76,7 @@ public final class OrnamentPlants {
 		mShaderSpline.setProgram(context.getString(R.string.shader_spline_vs),
 				context.getString(R.string.shader_spline_fs));
 		for (int i = 0; i < mPlants.length; ++i) {
-			mPlants[i].reset();
+			mPlants[i].mRootElementCount = 0;
 		}
 	}
 
@@ -96,7 +96,7 @@ public final class OrnamentPlants {
 		float aspectX = (float) Math.max(mWidth, mHeight) / mWidth;
 		float aspectY = (float) Math.max(mWidth, mHeight) / mHeight;
 		GLES20.glUniform2f(uAspectRatio, aspectX, aspectY);
-		GLES20.glUniform3fv(uColor, 1, color, 0);
+		GLES20.glUniform4fv(uColor, 1, color, 0);
 		GLES20.glVertexAttribPointer(aSplinePos, 2, GLES20.GL_FLOAT, false, 0,
 				mBufferSpline);
 		GLES20.glEnableVertexAttribArray(aSplinePos);
@@ -147,9 +147,9 @@ public final class OrnamentPlants {
 		public void getSplines(Vector<Spline> splines, long time, PointF offset) {
 			if (mRootElementCount == 0) {
 				RootElement element = mRootElements.get(mRootElementCount++);
-				element.setStartTime(time);
-				element.setDuration(OrnamentUtils.randI(500, 2000));
-				element.reset();
+				element.mStartTime = time;
+				element.mDuration = OrnamentUtils.randI(500, 2000);
+				element.mRootSplineCount = 0;
 
 				OrnamentUtils.rand(mCurrentPosition, -.7f, -.7f, .7f, .7f);
 				mCurrentPosition.offset(offset.x, offset.y);
@@ -163,8 +163,7 @@ public final class OrnamentPlants {
 				RootElement lastElement = mRootElements
 						.get(mRootElementCount - 1);
 				long additionTime = time;
-				while (time > lastElement.getStartTime()
-						+ lastElement.getDuration()) {
+				while (time > lastElement.mStartTime + lastElement.mDuration) {
 
 					RootElement element;
 					if (mRootElementCount >= mRootElements.size()) {
@@ -173,9 +172,9 @@ public final class OrnamentPlants {
 					} else {
 						element = mRootElements.get(mRootElementCount++);
 					}
-					element.setStartTime(additionTime);
-					element.setDuration(OrnamentUtils.randI(500, 2000));
-					element.reset();
+					element.mStartTime = additionTime;
+					element.mDuration = OrnamentUtils.randI(500, 2000);
+					element.mRootSplineCount = 0;
 
 					PointF targetPos = new PointF();
 					OrnamentUtils.rand(targetPos, -.7f, -.7f, .7f, .7f);
@@ -215,7 +214,7 @@ public final class OrnamentPlants {
 					} else {
 						PointF dir = mDirections[mCurrentDirIndex];
 						PointF normal = mDirections[(mCurrentDirIndex + 2) % 8];
-						if (element.getSplineCount() == 0) {
+						if (element.mRootSplineCount == 0) {
 							element.addLine(mCurrentPosition, dir, randLen,
 									normal, 2);
 						}
@@ -223,13 +222,13 @@ public final class OrnamentPlants {
 					}
 
 					lastElement = element;
-					additionTime += lastElement.getDuration();
+					additionTime += lastElement.mDuration;
 				}
 			}
 
 			RootElement lastElement = mRootElements.get(mRootElementCount - 1);
-			float t = (float) (time - lastElement.getStartTime())
-					/ lastElement.getDuration();
+			float t = (float) (time - lastElement.mStartTime)
+					/ lastElement.mDuration;
 			for (int i = 0; i < mRootElementCount; ++i) {
 				RootElement element = mRootElements.get(i);
 				if (i == mRootElementCount - 1) {
@@ -241,10 +240,6 @@ public final class OrnamentPlants {
 				}
 			}
 
-		}
-
-		public void reset() {
-			mRootElementCount = 0;
 		}
 
 	}
@@ -313,14 +308,6 @@ public final class OrnamentPlants {
 			}
 		}
 
-		public long getDuration() {
-			return mDuration;
-		}
-
-		public int getSplineCount() {
-			return mRootSplineCount;
-		}
-
 		public void getSplines(Vector<Spline> splines, float t1, float t2) {
 			for (int i = 0; i < mRootSplineCount; ++i) {
 				float startT = (float) i / mRootSplineCount;
@@ -340,22 +327,6 @@ public final class OrnamentPlants {
 					splines.add(spline);
 				}
 			}
-		}
-
-		public long getStartTime() {
-			return mStartTime;
-		}
-
-		public void reset() {
-			mRootSplineCount = 0;
-		}
-
-		public void setDuration(long duration) {
-			mDuration = duration;
-		}
-
-		public void setStartTime(long startTime) {
-			mStartTime = startTime;
 		}
 
 	}

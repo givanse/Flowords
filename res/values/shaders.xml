@@ -75,13 +75,13 @@
     </string>
     <string name="shader_spline_fs">
         precision mediump float;
-        uniform vec3 uColor;
+        uniform vec4 uColor;
         varying vec2 vLineCoord;
         void main() {
-            gl_FragColor = vec4(uColor, 0.3);
+            gl_FragColor = uColor;
             float a = abs(vLineCoord.y);
             if (a > 0.6) {
-                gl_FragColor.a = 0.2;
+                gl_FragColor.a *= 0.5;
             }
         }
     </string>
