@@ -104,26 +104,36 @@ public final class OrnamentPlants {
 		GLES20.glEnable(GLES20.GL_BLEND);
 		GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 
+		final int[] controlIds = { uControl0, uControl1, uControl2, uControl3 };
+
 		for (Spline spline : splines) {
-			GLES20.glUniform2f(uControl0, spline.mCtrlPoints[0].x - offset.x,
-					spline.mCtrlPoints[0].y - offset.y);
-			GLES20.glUniform2f(uControl1, spline.mCtrlPoints[1].x - offset.x,
-					spline.mCtrlPoints[1].y - offset.y);
-			GLES20.glUniform2f(uControl2, spline.mCtrlPoints[2].x - offset.x,
-					spline.mCtrlPoints[2].y - offset.y);
-			GLES20.glUniform2f(uControl3, spline.mCtrlPoints[3].x - offset.x,
-					spline.mCtrlPoints[3].y - offset.y);
+			if (renderSplinesSetControlPoints(controlIds, spline, offset)) {
+				GLES20.glUniform2f(uWidth, spline.mWidthStart, spline.mWidthEnd);
+				GLES20.glUniform2f(uBounds, spline.mStartT, spline.mEndT);
 
-			GLES20.glUniform2f(uWidth, spline.mWidthStart, spline.mWidthEnd);
-			GLES20.glUniform2f(uBounds, spline.mStartT, spline.mEndT);
-
-			int startIdx = (int) (spline.mStartT * mSplineVertexCount) * 2;
-			int endIdx = (int) (Math.ceil(spline.mEndT * mSplineVertexCount)) * 2;
-			GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, startIdx, endIdx
-					- startIdx);
+				int startIdx = (int) (spline.mStartT * mSplineVertexCount) * 2;
+				int endIdx = (int) (Math
+						.ceil(spline.mEndT * mSplineVertexCount)) * 2;
+				GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, startIdx, endIdx
+						- startIdx);
+			}
 		}
 
 		GLES20.glDisable(GLES20.GL_BLEND);
+	}
+
+	private boolean renderSplinesSetControlPoints(int[] ids, Spline spline,
+			PointF offset) {
+		int ret = 0;
+		for (int i = 0; i < 4; ++i) {
+			float x = spline.mCtrlPoints[i].x - offset.x;
+			float y = spline.mCtrlPoints[i].y - offset.y;
+			GLES20.glUniform2f(ids[i], x, y);
+			if (x > -1f && x < 1f && y > -1f && y < 1f) {
+				++ret;
+			}
+		}
+		return ret != 0;
 	}
 
 	private final class Plant {
@@ -247,21 +257,21 @@ public final class OrnamentPlants {
 	private final class RootElement {
 
 		private int mRootSplineCount;
-		private Vector<Spline> mRootSplines = new Vector<Spline>();
+		private final Spline[] mRootSplines = new Spline[5];
 		private long mStartTime, mDuration;
 
 		public RootElement() {
 			for (int i = 0; i < 5; ++i) {
 				Spline spline = new Spline();
 				spline.mWidthStart = spline.mWidthEnd = OrnamentConstants.SPLINE_ROOT_WIDTH;
-				mRootSplines.add(spline);
+				mRootSplines[i] = spline;
 			}
 		}
 
 		public void addArc(PointF start, PointF dir, float length,
 				PointF normal, float normalPos1, float normalPos2,
 				boolean flatEnd) {
-			Spline spline = mRootSplines.get(mRootSplineCount++);
+			Spline spline = mRootSplines[mRootSplineCount++];
 			spline.mCtrlPoints[0].set(start);
 
 			float Px = start.x + dir.x * normalPos1 + normal.x * normalPos1;
@@ -285,7 +295,7 @@ public final class OrnamentPlants {
 				PointF normal, int count) {
 			float randLen = 0, offsetX = 0, offsetY = 0;
 			for (int i = 0; i < count; ++i) {
-				Spline spline = mRootSplines.get(mRootSplineCount++);
+				Spline spline = mRootSplines[mRootSplineCount++];
 				for (int j = 0; j < 4; ++j) {
 					PointF P = spline.mCtrlPoints[j];
 					P.set(start);
@@ -320,7 +330,7 @@ public final class OrnamentPlants {
 			for (int i = 0; i < mRootSplineCount; ++i) {
 				float startT = (float) i / mRootSplineCount;
 				float endT = (float) (i + 1) / mRootSplineCount;
-				Spline spline = mRootSplines.get(i);
+				Spline spline = mRootSplines[i];
 				if (startT >= t1 && endT <= t2) {
 					spline.mStartT = 0f;
 					spline.mEndT = 1f;
