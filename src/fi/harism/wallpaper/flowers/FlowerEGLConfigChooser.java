@@ -14,7 +14,7 @@
    limitations under the License.
  */
 
-package fi.harism.wallpaper.ornament;
+package fi.harism.wallpaper.flowers;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -27,7 +27,7 @@ import android.opengl.GLSurfaceView;
  * buffer precision if needed. As for alpha and stencil buffer (and depth buffer
  * if set to false), lowest ones are preferred.
  */
-public final class OrnamentEGLConfigChooser implements
+public final class FlowerEGLConfigChooser implements
 		GLSurfaceView.EGLConfigChooser {
 
 	private boolean mNeedsDepth;
@@ -39,7 +39,7 @@ public final class OrnamentEGLConfigChooser implements
 	 *            If true, will try to find config with highest depth buffer
 	 *            precision on top of RGB precision.
 	 */
-	public OrnamentEGLConfigChooser(boolean needsDepth) {
+	public FlowerEGLConfigChooser(boolean needsDepth) {
 		mNeedsDepth = needsDepth;
 	}
 

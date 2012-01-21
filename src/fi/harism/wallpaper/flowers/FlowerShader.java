@@ -14,7 +14,7 @@
    limitations under the License.
  */
 
-package fi.harism.wallpaper.ornament;
+package fi.harism.wallpaper.flowers;
 
 import java.util.HashMap;
 
@@ -24,7 +24,7 @@ import android.util.Log;
 /**
  * Helper class for handling shaders.
  */
-public final class OrnamentShader {
+public final class FlowerShader {
 
 	// Shader program handle.
 	private int mProgram = -1;

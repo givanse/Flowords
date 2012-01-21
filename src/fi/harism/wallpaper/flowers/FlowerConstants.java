@@ -1,6 +1,6 @@
-package fi.harism.wallpaper.ornament;
+package fi.harism.wallpaper.flowers;
 
-public final class OrnamentConstants {
+public final class FlowerConstants {
 
 	public static final float[] COLOR_BG_BOTTOM = { .5f, .6f, .5f };
 	public static final float[] COLOR_BG_TOP = { .7f, .7f, .7f };

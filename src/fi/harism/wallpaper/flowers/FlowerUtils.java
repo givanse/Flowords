@@ -1,8 +1,8 @@
-package fi.harism.wallpaper.ornament;
+package fi.harism.wallpaper.flowers;
 
 import android.graphics.PointF;
 
-public final class OrnamentUtils {
+public final class FlowerUtils {
 
 	public static float dist(PointF point1, PointF point2) {
 		float dx = point1.x - point2.x;

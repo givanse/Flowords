@@ -1,4 +1,4 @@
-package fi.harism.wallpaper.ornament;
+package fi.harism.wallpaper.flowers;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -15,25 +15,25 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.widget.Toast;
 
-public final class OrnamentRenderer implements GLSurfaceView.Renderer {
+public final class FlowerRenderer implements GLSurfaceView.Renderer {
 
 	private FloatBuffer mBackgroundColors;
 	private Context mContext;
 	private PointF mOffset = new PointF(), mOffsetScroll = new PointF();
 	private PointF mOffsetSrc = new PointF(), mOffsetDst = new PointF();
 	private long mOffsetTime;
-	private OrnamentFbo mOrnamentFbo = new OrnamentFbo();
-	private OrnamentPlants mOrnamentPlants = new OrnamentPlants();
+	private FlowerFbo mOrnamentFbo = new FlowerFbo();
+	private FlowerObjects mOrnamentPlants = new FlowerObjects();
 	private ByteBuffer mScreenVertices;
 
 	// Shader for rendering background gradient.
-	private final OrnamentShader mShaderBackground = new OrnamentShader();
+	private final FlowerShader mShaderBackground = new FlowerShader();
 	// Shader for copying offscreen texture on screen.
-	private final OrnamentShader mShaderCopy = new OrnamentShader();
+	private final FlowerShader mShaderCopy = new FlowerShader();
 	// Surface/screen dimensions.
 	private int mWidth, mHeight;
 
-	public OrnamentRenderer(Context context) {
+	public FlowerRenderer(Context context) {
 		mContext = context;
 
 		// Create screen coordinates buffer.
@@ -44,10 +44,10 @@ public final class OrnamentRenderer implements GLSurfaceView.Renderer {
 		// Create background color float buffer.
 		ByteBuffer bBuf = ByteBuffer.allocateDirect(3 * 4 * 4);
 		mBackgroundColors = bBuf.order(ByteOrder.nativeOrder()).asFloatBuffer();
-		mBackgroundColors.put(OrnamentConstants.COLOR_BG_TOP)
-				.put(OrnamentConstants.COLOR_BG_BOTTOM)
-				.put(OrnamentConstants.COLOR_BG_TOP)
-				.put(OrnamentConstants.COLOR_BG_BOTTOM).position(0);
+		mBackgroundColors.put(FlowerConstants.COLOR_BG_TOP)
+				.put(FlowerConstants.COLOR_BG_BOTTOM)
+				.put(FlowerConstants.COLOR_BG_TOP)
+				.put(FlowerConstants.COLOR_BG_BOTTOM).position(0);
 	}
 
 	@Override
@@ -56,7 +56,7 @@ public final class OrnamentRenderer implements GLSurfaceView.Renderer {
 		if (time - mOffsetTime > 5000) {
 			mOffsetTime = time;
 			mOffsetSrc.set(mOffsetDst);
-			OrnamentUtils.rand(mOffsetDst, -1f, -1f, 1f, 1f);
+			FlowerUtils.rand(mOffsetDst, -1f, -1f, 1f, 1f);
 		}
 		float t = (float) (time - mOffsetTime) / 5000;
 		t = t * t * (3 - 2 * t);

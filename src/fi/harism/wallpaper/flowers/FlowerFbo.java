@@ -14,14 +14,14 @@
    limitations under the License.
  */
 
-package fi.harism.wallpaper.ornament;
+package fi.harism.wallpaper.flowers;
 
 import android.opengl.GLES20;
 
 /**
  * Helper class for handling frame buffer objects.
  */
-public final class OrnamentFbo {
+public final class FlowerFbo {
 
 	// Optional depth buffer handle.
 	private int mDepthBufferHandle = -1;

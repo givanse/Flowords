@@ -1,11 +1,11 @@
-package fi.harism.wallpaper.ornament;
+package fi.harism.wallpaper.flowers;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.service.wallpaper.WallpaperService;
 import android.view.SurfaceHolder;
 
-public final class OrnamentService extends WallpaperService {
+public final class FlowerService extends WallpaperService {
 
 	@Override
 	public Engine onCreateEngine() {
@@ -19,7 +19,7 @@ public final class OrnamentService extends WallpaperService {
 
 		// Slightly modified GLSurfaceView.
 		private WallpaperGLSurfaceView mGLSurfaceView;
-		private OrnamentRenderer mRenderer;
+		private FlowerRenderer mRenderer;
 
 		@Override
 		public void onCreate(SurfaceHolder surfaceHolder) {
@@ -28,11 +28,11 @@ public final class OrnamentService extends WallpaperService {
 			// android.os.Debug.waitForDebugger();
 
 			super.onCreate(surfaceHolder);
-			mRenderer = new OrnamentRenderer(OrnamentService.this);
-			mGLSurfaceView = new WallpaperGLSurfaceView(OrnamentService.this);
+			mRenderer = new FlowerRenderer(FlowerService.this);
+			mGLSurfaceView = new WallpaperGLSurfaceView(FlowerService.this);
 			mGLSurfaceView.setEGLContextClientVersion(2);
-			mGLSurfaceView.setEGLConfigChooser(new OrnamentEGLConfigChooser(
-					false));
+			mGLSurfaceView
+					.setEGLConfigChooser(new FlowerEGLConfigChooser(false));
 			mGLSurfaceView.setRenderer(mRenderer);
 			mGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
 		}

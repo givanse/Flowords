@@ -1,4 +1,4 @@
-package fi.harism.wallpaper.ornament;
+package fi.harism.wallpaper.flowers;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -10,7 +10,7 @@ import android.graphics.PointF;
 import android.opengl.GLES20;
 import android.os.SystemClock;
 
-public final class OrnamentPlants {
+public final class FlowerObjects {
 
 	private static final float[] DIRECTIONS = { 0, 1, 1, 1, 1, 0, 1, -1, 0, -1,
 			-1, -1, -1, 0, -1, 1 };
@@ -20,18 +20,18 @@ public final class OrnamentPlants {
 	private ByteBuffer mBufferTexture;
 	private final PointF[] mDirections = new PointF[8];
 
-	private final OrnamentFbo mFlowerFbo = new OrnamentFbo();
+	private final FlowerFbo mFlowerFbo = new FlowerFbo();
 	private final Vector<Flower> mFlowers = new Vector<Flower>();
-	private final Plant[] mPlants = new Plant[OrnamentConstants.PLANT_COUNT];
-	private final OrnamentShader mShaderPoint = new OrnamentShader();
-	private final OrnamentShader mShaderSpline = new OrnamentShader();
-	private final OrnamentShader mShaderTexture = new OrnamentShader();
+	private final Plant[] mPlants = new Plant[FlowerConstants.PLANT_COUNT];
+	private final FlowerShader mShaderPoint = new FlowerShader();
+	private final FlowerShader mShaderSpline = new FlowerShader();
+	private final FlowerShader mShaderTexture = new FlowerShader();
 	private final Vector<Spline> mSplines = new Vector<Spline>();
 	private int mSplineVertexCount;
 	private int mWidth, mHeight;
 
-	public OrnamentPlants() {
-		mSplineVertexCount = OrnamentConstants.SPLINE_SPLIT_COUNT + 2;
+	public FlowerObjects() {
+		mSplineVertexCount = FlowerConstants.SPLINE_SPLIT_COUNT + 2;
 
 		ByteBuffer bBuffer = ByteBuffer
 				.allocateDirect(4 * 4 * mSplineVertexCount);
@@ -68,8 +68,8 @@ public final class OrnamentPlants {
 			mSplines.clear();
 			mFlowers.clear();
 			mPlants[i].getRenderElements(mSplines, mFlowers, renderTime);
-			renderSplines(mSplines, OrnamentConstants.PLANT_COLORS[i], offset);
-			renderFlowers(mFlowers, OrnamentConstants.PLANT_COLORS[i], offset);
+			renderSplines(mSplines, FlowerConstants.PLANT_COLORS[i], offset);
+			renderFlowers(mFlowers, FlowerConstants.PLANT_COLORS[i], offset);
 		}
 
 		GLES20.glDisable(GLES20.GL_BLEND);
@@ -310,13 +310,13 @@ public final class OrnamentPlants {
 			PointF dir = mDirections[(8 + startDir + rotateDir) % 8];
 			PointF normal = mDirections[(8 + startDir - rotateDir) % 8];
 			Spline spline = branch.getNextSpline();
-			spline.mWidthStart = OrnamentConstants.SPLINE_BRANCH_WIDTH;
+			spline.mWidthStart = FlowerConstants.SPLINE_BRANCH_WIDTH;
 			spline.mWidthEnd = 0f;
 			genArc(spline, p, dir, len, normal, normalLen, len - normalLen,
 					false);
 			p.offset(dir.x * len, dir.y * len);
 
-			int rand = OrnamentUtils.randI(0, 3);
+			int rand = FlowerUtils.randI(0, 3);
 			if (rand == 0) {
 				Flower flower = branch.getNextFlower();
 				flower.mPosition.set(p);
@@ -325,11 +325,11 @@ public final class OrnamentPlants {
 				flower.mRotationCos = (float) Math.cos(rotation);
 			}
 			if (rand > 0) {
-				spline.mWidthEnd = OrnamentConstants.SPLINE_BRANCH_WIDTH / 2;
+				spline.mWidthEnd = FlowerConstants.SPLINE_BRANCH_WIDTH / 2;
 				dir = mDirections[(8 + startDir + 3 * rotateDir) % 8];
 				normal = mDirections[(8 + startDir + rotateDir) % 8];
 				spline = branch.getNextSpline();
-				spline.mWidthStart = OrnamentConstants.SPLINE_BRANCH_WIDTH / 2;
+				spline.mWidthStart = FlowerConstants.SPLINE_BRANCH_WIDTH / 2;
 				spline.mWidthEnd = 0f;
 				genArc(spline, p, dir, len, normal, normalLen, len - normalLen,
 						false);
@@ -345,7 +345,7 @@ public final class OrnamentPlants {
 				dir = mDirections[(8 + startDir) % 8];
 				normal = mDirections[(8 + startDir + 2 * rotateDir) % 8];
 				spline = branch.getNextSpline();
-				spline.mWidthStart = OrnamentConstants.SPLINE_BRANCH_WIDTH / 2;
+				spline.mWidthStart = FlowerConstants.SPLINE_BRANCH_WIDTH / 2;
 				spline.mWidthEnd = 0f;
 				genArc(spline, p, dir, len * .5f, normal, normalLen * .5f,
 						(len - normalLen) * .5f, false);
@@ -391,14 +391,14 @@ public final class OrnamentPlants {
 			if (mRootElementCount == 0) {
 				RootElement element = mRootElements.get(mRootElementCount++);
 				element.mStartTime = time;
-				element.mDuration = OrnamentUtils.randI(500, 2000);
+				element.mDuration = FlowerUtils.randI(500, 2000);
 				element.mRootSplineCount = 0;
 
-				OrnamentUtils.rand(mCurrentPosition, -.5f, -.5f, .5f, .5f);
+				FlowerUtils.rand(mCurrentPosition, -.5f, -.5f, .5f, .5f);
 				mCurrentPosition.offset(offset.x, offset.y);
 
-				float randLen = OrnamentUtils.randF(.5f, .8f);
-				mCurrentDirIndex = OrnamentUtils.randI(0, 8);
+				float randLen = FlowerUtils.randF(.5f, .8f);
+				mCurrentDirIndex = FlowerUtils.randI(0, 8);
 				PointF dir = mDirections[mCurrentDirIndex];
 				Spline spline = element.getNextSpline();
 				genLine(spline, mCurrentPosition, dir, randLen);
@@ -417,19 +417,19 @@ public final class OrnamentPlants {
 						element = mRootElements.get(mRootElementCount++);
 					}
 					element.mStartTime = additionTime;
-					element.mDuration = OrnamentUtils.randI(500, 2000);
+					element.mDuration = FlowerUtils.randI(500, 2000);
 					element.mRootSplineCount = 0;
 
 					PointF targetPos = new PointF();
-					OrnamentUtils.rand(targetPos, -.5f, -.5f, .5f, .5f);
+					FlowerUtils.rand(targetPos, -.5f, -.5f, .5f, .5f);
 					targetPos.offset(offset.x, offset.y);
 
-					float minDist = OrnamentUtils.dist(mCurrentPosition,
+					float minDist = FlowerUtils.dist(mCurrentPosition,
 							mDirections[mCurrentDirIndex], targetPos);
 					int minDirIndex = mCurrentDirIndex;
 					for (int i = 1; i < 8; ++i) {
 						PointF dir = mDirections[(mCurrentDirIndex + i) % 8];
-						float dist = OrnamentUtils.dist(mCurrentPosition, dir,
+						float dist = FlowerUtils.dist(mCurrentPosition, dir,
 								targetPos);
 						if (dist < minDist) {
 							minDist = dist;
@@ -437,10 +437,9 @@ public final class OrnamentPlants {
 						}
 					}
 
-					float randLen = OrnamentUtils.randF(.3f, .5f);
-					randLen = Math
-							.max(randLen, OrnamentUtils.dist(mCurrentPosition,
-									targetPos) / 2f);
+					float randLen = FlowerUtils.randF(.3f, .5f);
+					randLen = Math.max(randLen,
+							FlowerUtils.dist(mCurrentPosition, targetPos) / 2f);
 					// 2 * (sqrt(2) - 1) / 3
 					float normalLen = 0.27614237f * randLen;
 
@@ -457,9 +456,9 @@ public final class OrnamentPlants {
 							mCurrentPosition.offset(dir.x * randLen, dir.y
 									* randLen);
 
-							if (OrnamentUtils.randI(0, 3) == 0) {
+							if (FlowerUtils.randI(0, 3) == 0) {
 								Branch b = element.getCurrentBranch();
-								int branchDir = OrnamentUtils.randI(0, 2) == 0 ? -k
+								int branchDir = FlowerUtils.randI(0, 2) == 0 ? -k
 										: k;
 								genBranch(b, mCurrentPosition, i + k,
 										branchDir, randLen * .7f,
@@ -475,7 +474,7 @@ public final class OrnamentPlants {
 								* randLen);
 
 						Branch b = element.getCurrentBranch();
-						int branchDir = OrnamentUtils.randI(0, 2) == 0 ? -1 : 1;
+						int branchDir = FlowerUtils.randI(0, 2) == 0 ? -1 : 1;
 						genBranch(b, mCurrentPosition, mCurrentDirIndex,
 								branchDir, randLen * .7f, normalLen * .7f);
 					}
@@ -498,7 +497,7 @@ public final class OrnamentPlants {
 		public RootElement() {
 			for (int i = 0; i < 5; ++i) {
 				Spline spline = new Spline();
-				spline.mWidthStart = spline.mWidthEnd = OrnamentConstants.SPLINE_ROOT_WIDTH;
+				spline.mWidthStart = spline.mWidthEnd = FlowerConstants.SPLINE_ROOT_WIDTH;
 				mRootSplines[i] = spline;
 				mBranches[i] = new Branch();
 			}
