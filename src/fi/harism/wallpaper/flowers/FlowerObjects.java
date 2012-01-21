@@ -95,7 +95,7 @@ public final class FlowerObjects {
 		mFlowerFbo.init(64, 64, 1);
 		mFlowerFbo.bind();
 		mFlowerFbo.bindTexture(0);
-		GLES20.glClearColor(.1f, 0f, 0f, 0f);
+		GLES20.glClearColor(0f, 0f, 0f, 0f);
 		GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
 		ByteBuffer bBuffer = ByteBuffer.allocateDirect(6 * 2 * 4);
@@ -119,17 +119,25 @@ public final class FlowerObjects {
 				fBuffer);
 		GLES20.glEnableVertexAttribArray(aPosition);
 
-		GLES20.glUniform4f(uColor, .5f, 0, 0, 0);
+		GLES20.glUniform4f(uColor, .8f, 0, 0, 0);
 		GLES20.glUniform1f(uPointSize, 36);
 		GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
 		GLES20.glUniform1f(uPointSize, 24);
 		GLES20.glDrawArrays(GLES20.GL_POINTS, 1, 6);
 
 		GLES20.glUniform4f(uColor, 1f, 0, 0, 0);
-		GLES20.glUniform1f(uPointSize, 32);
+		GLES20.glUniform1f(uPointSize, 30);
 		GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
-		GLES20.glUniform1f(uPointSize, 20);
+		GLES20.glUniform1f(uPointSize, 18);
 		GLES20.glDrawArrays(GLES20.GL_POINTS, 1, 6);
+		
+		GLES20.glUniform4f(uColor, .8f, 0, 0, 0);
+		GLES20.glUniform1f(uPointSize, 24);
+		GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
+		
+		GLES20.glUniform4f(uColor, 0, 0, 0, 0);
+		GLES20.glUniform1f(uPointSize, 18);
+		GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
 	}
 
 	public void onSurfaceCreated(Context context) {

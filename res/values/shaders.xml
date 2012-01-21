@@ -81,7 +81,7 @@
             gl_FragColor = uColor;
             float a = abs(vLineCoord.y);
             if (a > 0.6) {
-                gl_FragColor.a *= 0.5;
+                gl_FragColor *= 0.8;
             }
         }
     </string>
@@ -105,8 +105,7 @@
         uniform vec4 uColor;
         varying vec2 vTextureCoord;
         void main() {
-            gl_FragColor = uColor;
-            gl_FragColor.a *= texture2D(sTexture, vTextureCoord).r;
+            gl_FragColor = uColor * texture2D(sTexture, vTextureCoord).r;
         }
     </string>
     <string name="shader_point_vs">
