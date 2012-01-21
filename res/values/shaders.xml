@@ -87,21 +87,26 @@
     </string>
     
     <string name="shader_texture_vs">
+        uniform vec2 uAspectRatio;
         uniform vec2 uOffset;
+        uniform vec2 uRotation;
         uniform float uScale;
         attribute vec2 aPosition;
         varying vec2 vTextureCoord;
         void main() {
-            gl_Position = vec4(aPosition * uScale + uOffset, 0.0, 1.0);
+            vec2 pos = vec2(aPosition.x * uRotation.y - aPosition.y * uRotation.x,
+                            aPosition.x * uRotation.x + aPosition.y * uRotation.y);
+            gl_Position = vec4(pos * uAspectRatio * uScale + uOffset, 0.0, 1.0);
             vTextureCoord = (aPosition.xy + 1.0) * 0.5;
         }
     </string>
     <string name="shader_texture_fs">
         precision mediump float;
         uniform sampler2D sTexture;
+        uniform vec4 uColor;
         varying vec2 vTextureCoord;
         void main() {
-            gl_FragColor = vec4(0.5);
+            gl_FragColor = uColor;
         }
     </string>    
 </resources>

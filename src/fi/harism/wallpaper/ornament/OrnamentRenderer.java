@@ -36,7 +36,7 @@ public final class OrnamentRenderer implements GLSurfaceView.Renderer {
 	public OrnamentRenderer(Context context) {
 		mContext = context;
 
-		// Create screen coordinates float buffer.
+		// Create screen coordinates buffer.
 		final byte SCREEN_COORDS[] = { -1, 1, -1, -1, 1, 1, 1, -1 };
 		mScreenVertices = ByteBuffer.allocateDirect(2 * 4);
 		mScreenVertices.put(SCREEN_COORDS).position(0);

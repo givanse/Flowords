@@ -14,15 +14,18 @@ public final class OrnamentPlants {
 
 	private static final float[] DIRECTIONS = { 0, 1, 1, 1, 1, 0, 1, -1, 0, -1,
 			-1, -1, -1, 0, -1, 1 };
+	private final PointF mAspectRatio = new PointF();
 	private FloatBuffer mBufferSpline;
 
+	private ByteBuffer mBufferTexture;
 	private final PointF[] mDirections = new PointF[8];
+
+	private final Vector<Flower> mFlowers = new Vector<Flower>();
 	private final Plant[] mPlants = new Plant[OrnamentConstants.PLANT_COUNT];
-
-	private OrnamentShader mShaderSpline = new OrnamentShader();
-	private Vector<Spline> mSplines = new Vector<Spline>();
+	private final OrnamentShader mShaderSpline = new OrnamentShader();
+	private final OrnamentShader mShaderTexture = new OrnamentShader();
+	private final Vector<Spline> mSplines = new Vector<Spline>();
 	private int mSplineVertexCount;
-
 	private int mWidth, mHeight;
 
 	public OrnamentPlants() {
@@ -38,6 +41,10 @@ public final class OrnamentPlants {
 		}
 		mBufferSpline.position(0);
 
+		final byte TEXTURE_VERTICES[] = { -1, 1, -1, -1, 1, 1, 1, -1 };
+		mBufferTexture = ByteBuffer.allocateDirect(2 * 4);
+		mBufferTexture.put(TEXTURE_VERTICES).position(0);
+
 		for (int i = 0; i < mDirections.length; ++i) {
 			mDirections[i] = new PointF();
 		}
@@ -51,35 +58,71 @@ public final class OrnamentPlants {
 		for (Plant plant : mPlants) {
 			plant.update(renderTime, offset);
 		}
+
+		GLES20.glEnable(GLES20.GL_BLEND);
+		GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+
 		for (int i = 0; i < mPlants.length; ++i) {
 			mSplines.clear();
-			mPlants[i].getSplines(mSplines, renderTime);
+			mFlowers.clear();
+			mPlants[i].getRenderElements(mSplines, mFlowers, renderTime);
 			renderSplines(mSplines, OrnamentConstants.PLANT_COLORS[i], offset);
+			renderFlowers(mFlowers, OrnamentConstants.PLANT_COLORS[i], offset);
 		}
+
+		GLES20.glDisable(GLES20.GL_BLEND);
 	}
 
 	public void onSurfaceChanged(int width, int height) {
 		mWidth = width;
 		mHeight = height;
 
-		float aspectX = (float) Math.min(mWidth, mHeight) / mWidth;
-		float aspectY = (float) Math.min(mWidth, mHeight) / mHeight;
+		mAspectRatio.x = (float) Math.min(mWidth, mHeight) / mWidth;
+		mAspectRatio.y = (float) Math.min(mWidth, mHeight) / mHeight;
 		for (int i = 0; i < 8; ++i) {
 			PointF dir = mDirections[i];
 			dir.set(DIRECTIONS[i * 2 + 0], DIRECTIONS[i * 2 + 1]);
-			float len = dir.length();
-			dir.x /= len;
-			dir.y /= len;
-			dir.x *= aspectX;
-			dir.y *= aspectY;
+			float lenInv = 1f / dir.length();
+			dir.x *= mAspectRatio.x * lenInv;
+			dir.y *= mAspectRatio.y * lenInv;
 		}
 	}
 
 	public void onSurfaceCreated(Context context) {
 		mShaderSpline.setProgram(context.getString(R.string.shader_spline_vs),
 				context.getString(R.string.shader_spline_fs));
+		mShaderTexture.setProgram(
+				context.getString(R.string.shader_texture_vs),
+				context.getString(R.string.shader_texture_fs));
 		for (int i = 0; i < mPlants.length; ++i) {
 			mPlants[i].mRootElementCount = 0;
+		}
+	}
+
+	private void renderFlowers(Vector<Flower> flowers, float[] color,
+			PointF offset) {
+		mShaderTexture.useProgram();
+
+		int uAspectRatio = mShaderTexture.getHandle("uAspectRatio");
+		int uOffset = mShaderTexture.getHandle("uOffset");
+		int uScale = mShaderTexture.getHandle("uScale");
+		int uRotation = mShaderTexture.getHandle("uRotation");
+		int uColor = mShaderTexture.getHandle("uColor");
+		int aPosition = mShaderTexture.getHandle("aPosition");
+
+		GLES20.glUniform2f(uAspectRatio, mAspectRatio.x, mAspectRatio.y);
+		GLES20.glUniform4fv(uColor, 1, color, 0);
+		GLES20.glVertexAttribPointer(aPosition, 2, GLES20.GL_BYTE, false, 0,
+				mBufferTexture);
+		GLES20.glEnableVertexAttribArray(aPosition);
+
+		for (Flower flower : flowers) {
+			GLES20.glUniform2f(uOffset, flower.mPosition.x - offset.x,
+					flower.mPosition.y - offset.y);
+			GLES20.glUniform2f(uRotation, flower.mRotationSin,
+					flower.mRotationCos);
+			GLES20.glUniform1f(uScale, flower.mScale);
+			GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 		}
 	}
 
@@ -96,16 +139,11 @@ public final class OrnamentPlants {
 		int uAspectRatio = mShaderSpline.getHandle("uAspectRatio");
 		int aSplinePos = mShaderSpline.getHandle("aSplinePos");
 
-		float aspectX = (float) Math.max(mWidth, mHeight) / mWidth;
-		float aspectY = (float) Math.max(mWidth, mHeight) / mHeight;
-		GLES20.glUniform2f(uAspectRatio, aspectX, aspectY);
+		GLES20.glUniform2f(uAspectRatio, mAspectRatio.x, mAspectRatio.y);
 		GLES20.glUniform4fv(uColor, 1, color, 0);
 		GLES20.glVertexAttribPointer(aSplinePos, 2, GLES20.GL_FLOAT, false, 0,
 				mBufferSpline);
 		GLES20.glEnableVertexAttribArray(aSplinePos);
-
-		GLES20.glEnable(GLES20.GL_BLEND);
-		GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 
 		final int[] controlIds = { uControl0, uControl1, uControl2, uControl3 };
 
@@ -130,25 +168,33 @@ public final class OrnamentPlants {
 						- startIdx);
 			}
 		}
-
-		GLES20.glDisable(GLES20.GL_BLEND);
 	}
 
 	private final class Branch {
-		private int mBranchSplineCount;
+		public int mBranchSplineCount;
 		private final Spline[] mBranchSplines = new Spline[3];
+		public int mFlowerCount;
+		private final Flower[] mFlowers = new Flower[2];
 
 		public Branch() {
 			for (int i = 0; i < mBranchSplines.length; ++i) {
 				mBranchSplines[i] = new Spline();
 			}
+			for (int i = 0; i < mFlowers.length; ++i) {
+				mFlowers[i] = new Flower();
+			}
+		}
+
+		public Flower getNextFlower() {
+			return mFlowers[mFlowerCount++];
 		}
 
 		public Spline getNextSpline() {
 			return mBranchSplines[mBranchSplineCount++];
 		}
 
-		public void getSplines(Vector<Spline> splines, float t) {
+		public void getRenderElements(Vector<Spline> splines,
+				Vector<Flower> flowers, float t) {
 			for (int i = 0; i < mBranchSplineCount; ++i) {
 				Spline spline = mBranchSplines[i];
 				spline.mEndT = 1f;
@@ -162,12 +208,18 @@ public final class OrnamentPlants {
 				}
 				splines.add(spline);
 			}
+			for (int i = 0; i < mFlowerCount; ++i) {
+				Flower flower = mFlowers[i];
+				flower.mScale = Math.max((t - .5f) * 2, 0f);
+				flower.mScale *= .08f;
+				flowers.add(flower);
+			}
 		}
-
 	}
 
 	private final class Flower {
 		public final PointF mPosition = new PointF();
+		public float mRotationSin, mRotationCos;
 		public float mScale;
 	}
 
@@ -216,6 +268,13 @@ public final class OrnamentPlants {
 			p.offset(dir.x * len, dir.y * len);
 
 			int rand = OrnamentUtils.randI(0, 3);
+			if (rand == 0) {
+				Flower flower = branch.getNextFlower();
+				flower.mPosition.set(p);
+				double rotation = Math.PI * 2 * startDir / 8;
+				flower.mRotationSin = (float) Math.sin(rotation);
+				flower.mRotationCos = (float) Math.cos(rotation);
+			}
 			if (rand > 0) {
 				spline.mWidthEnd = OrnamentConstants.SPLINE_BRANCH_WIDTH / 2;
 				dir = mDirections[(8 + startDir + 3 * rotateDir) % 8];
@@ -225,6 +284,13 @@ public final class OrnamentPlants {
 				spline.mWidthEnd = 0f;
 				genArc(spline, p, dir, len, normal, normalLen, len - normalLen,
 						false);
+
+				Flower flower = branch.getNextFlower();
+				flower.mPosition.set(p);
+				flower.mPosition.offset(dir.x * len, dir.y * len);
+				double rotation = Math.PI * 2 * startDir / 8;
+				flower.mRotationSin = (float) Math.sin(rotation);
+				flower.mRotationCos = (float) Math.cos(rotation);
 			}
 			if (rand > 1) {
 				dir = mDirections[(8 + startDir) % 8];
@@ -234,6 +300,13 @@ public final class OrnamentPlants {
 				spline.mWidthEnd = 0f;
 				genArc(spline, p, dir, len * .5f, normal, normalLen * .5f,
 						(len - normalLen) * .5f, false);
+
+				Flower flower = branch.getNextFlower();
+				flower.mPosition.set(p);
+				flower.mPosition.offset(dir.x * len * .5f, dir.y * len * .5f);
+				double rotation = Math.PI * 2 * ((startDir + 1) % 8) / 8;
+				flower.mRotationSin = (float) Math.sin(rotation);
+				flower.mRotationCos = (float) Math.cos(rotation);
 			}
 		}
 
@@ -248,21 +321,21 @@ public final class OrnamentPlants {
 			}
 		}
 
-		public void getSplines(Vector<Spline> splines, long time) {
+		public void getRenderElements(Vector<Spline> splines,
+				Vector<Flower> flowers, long time) {
 			RootElement lastElement = mRootElements.get(mRootElementCount - 1);
 			float t = (float) (time - lastElement.mStartTime)
 					/ lastElement.mDuration;
 			for (int i = 0; i < mRootElementCount; ++i) {
 				RootElement element = mRootElements.get(i);
 				if (i == mRootElementCount - 1) {
-					element.getSplines(splines, 0f, t);
+					element.getRenderElements(splines, flowers, 0f, t);
 				} else if (i == 0 && mRootElementCount == mRootElements.size()) {
-					element.getSplines(splines, t, 1f);
+					element.getRenderElements(splines, flowers, t, 1f);
 				} else {
-					element.getSplines(splines, 0f, 1f);
+					element.getRenderElements(splines, flowers, 0f, 1f);
 				}
 			}
-
 		}
 
 		public void update(long time, PointF offset) {
@@ -272,7 +345,7 @@ public final class OrnamentPlants {
 				element.mDuration = OrnamentUtils.randI(500, 2000);
 				element.mRootSplineCount = 0;
 
-				OrnamentUtils.rand(mCurrentPosition, -.7f, -.7f, .7f, .7f);
+				OrnamentUtils.rand(mCurrentPosition, -.5f, -.5f, .5f, .5f);
 				mCurrentPosition.offset(offset.x, offset.y);
 
 				float randLen = OrnamentUtils.randF(.5f, .8f);
@@ -299,7 +372,7 @@ public final class OrnamentPlants {
 					element.mRootSplineCount = 0;
 
 					PointF targetPos = new PointF();
-					OrnamentUtils.rand(targetPos, -.7f, -.7f, .7f, .7f);
+					OrnamentUtils.rand(targetPos, -.5f, -.5f, .5f, .5f);
 					targetPos.offset(offset.x, offset.y);
 
 					float minDist = OrnamentUtils.dist(mCurrentPosition,
@@ -388,10 +461,12 @@ public final class OrnamentPlants {
 
 		public Spline getNextSpline() {
 			mBranches[mRootSplineCount].mBranchSplineCount = 0;
+			mBranches[mRootSplineCount].mFlowerCount = 0;
 			return mRootSplines[mRootSplineCount++];
 		}
 
-		public void getSplines(Vector<Spline> splines, float t1, float t2) {
+		public void getRenderElements(Vector<Spline> splines,
+				Vector<Flower> flowers, float t1, float t2) {
 			for (int i = 0; i < mRootSplineCount; ++i) {
 				float startT = (float) i / mRootSplineCount;
 				float endT = (float) (i + 1) / mRootSplineCount;
@@ -400,22 +475,22 @@ public final class OrnamentPlants {
 					spline.mStartT = 0f;
 					spline.mEndT = 1f;
 					splines.add(spline);
-					mBranches[i].getSplines(splines, 1f);
+					mBranches[i].getRenderElements(splines, flowers, 1f);
 				} else if (startT < t1 && endT > t1) {
 					spline.mStartT = (t1 - startT) / (endT - startT);
 					spline.mEndT = 1f;
 					splines.add(spline);
-					mBranches[i].getSplines(splines, 1f - spline.mStartT);
+					mBranches[i].getRenderElements(splines, flowers,
+							1f - spline.mStartT);
 				} else if (startT < t2 && endT > t2) {
 					spline.mStartT = 0f;
 					spline.mEndT = (t2 - startT) / (endT - startT);
 					splines.add(spline);
-					mBranches[i].getSplines(splines, spline.mEndT
-							* spline.mEndT);
+					mBranches[i].getRenderElements(splines, flowers,
+							spline.mEndT);
 				}
 			}
 		}
-
 	}
 
 	private final class Spline {
