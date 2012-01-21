@@ -20,13 +20,13 @@ public final class FlowerObjects {
 	private ByteBuffer mBufferTexture;
 	private final PointF[] mDirections = new PointF[8];
 
+	private final Vector<StructFlower> mFlowerContainer = new Vector<StructFlower>();
 	private final FlowerFbo mFlowerFbo = new FlowerFbo();
-	private final Vector<Flower> mFlowers = new Vector<Flower>();
-	private final Plant[] mPlants = new Plant[FlowerConstants.PLANT_COUNT];
+	private final ElementPlant[] mPlants = new ElementPlant[FlowerConstants.PLANT_COUNT];
 	private final FlowerShader mShaderPoint = new FlowerShader();
 	private final FlowerShader mShaderSpline = new FlowerShader();
 	private final FlowerShader mShaderTexture = new FlowerShader();
-	private final Vector<Spline> mSplines = new Vector<Spline>();
+	private final Vector<StructSpline> mSplineContainer = new Vector<StructSpline>();
 	private int mSplineVertexCount;
 	private int mWidth, mHeight;
 
@@ -51,13 +51,13 @@ public final class FlowerObjects {
 			mDirections[i] = new PointF();
 		}
 		for (int i = 0; i < mPlants.length; ++i) {
-			mPlants[i] = new Plant();
+			mPlants[i] = new ElementPlant();
 		}
 	}
 
 	public void onDrawFrame(PointF offset) {
 		long renderTime = SystemClock.uptimeMillis();
-		for (Plant plant : mPlants) {
+		for (ElementPlant plant : mPlants) {
 			plant.update(renderTime, offset);
 		}
 
@@ -65,11 +65,14 @@ public final class FlowerObjects {
 		GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 
 		for (int i = 0; i < mPlants.length; ++i) {
-			mSplines.clear();
-			mFlowers.clear();
-			mPlants[i].getRenderElements(mSplines, mFlowers, renderTime);
-			renderSplines(mSplines, FlowerConstants.PLANT_COLORS[i], offset);
-			renderFlowers(mFlowers, FlowerConstants.PLANT_COLORS[i], offset);
+			mSplineContainer.clear();
+			mFlowerContainer.clear();
+			mPlants[i].getRenderElements(mSplineContainer, mFlowerContainer,
+					renderTime);
+			renderSplines(mSplineContainer, FlowerConstants.PLANT_COLORS[i],
+					offset);
+			renderFlowers(mFlowerContainer, FlowerConstants.PLANT_COLORS[i],
+					offset);
 		}
 
 		GLES20.glDisable(GLES20.GL_BLEND);
@@ -145,7 +148,7 @@ public final class FlowerObjects {
 		}
 	}
 
-	private void renderFlowers(Vector<Flower> flowers, float[] color,
+	private void renderFlowers(Vector<StructFlower> flowers, float[] color,
 			PointF offset) {
 
 		mShaderTexture.useProgram();
@@ -165,7 +168,7 @@ public final class FlowerObjects {
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
 		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mFlowerFbo.getTexture(0));
 
-		for (Flower flower : flowers) {
+		for (StructFlower flower : flowers) {
 			GLES20.glUniform2f(uOffset, flower.mPosition.x - offset.x,
 					flower.mPosition.y - offset.y);
 			GLES20.glUniform2f(uRotation, flower.mRotationSin,
@@ -175,7 +178,7 @@ public final class FlowerObjects {
 		}
 	}
 
-	public void renderSplines(Vector<Spline> splines, float[] color,
+	public void renderSplines(Vector<StructSpline> splines, float[] color,
 			PointF offset) {
 		mShaderSpline.useProgram();
 		int uControl0 = mShaderSpline.getHandle("uControl0");
@@ -196,7 +199,7 @@ public final class FlowerObjects {
 
 		final int[] controlIds = { uControl0, uControl1, uControl2, uControl3 };
 
-		for (Spline spline : splines) {
+		for (StructSpline spline : splines) {
 			int visiblePointCount = 0;
 			for (int i = 0; i < 4; ++i) {
 				float x = spline.mPoints[i].x - offset.x;
@@ -219,33 +222,33 @@ public final class FlowerObjects {
 		}
 	}
 
-	private final class Branch {
+	private final class ElementBranch {
 		public int mBranchSplineCount;
-		private final Spline[] mBranchSplines = new Spline[3];
+		private final StructSpline[] mBranchSplines = new StructSpline[3];
 		public int mFlowerCount;
-		private final Flower[] mFlowers = new Flower[2];
+		private final StructFlower[] mFlowers = new StructFlower[2];
 
-		public Branch() {
+		public ElementBranch() {
 			for (int i = 0; i < mBranchSplines.length; ++i) {
-				mBranchSplines[i] = new Spline();
+				mBranchSplines[i] = new StructSpline();
 			}
 			for (int i = 0; i < mFlowers.length; ++i) {
-				mFlowers[i] = new Flower();
+				mFlowers[i] = new StructFlower();
 			}
 		}
 
-		public Flower getNextFlower() {
+		public StructFlower getNextFlower() {
 			return mFlowers[mFlowerCount++];
 		}
 
-		public Spline getNextSpline() {
+		public StructSpline getNextSpline() {
 			return mBranchSplines[mBranchSplineCount++];
 		}
 
-		public void getRenderElements(Vector<Spline> splines,
-				Vector<Flower> flowers, float t) {
+		public void getRenderElements(Vector<StructSpline> splines,
+				Vector<StructFlower> flowers, float t) {
 			for (int i = 0; i < mBranchSplineCount; ++i) {
-				Spline spline = mBranchSplines[i];
+				StructSpline spline = mBranchSplines[i];
 				spline.mEndT = 1f;
 				switch (i) {
 				case 0:
@@ -258,7 +261,7 @@ public final class FlowerObjects {
 				splines.add(spline);
 			}
 			for (int i = 0; i < mFlowerCount; ++i) {
-				Flower flower = mFlowers[i];
+				StructFlower flower = mFlowers[i];
 				flower.mScale = Math.max((t - .5f) * 2, 0f);
 				flower.mScale *= .1f;
 				flowers.add(flower);
@@ -266,26 +269,20 @@ public final class FlowerObjects {
 		}
 	}
 
-	private final class Flower {
-		public final PointF mPosition = new PointF();
-		public float mRotationSin, mRotationCos;
-		public float mScale;
-	}
-
-	private final class Plant {
+	private final class ElementPlant {
 
 		private int mCurrentDirIndex;
 		private final PointF mCurrentPosition = new PointF();
 		public int mRootElementCount;
-		private final Vector<RootElement> mRootElements = new Vector<RootElement>();
+		private final Vector<ElementRoot> mRootElements = new Vector<ElementRoot>();
 
-		public Plant() {
+		public ElementPlant() {
 			for (int i = 0; i < 6; ++i) {
-				mRootElements.add(new RootElement());
+				mRootElements.add(new ElementRoot());
 			}
 		}
 
-		public void genArc(Spline spline, PointF start, PointF dir,
+		public void genArc(StructSpline spline, PointF start, PointF dir,
 				float length, PointF normal, float normalPos1,
 				float normalPos2, boolean flatEnd) {
 
@@ -302,14 +299,14 @@ public final class FlowerObjects {
 			spline.mPoints[3].offset(dir.x * length, dir.y * length);
 		}
 
-		private void genBranch(Branch branch, PointF pos, int startDir,
+		private void genBranch(ElementBranch branch, PointF pos, int startDir,
 				int rotateDir, float len, float normalLen) {
 			PointF p = new PointF();
 			p.set(pos);
 
 			PointF dir = mDirections[(8 + startDir + rotateDir) % 8];
 			PointF normal = mDirections[(8 + startDir - rotateDir) % 8];
-			Spline spline = branch.getNextSpline();
+			StructSpline spline = branch.getNextSpline();
 			spline.mWidthStart = FlowerConstants.SPLINE_BRANCH_WIDTH;
 			spline.mWidthEnd = 0f;
 			genArc(spline, p, dir, len, normal, normalLen, len - normalLen,
@@ -318,7 +315,7 @@ public final class FlowerObjects {
 
 			int rand = FlowerUtils.randI(0, 3);
 			if (rand == 0) {
-				Flower flower = branch.getNextFlower();
+				StructFlower flower = branch.getNextFlower();
 				flower.mPosition.set(p);
 				double rotation = Math.PI * 2 * startDir / 8;
 				flower.mRotationSin = (float) Math.sin(rotation);
@@ -334,7 +331,7 @@ public final class FlowerObjects {
 				genArc(spline, p, dir, len, normal, normalLen, len - normalLen,
 						false);
 
-				Flower flower = branch.getNextFlower();
+				StructFlower flower = branch.getNextFlower();
 				flower.mPosition.set(p);
 				flower.mPosition.offset(dir.x * len, dir.y * len);
 				double rotation = Math.PI * 2 * startDir / 8;
@@ -350,7 +347,7 @@ public final class FlowerObjects {
 				genArc(spline, p, dir, len * .5f, normal, normalLen * .5f,
 						(len - normalLen) * .5f, false);
 
-				Flower flower = branch.getNextFlower();
+				StructFlower flower = branch.getNextFlower();
 				flower.mPosition.set(p);
 				flower.mPosition.offset(dir.x * len * .5f, dir.y * len * .5f);
 				double rotation = Math.PI * 2 * ((startDir + 1) % 8) / 8;
@@ -359,7 +356,7 @@ public final class FlowerObjects {
 			}
 		}
 
-		public void genLine(Spline spline, PointF start, PointF dir,
+		public void genLine(StructSpline spline, PointF start, PointF dir,
 				float length) {
 
 			for (int i = 0; i < 4; ++i) {
@@ -370,13 +367,13 @@ public final class FlowerObjects {
 			}
 		}
 
-		public void getRenderElements(Vector<Spline> splines,
-				Vector<Flower> flowers, long time) {
-			RootElement lastElement = mRootElements.get(mRootElementCount - 1);
+		public void getRenderElements(Vector<StructSpline> splines,
+				Vector<StructFlower> flowers, long time) {
+			ElementRoot lastElement = mRootElements.get(mRootElementCount - 1);
 			float t = (float) (time - lastElement.mStartTime)
 					/ lastElement.mDuration;
 			for (int i = 0; i < mRootElementCount; ++i) {
-				RootElement element = mRootElements.get(i);
+				ElementRoot element = mRootElements.get(i);
 				if (i == mRootElementCount - 1) {
 					element.getRenderElements(splines, flowers, 0f, t);
 				} else if (i == 0 && mRootElementCount == mRootElements.size()) {
@@ -389,7 +386,7 @@ public final class FlowerObjects {
 
 		public void update(long time, PointF offset) {
 			if (mRootElementCount == 0) {
-				RootElement element = mRootElements.get(mRootElementCount++);
+				ElementRoot element = mRootElements.get(mRootElementCount++);
 				element.mStartTime = time;
 				element.mDuration = FlowerUtils.randI(500, 2000);
 				element.mRootSplineCount = 0;
@@ -400,16 +397,16 @@ public final class FlowerObjects {
 				float randLen = FlowerUtils.randF(.5f, .8f);
 				mCurrentDirIndex = FlowerUtils.randI(0, 8);
 				PointF dir = mDirections[mCurrentDirIndex];
-				Spline spline = element.getNextSpline();
+				StructSpline spline = element.getNextSpline();
 				genLine(spline, mCurrentPosition, dir, randLen);
 				mCurrentPosition.offset(dir.x * randLen, dir.y * randLen);
 			} else {
-				RootElement lastElement = mRootElements
+				ElementRoot lastElement = mRootElements
 						.get(mRootElementCount - 1);
 				long additionTime = time;
 				while (time > lastElement.mStartTime + lastElement.mDuration) {
 
-					RootElement element;
+					ElementRoot element;
 					if (mRootElementCount >= mRootElements.size()) {
 						element = mRootElements.remove(0);
 						mRootElements.add(element);
@@ -449,34 +446,35 @@ public final class FlowerObjects {
 								* k; i += 2 * k) {
 							PointF dir = mDirections[i];
 							PointF normal = mDirections[(8 + i - 2 * k) % 8];
-							Spline spline = element.getNextSpline();
+							StructSpline spline = element.getNextSpline();
 							genArc(spline, mCurrentPosition, dir, randLen,
 									normal, normalLen, randLen - normalLen,
 									i == minDirIndex);
-							mCurrentPosition.offset(dir.x * randLen, dir.y
-									* randLen);
 
 							if (FlowerUtils.randI(0, 3) == 0) {
-								Branch b = element.getCurrentBranch();
+								ElementBranch b = element.getCurrentBranch();
 								int branchDir = FlowerUtils.randI(0, 2) == 0 ? -k
 										: k;
-								genBranch(b, mCurrentPosition, i + k,
-										branchDir, randLen * .7f,
-										normalLen * .7f);
+								genBranch(b, mCurrentPosition, i, branchDir,
+										randLen * .7f, normalLen * .7f);
 							}
+
+							mCurrentPosition.offset(dir.x * randLen, dir.y
+									* randLen);
 						}
 						mCurrentDirIndex = minDirIndex;
 					} else {
 						PointF dir = mDirections[mCurrentDirIndex];
-						Spline spline = element.getNextSpline();
+						StructSpline spline = element.getNextSpline();
 						genLine(spline, mCurrentPosition, dir, randLen);
-						mCurrentPosition.offset(dir.x * randLen, dir.y
-								* randLen);
 
-						Branch b = element.getCurrentBranch();
+						ElementBranch b = element.getCurrentBranch();
 						int branchDir = FlowerUtils.randI(0, 2) == 0 ? -1 : 1;
 						genBranch(b, mCurrentPosition, mCurrentDirIndex,
 								branchDir, randLen * .7f, normalLen * .7f);
+
+						mCurrentPosition.offset(dir.x * randLen, dir.y
+								* randLen);
 					}
 
 					lastElement = element;
@@ -487,38 +485,38 @@ public final class FlowerObjects {
 
 	}
 
-	private final class RootElement {
+	private final class ElementRoot {
 
-		private final Branch[] mBranches = new Branch[5];
+		private final ElementBranch[] mBranches = new ElementBranch[5];
 		public int mRootSplineCount;
-		private final Spline[] mRootSplines = new Spline[5];
+		private final StructSpline[] mRootSplines = new StructSpline[5];
 		public long mStartTime, mDuration;
 
-		public RootElement() {
+		public ElementRoot() {
 			for (int i = 0; i < 5; ++i) {
-				Spline spline = new Spline();
+				StructSpline spline = new StructSpline();
 				spline.mWidthStart = spline.mWidthEnd = FlowerConstants.SPLINE_ROOT_WIDTH;
 				mRootSplines[i] = spline;
-				mBranches[i] = new Branch();
+				mBranches[i] = new ElementBranch();
 			}
 		}
 
-		public Branch getCurrentBranch() {
+		public ElementBranch getCurrentBranch() {
 			return mBranches[mRootSplineCount - 1];
 		}
 
-		public Spline getNextSpline() {
+		public StructSpline getNextSpline() {
 			mBranches[mRootSplineCount].mBranchSplineCount = 0;
 			mBranches[mRootSplineCount].mFlowerCount = 0;
 			return mRootSplines[mRootSplineCount++];
 		}
 
-		public void getRenderElements(Vector<Spline> splines,
-				Vector<Flower> flowers, float t1, float t2) {
+		public void getRenderElements(Vector<StructSpline> splines,
+				Vector<StructFlower> flowers, float t1, float t2) {
 			for (int i = 0; i < mRootSplineCount; ++i) {
 				float startT = (float) i / mRootSplineCount;
 				float endT = (float) (i + 1) / mRootSplineCount;
-				Spline spline = mRootSplines[i];
+				StructSpline spline = mRootSplines[i];
 				if (startT >= t1 && endT <= t2) {
 					spline.mStartT = 0f;
 					spline.mEndT = 1f;
@@ -541,12 +539,18 @@ public final class FlowerObjects {
 		}
 	}
 
-	private final class Spline {
+	private final class StructFlower {
+		public final PointF mPosition = new PointF();
+		public float mRotationSin, mRotationCos;
+		public float mScale;
+	}
+
+	private final class StructSpline {
 		public final PointF mPoints[] = new PointF[4];
 		public float mStartT = 0f, mEndT = 1f;
 		public float mWidthStart, mWidthEnd;
 
-		public Spline() {
+		public StructSpline() {
 			for (int i = 0; i < mPoints.length; ++i) {
 				mPoints[i] = new PointF();
 			}
