@@ -112,8 +112,8 @@ public final class OrnamentPlants {
 		for (Spline spline : splines) {
 			int visiblePointCount = 0;
 			for (int i = 0; i < 4; ++i) {
-				float x = spline.mCtrlPoints[i].x - offset.x;
-				float y = spline.mCtrlPoints[i].y - offset.y;
+				float x = spline.mPoints[i].x - offset.x;
+				float y = spline.mPoints[i].y - offset.y;
 				GLES20.glUniform2f(controlIds[i], x, y);
 				if (x > -1f && x < 1f && y > -1f && y < 1f) {
 					++visiblePointCount;
@@ -151,26 +151,24 @@ public final class OrnamentPlants {
 		public void getSplines(Vector<Spline> splines, float t) {
 			for (int i = 0; i < mBranchSplineCount; ++i) {
 				Spline spline = mBranchSplines[i];
+				spline.mEndT = 1f;
 				switch (i) {
 				case 0:
-					spline.mWidthStart = t
-							* OrnamentConstants.SPLINE_BRANCH_WIDTH;
-					if (mBranchSplineCount > 1) {
-						spline.mWidthEnd = spline.mWidthStart / 2;
-					} else {
-						spline.mWidthEnd = 0f;
-					}
+					spline.mStartT = 1f - Math.max((t - .5f) * 2, 0f);
 					break;
 				default:
-					spline.mWidthStart = t
-							* OrnamentConstants.SPLINE_BRANCH_WIDTH / 2;
-					spline.mWidthEnd = 0f;
+					spline.mStartT = 1f - Math.min(t * 2, 1f);
 					break;
 				}
 				splines.add(spline);
 			}
 		}
 
+	}
+
+	private final class Flower {
+		public final PointF mPosition = new PointF();
+		public float mScale;
 	}
 
 	private final class Plant {
@@ -190,23 +188,17 @@ public final class OrnamentPlants {
 				float length, PointF normal, float normalPos1,
 				float normalPos2, boolean flatEnd) {
 
-			spline.mCtrlPoints[0].set(start);
-
-			float Px = start.x + dir.x * normalPos1 + normal.x * normalPos1;
-			float Py = start.y + dir.y * normalPos1 + normal.y * normalPos1;
-			float Qx = start.x + dir.x * normalPos2;
-			float Qy = start.y + dir.y * normalPos2;
-
-			if (!flatEnd) {
-				Qx += normal.x * (length - normalPos2);
-				Qy += normal.y * (length - normalPos2);
+			for (PointF point : spline.mPoints) {
+				point.set(start);
 			}
-
-			spline.mCtrlPoints[1].set(Px, Py);
-			spline.mCtrlPoints[2].set(Qx, Qy);
-
-			spline.mCtrlPoints[3].set(start);
-			spline.mCtrlPoints[3].offset(dir.x * length, dir.y * length);
+			spline.mPoints[1].offset((dir.x + normal.x) * normalPos1,
+					(dir.y + normal.y) * normalPos1);
+			spline.mPoints[2].offset(dir.x * normalPos2, dir.y * normalPos2);
+			if (!flatEnd) {
+				spline.mPoints[2].offset(normal.x * (length - normalPos2),
+						normal.y * (length - normalPos2));
+			}
+			spline.mPoints[3].offset(dir.x * length, dir.y * length);
 		}
 
 		private void genBranch(Branch branch, PointF pos, int startDir,
@@ -217,15 +209,20 @@ public final class OrnamentPlants {
 			PointF dir = mDirections[(8 + startDir + rotateDir) % 8];
 			PointF normal = mDirections[(8 + startDir - rotateDir) % 8];
 			Spline spline = branch.getNextSpline();
+			spline.mWidthStart = OrnamentConstants.SPLINE_BRANCH_WIDTH;
+			spline.mWidthEnd = 0f;
 			genArc(spline, p, dir, len, normal, normalLen, len - normalLen,
 					false);
 			p.offset(dir.x * len, dir.y * len);
 
 			int rand = OrnamentUtils.randI(0, 3);
 			if (rand > 0) {
+				spline.mWidthEnd = OrnamentConstants.SPLINE_BRANCH_WIDTH / 2;
 				dir = mDirections[(8 + startDir + 3 * rotateDir) % 8];
 				normal = mDirections[(8 + startDir + rotateDir) % 8];
 				spline = branch.getNextSpline();
+				spline.mWidthStart = OrnamentConstants.SPLINE_BRANCH_WIDTH / 2;
+				spline.mWidthEnd = 0f;
 				genArc(spline, p, dir, len, normal, normalLen, len - normalLen,
 						false);
 			}
@@ -233,32 +230,22 @@ public final class OrnamentPlants {
 				dir = mDirections[(8 + startDir) % 8];
 				normal = mDirections[(8 + startDir + 2 * rotateDir) % 8];
 				spline = branch.getNextSpline();
+				spline.mWidthStart = OrnamentConstants.SPLINE_BRANCH_WIDTH / 2;
+				spline.mWidthEnd = 0f;
 				genArc(spline, p, dir, len * .5f, normal, normalLen * .5f,
 						(len - normalLen) * .5f, false);
 			}
 		}
 
 		public void genLine(Spline spline, PointF start, PointF dir,
-				float length, PointF normal, float startOffset, float endOffset) {
+				float length) {
 
-			spline.mCtrlPoints[0].set(start);
-			spline.mCtrlPoints[0].offset(normal.x * startOffset, normal.y
-					* startOffset);
-
-			spline.mCtrlPoints[1].set(start.x + dir.x * (length / 3f), start.y
-					+ dir.y * (length / 3f));
-			spline.mCtrlPoints[1].offset(normal.x * startOffset, normal.y
-					* startOffset);
-
-			spline.mCtrlPoints[2].set(start.x + dir.x * (2 * length / 3f),
-					start.y + dir.y * (2 * length / 3f));
-			spline.mCtrlPoints[2].offset(normal.x * endOffset, normal.y
-					* endOffset);
-
-			spline.mCtrlPoints[3].set(start.x + dir.x * length, start.y + dir.y
-					* length);
-			spline.mCtrlPoints[3].offset(normal.x * endOffset, normal.y
-					* endOffset);
+			for (int i = 0; i < 4; ++i) {
+				float t = (i * length) / 3;
+				PointF point = spline.mPoints[i];
+				point.set(start);
+				point.offset(dir.x * t, dir.y * t);
+			}
 		}
 
 		public void getSplines(Vector<Spline> splines, long time) {
@@ -291,9 +278,8 @@ public final class OrnamentPlants {
 				float randLen = OrnamentUtils.randF(.5f, .8f);
 				mCurrentDirIndex = OrnamentUtils.randI(0, 8);
 				PointF dir = mDirections[mCurrentDirIndex];
-				PointF normal = mDirections[(mCurrentDirIndex + 2) % 8];
 				Spline spline = element.getNextSpline();
-				genLine(spline, mCurrentPosition, dir, randLen, normal, .2f, 0f);
+				genLine(spline, mCurrentPosition, dir, randLen);
 				mCurrentPosition.offset(dir.x * randLen, dir.y * randLen);
 			} else {
 				RootElement lastElement = mRootElements
@@ -361,16 +347,8 @@ public final class OrnamentPlants {
 						mCurrentDirIndex = minDirIndex;
 					} else {
 						PointF dir = mDirections[mCurrentDirIndex];
-						PointF normal = mDirections[(mCurrentDirIndex + 2) % 8];
-						float lineOffset = OrnamentUtils.randF(-.1f, .1f);
 						Spline spline = element.getNextSpline();
-						genLine(spline, mCurrentPosition, dir, randLen, normal,
-								0f, lineOffset);
-						mCurrentPosition.offset(dir.x * randLen, dir.y
-								* randLen);
-						spline = element.getNextSpline();
-						genLine(spline, mCurrentPosition, dir, randLen, normal,
-								lineOffset, 0f);
+						genLine(spline, mCurrentPosition, dir, randLen);
 						mCurrentPosition.offset(dir.x * randLen, dir.y
 								* randLen);
 
@@ -441,10 +419,15 @@ public final class OrnamentPlants {
 	}
 
 	private final class Spline {
-		public final PointF mCtrlPoints[] = new PointF[] { new PointF(),
-				new PointF(), new PointF(), new PointF() };
+		public final PointF mPoints[] = new PointF[4];
 		public float mStartT = 0f, mEndT = 1f;
 		public float mWidthStart, mWidthEnd;
+
+		public Spline() {
+			for (int i = 0; i < mPoints.length; ++i) {
+				mPoints[i] = new PointF();
+			}
+		}
 	}
 
 }
