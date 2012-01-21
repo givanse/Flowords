@@ -85,7 +85,6 @@
             }
         }
     </string>
-    
     <string name="shader_texture_vs">
         uniform vec2 uAspectRatio;
         uniform vec2 uOffset;
@@ -107,6 +106,26 @@
         varying vec2 vTextureCoord;
         void main() {
             gl_FragColor = uColor;
+            gl_FragColor.a *= texture2D(sTexture, vTextureCoord).r;
         }
-    </string>    
+    </string>
+    <string name="shader_point_vs">
+        uniform float uPointSize;
+        attribute vec2 aPosition;
+        void main() {
+            gl_Position = vec4(aPosition, 0.0, 1.0);
+            gl_PointSize = uPointSize;
+        }
+    </string>
+    <string name="shader_point_fs">
+        precision mediump float;
+        uniform vec4 uColor;
+        void main() {
+            if (length(gl_PointCoord - 0.5) >= 0.5) {
+                discard;
+            } else {
+                gl_FragColor = uColor;
+            }
+        }
+    </string>
 </resources>

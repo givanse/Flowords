@@ -20,8 +20,10 @@ public final class OrnamentPlants {
 	private ByteBuffer mBufferTexture;
 	private final PointF[] mDirections = new PointF[8];
 
+	private final OrnamentFbo mFlowerFbo = new OrnamentFbo();
 	private final Vector<Flower> mFlowers = new Vector<Flower>();
 	private final Plant[] mPlants = new Plant[OrnamentConstants.PLANT_COUNT];
+	private final OrnamentShader mShaderPoint = new OrnamentShader();
 	private final OrnamentShader mShaderSpline = new OrnamentShader();
 	private final OrnamentShader mShaderTexture = new OrnamentShader();
 	private final Vector<Spline> mSplines = new Vector<Spline>();
@@ -86,6 +88,45 @@ public final class OrnamentPlants {
 			dir.x *= mAspectRatio.x * lenInv;
 			dir.y *= mAspectRatio.y * lenInv;
 		}
+
+		mFlowerFbo.init(64, 64, 1);
+		mFlowerFbo.bind();
+		mFlowerFbo.bindTexture(0);
+		GLES20.glClearColor(.1f, 0f, 0f, 0f);
+		GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+
+		ByteBuffer bBuffer = ByteBuffer.allocateDirect(6 * 2 * 4);
+		FloatBuffer fBuffer = bBuffer.order(ByteOrder.nativeOrder())
+				.asFloatBuffer();
+		fBuffer.put(0).put(0);
+		float dist = 1.7f / 3f;
+		for (int i = 0; i < 5; ++i) {
+			double r = Math.PI * 2 * i / 5;
+			fBuffer.put((float) Math.sin(r) * dist).put(
+					(float) Math.cos(r) * dist);
+		}
+		fBuffer.position(0);
+
+		mShaderPoint.useProgram();
+		int uPointSize = mShaderPoint.getHandle("uPointSize");
+		int uColor = mShaderPoint.getHandle("uColor");
+		int aPosition = mShaderPoint.getHandle("aPosition");
+
+		GLES20.glVertexAttribPointer(aPosition, 2, GLES20.GL_FLOAT, false, 0,
+				fBuffer);
+		GLES20.glEnableVertexAttribArray(aPosition);
+
+		GLES20.glUniform4f(uColor, .5f, 0, 0, 0);
+		GLES20.glUniform1f(uPointSize, 36);
+		GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
+		GLES20.glUniform1f(uPointSize, 24);
+		GLES20.glDrawArrays(GLES20.GL_POINTS, 1, 6);
+
+		GLES20.glUniform4f(uColor, 1f, 0, 0, 0);
+		GLES20.glUniform1f(uPointSize, 32);
+		GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
+		GLES20.glUniform1f(uPointSize, 20);
+		GLES20.glDrawArrays(GLES20.GL_POINTS, 1, 6);
 	}
 
 	public void onSurfaceCreated(Context context) {
@@ -94,6 +135,11 @@ public final class OrnamentPlants {
 		mShaderTexture.setProgram(
 				context.getString(R.string.shader_texture_vs),
 				context.getString(R.string.shader_texture_fs));
+		mShaderPoint.setProgram(context.getString(R.string.shader_point_vs),
+				context.getString(R.string.shader_point_fs));
+
+		mFlowerFbo.reset();
+
 		for (int i = 0; i < mPlants.length; ++i) {
 			mPlants[i].mRootElementCount = 0;
 		}
@@ -101,8 +147,8 @@ public final class OrnamentPlants {
 
 	private void renderFlowers(Vector<Flower> flowers, float[] color,
 			PointF offset) {
-		mShaderTexture.useProgram();
 
+		mShaderTexture.useProgram();
 		int uAspectRatio = mShaderTexture.getHandle("uAspectRatio");
 		int uOffset = mShaderTexture.getHandle("uOffset");
 		int uScale = mShaderTexture.getHandle("uScale");
@@ -115,6 +161,9 @@ public final class OrnamentPlants {
 		GLES20.glVertexAttribPointer(aPosition, 2, GLES20.GL_BYTE, false, 0,
 				mBufferTexture);
 		GLES20.glEnableVertexAttribArray(aPosition);
+
+		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mFlowerFbo.getTexture(0));
 
 		for (Flower flower : flowers) {
 			GLES20.glUniform2f(uOffset, flower.mPosition.x - offset.x,
@@ -211,7 +260,7 @@ public final class OrnamentPlants {
 			for (int i = 0; i < mFlowerCount; ++i) {
 				Flower flower = mFlowers[i];
 				flower.mScale = Math.max((t - .5f) * 2, 0f);
-				flower.mScale *= .08f;
+				flower.mScale *= .1f;
 				flowers.add(flower);
 			}
 		}
