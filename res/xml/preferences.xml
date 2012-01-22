@@ -35,19 +35,6 @@
             android:summary="Select predefined color scheme or custom to create your own"
             android:title="Color Scheme" />
 
-        <fi.harism.wallpaper.flowers.prefs.FlowerRGBColorPreference
-            android:defaultValue="#808080"
-            android:dependency="@string/key_colors_scheme"
-            android:key="@string/key_colors_bg_top"
-            android:summary="Select background gradient color"
-            android:title="Background Top" />
-        <fi.harism.wallpaper.flowers.prefs.FlowerRGBColorPreference
-            android:defaultValue="#AA8060"
-            android:dependency="@string/key_colors_scheme"
-            android:key="@string/key_colors_bg_bottom"
-            android:summary="Select background gradient color"
-            android:title="Background Bottom" />
-
         <fi.harism.wallpaper.flowers.prefs.FlowerRGBAColorPreference
             android:defaultValue="#80AA8060"
             android:dependency="@string/key_colors_scheme"
@@ -60,6 +47,19 @@
             android:key="@string/key_colors_flower_2"
             android:summary="Select flower color"
             android:title="Flower #2" />
+
+        <fi.harism.wallpaper.flowers.prefs.FlowerRGBColorPreference
+            android:defaultValue="#808080"
+            android:dependency="@string/key_colors_scheme"
+            android:key="@string/key_colors_bg_top"
+            android:summary="Select background gradient color"
+            android:title="Background Top" />
+        <fi.harism.wallpaper.flowers.prefs.FlowerRGBColorPreference
+            android:defaultValue="#AA8060"
+            android:dependency="@string/key_colors_scheme"
+            android:key="@string/key_colors_bg_bottom"
+            android:summary="Select background gradient color"
+            android:title="Background Bottom" />
     </PreferenceCategory>
 
 </PreferenceScreen>

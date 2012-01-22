@@ -8,7 +8,7 @@
     <string name="description">Flowers, live OpenGL 2.0 ES wallpaper.</string>
     <string name="error_shader_compiler">Flowers error; GLSL shader compiler not supported.</string>
     
-    <!-- Preference keys -->
+    <!-- Preference key values -->
     <string name="key_general_flower_count">key_general_flower_count</string>
     <string name="key_general_zoom">key_general_zoom</string>
     <string name="key_general_branch_propability">key_general_branch_propability</string>

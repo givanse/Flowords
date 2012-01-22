@@ -5,89 +5,63 @@
 
     <View
         android:id="@+id/color_view"
-        android:layout_width="40dip"
-        android:layout_height="40dip"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:layout_alignParentLeft="true"
         android:layout_centerVertical="true"
-        android:layout_marginLeft="4dip" />
+        android:layout_marginLeft="4dp" />
 
     <TextView
         android:id="@+id/color_red_label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/preference_color_TextView"
         android:layout_alignTop="@id/color_view"
-        android:layout_marginLeft="4dip"
+        android:layout_marginTop="0dp"
         android:layout_toRightOf="@id/color_view"
-        android:text="R"
-        android:textSize="10pt" />
+        android:text="R" />
 
     <SeekBar
         android:id="@+id/color_red_seekbar"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        style="@style/preference_color_SeekBar"
         android:layout_alignTop="@id/color_red_label"
-        android:layout_marginLeft="4dip"
-        android:layout_marginRight="8dip"
         android:layout_toRightOf="@id/color_red_label" />
 
     <TextView
         android:id="@+id/color_green_label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/preference_color_TextView"
         android:layout_below="@id/color_red_label"
-        android:layout_marginLeft="4dip"
-        android:layout_marginTop="4dip"
         android:layout_toRightOf="@id/color_view"
-        android:text="G"
-        android:textSize="10pt" />
+        android:text="G" />
 
     <SeekBar
         android:id="@+id/color_green_seekbar"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        style="@style/preference_color_SeekBar"
         android:layout_alignTop="@id/color_green_label"
-        android:layout_marginLeft="4dip"
-        android:layout_marginRight="8dip"
         android:layout_toRightOf="@id/color_green_label" />
 
     <TextView
         android:id="@+id/color_blue_label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/preference_color_TextView"
         android:layout_below="@id/color_green_label"
-        android:layout_marginLeft="4dip"
-        android:layout_marginTop="4dip"
         android:layout_toRightOf="@id/color_view"
-        android:text="B"
-        android:textSize="10pt" />
+        android:text="B" />
 
     <SeekBar
         android:id="@+id/color_blue_seekbar"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        style="@style/preference_color_SeekBar"
         android:layout_alignTop="@id/color_blue_label"
-        android:layout_marginLeft="4dip"
-        android:layout_marginRight="8dip"
         android:layout_toRightOf="@id/color_blue_label" />
 
     <TextView
         android:id="@+id/color_alpha_label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/preference_color_TextView"
         android:layout_below="@id/color_blue_label"
-        android:layout_marginLeft="4dip"
-        android:layout_marginTop="4dip"
         android:layout_toRightOf="@id/color_view"
-        android:text="A"
-        android:textSize="10pt" />
+        android:text="A" />
 
     <SeekBar
         android:id="@+id/color_alpha_seekbar"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        style="@style/preference_color_SeekBar"
         android:layout_alignTop="@id/color_alpha_label"
-        android:layout_marginLeft="4dip"
-        android:layout_marginRight="8dip"
         android:layout_toRightOf="@id/color_alpha_label" />
 
 </RelativeLayout>
