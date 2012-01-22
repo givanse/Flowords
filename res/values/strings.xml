@@ -1,9 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- General strings -->
     <string name="app_name">Flowers</string>
+    <string name="preferences_name">Flowers Preferences</string>
     <string name="author">harism</string>
     <string name="description">Flowers, live OpenGL 2.0 ES wallpaper.</string>
     <string name="error_shader_compiler">Flowers error; GLSL shader compiler not supported.</string>
+    
+    <!-- Preference keys -->
+    <string name="key_general_flower_count">key_general_flower_count</string>
+    <string name="key_general_zoom">key_general_zoom</string>
+    <string name="key_general_branch_propability">key_general_branch_propability</string>
+    <string name="key_general_spline_quality">key_general_spline_quality</string>
+    <string name="key_colors_scheme">key_colors_scheme</string>
+    <string name="key_colors_bg_top">key_colors_bg_top</string>
+    <string name="key_colors_bg_bottom">key_colors_bg_bottom</string>
+    <string name="key_colors_flower_1">key_colors_flower_1</string>
+    <string name="key_colors_flower_2">key_colors_flower_2</string>
     
 </resources>

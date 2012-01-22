@@ -1,7 +1,9 @@
 package fi.harism.wallpaper.flowers;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.opengl.GLSurfaceView;
+import android.preference.PreferenceManager;
 import android.service.wallpaper.WallpaperService;
 import android.view.SurfaceHolder;
 
@@ -15,10 +17,12 @@ public final class FlowerService extends WallpaperService {
 	/**
 	 * Private wallpaper engine implementation.
 	 */
-	private final class WallpaperEngine extends Engine {
+	private final class WallpaperEngine extends Engine implements
+			SharedPreferences.OnSharedPreferenceChangeListener {
 
 		// Slightly modified GLSurfaceView.
 		private WallpaperGLSurfaceView mGLSurfaceView;
+		private SharedPreferences mPreferences;
 		private FlowerRenderer mRenderer;
 
 		@Override
@@ -29,12 +33,19 @@ public final class FlowerService extends WallpaperService {
 
 			super.onCreate(surfaceHolder);
 			mRenderer = new FlowerRenderer(FlowerService.this);
+
+			mPreferences = PreferenceManager
+					.getDefaultSharedPreferences(FlowerService.this);
+			mPreferences.registerOnSharedPreferenceChangeListener(this);
+			mRenderer.setPreferences(mPreferences);
+
 			mGLSurfaceView = new WallpaperGLSurfaceView(FlowerService.this);
 			mGLSurfaceView.setEGLContextClientVersion(2);
 			mGLSurfaceView
 					.setEGLConfigChooser(new FlowerEGLConfigChooser(false));
 			mGLSurfaceView.setRenderer(mRenderer);
 			mGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+			mGLSurfaceView.onPause();
 		}
 
 		@Override
@@ -52,6 +63,12 @@ public final class FlowerService extends WallpaperService {
 			super.onOffsetsChanged(xOffset, yOffset, xOffsetStep, yOffsetStep,
 					xPixelOffset, yPixelOffset);
 			mRenderer.setOffset(xOffset, yOffset);
+		}
+
+		@Override
+		public void onSharedPreferenceChanged(
+				SharedPreferences sharedPreferences, String key) {
+			mRenderer.setPreferences(sharedPreferences);
 		}
 
 		@Override

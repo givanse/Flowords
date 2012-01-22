@@ -130,11 +130,11 @@ public final class FlowerObjects {
 		GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
 		GLES20.glUniform1f(uPointSize, 18);
 		GLES20.glDrawArrays(GLES20.GL_POINTS, 1, 6);
-		
+
 		GLES20.glUniform4f(uColor, .8f, 0, 0, 0);
 		GLES20.glUniform1f(uPointSize, 24);
 		GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
-		
+
 		GLES20.glUniform4f(uColor, 0, 0, 0, 0);
 		GLES20.glUniform1f(uPointSize, 18);
 		GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);

@@ -26,6 +26,12 @@
                 android:name="android.service.wallpaper"
                 android:resource="@xml/flowers" />
         </service>
+        
+        <activity
+            android:name=".prefs.FlowerPreferenceActivity"
+            android:exported="true"
+            android:label="@string/preferences_name" />
+        
     </application>
 
 </manifest>

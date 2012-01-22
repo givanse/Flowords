@@ -8,6 +8,7 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.PointF;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -141,6 +142,10 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 
 	public void setOffset(float xOffset, float yOffset) {
 		mOffsetScroll.set(xOffset * 2f, yOffset * 2f);
+	}
+
+	public void setPreferences(SharedPreferences prefs) {
+
 	}
 
 }

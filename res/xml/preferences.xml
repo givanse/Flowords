@@ -1,0 +1,65 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:harism="http://schemas.android.com/apk/res/fi.harism.glsl" >
+
+    <PreferenceCategory android:title="General" >
+        <ListPreference
+            android:defaultValue="2"
+            android:entries="@array/general_flower_count_entries"
+            android:entryValues="@array/general_flower_count_values"
+            android:key="@string/key_general_flower_count"
+            android:summary="Select number of flower ornaments"
+            android:title="Flower Count" />
+
+        <fi.harism.wallpaper.flowers.prefs.FlowerSliderPreference
+            android:defaultValue="100"
+            android:key="@string/key_general_zoom"
+            android:summary="Adjust flowers zoom value"
+            android:title="Zoom" />
+        <fi.harism.wallpaper.flowers.prefs.FlowerSliderPreference
+            android:defaultValue="50"
+            android:key="@string/key_general_branch_propability"
+            android:summary="Adjusts propability on how often a branch is generated"
+            android:title="Branch Propability" />
+        <fi.harism.wallpaper.flowers.prefs.FlowerSliderPreference
+            android:defaultValue="10"
+            android:key="@string/key_general_spline_quality"
+            android:summary="Adjust value on how many lines are used to render one spline"
+            android:title="Spline Quality" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Colors" >
+        <fi.harism.wallpaper.flowers.prefs.FlowerColorSchemePreference
+            android:defaultValue="1"
+            android:entries="@array/colors_scheme_entries"
+            android:entryValues="@array/colors_scheme_values"
+            android:key="@string/key_colors_scheme"
+            android:summary="Select predefined color scheme or custom to create your own"
+            android:title="Color Scheme" />
+
+        <fi.harism.wallpaper.flowers.prefs.FlowerRGBColorPreference
+            android:defaultValue="#808080"
+            android:dependency="@string/key_colors_scheme"
+            android:key="@string/key_colors_bg_top"
+            android:summary="Select background gradient color"
+            android:title="Background Top" />
+        <fi.harism.wallpaper.flowers.prefs.FlowerRGBColorPreference
+            android:defaultValue="#AA8060"
+            android:dependency="@string/key_colors_scheme"
+            android:key="@string/key_colors_bg_bottom"
+            android:summary="Select background gradient color"
+            android:title="Background Bottom" />
+
+        <fi.harism.wallpaper.flowers.prefs.FlowerRGBAColorPreference
+            android:defaultValue="#80AA8060"
+            android:dependency="@string/key_colors_scheme"
+            android:key="@string/key_colors_flower_1"
+            android:summary="Select flower color"
+            android:title="Flower #1" />
+        <fi.harism.wallpaper.flowers.prefs.FlowerRGBAColorPreference
+            android:defaultValue="#80AA80A0"
+            android:dependency="@string/key_colors_scheme"
+            android:key="@string/key_colors_flower_2"
+            android:summary="Select flower color"
+            android:title="Flower #2" />
+    </PreferenceCategory>
+
+</PreferenceScreen>
