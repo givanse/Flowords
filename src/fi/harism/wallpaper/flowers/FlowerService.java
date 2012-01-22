@@ -51,6 +51,8 @@ public final class FlowerService extends WallpaperService {
 		@Override
 		public void onDestroy() {
 			super.onDestroy();
+			mPreferences.unregisterOnSharedPreferenceChangeListener(this);
+			mPreferences = null;
 			mGLSurfaceView.onDestroy();
 			mGLSurfaceView = null;
 			mRenderer = null;
