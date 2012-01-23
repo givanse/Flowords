@@ -9,6 +9,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.graphics.PointF;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -20,11 +21,11 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 
 	private FloatBuffer mBackgroundColors;
 	private Context mContext;
+	private FlowerFbo mFlowerFbo = new FlowerFbo();
+	private FlowerObjects mFlowerObjects = new FlowerObjects();
 	private PointF mOffset = new PointF(), mOffsetScroll = new PointF();
 	private PointF mOffsetSrc = new PointF(), mOffsetDst = new PointF();
 	private long mOffsetTime;
-	private FlowerFbo mOrnamentFbo = new FlowerFbo();
-	private FlowerObjects mOrnamentPlants = new FlowerObjects();
 	private ByteBuffer mScreenVertices;
 
 	// Shader for rendering background gradient.
@@ -43,16 +44,23 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 		mScreenVertices.put(SCREEN_COORDS).position(0);
 
 		// Create background color float buffer.
-		ByteBuffer bBuf = ByteBuffer.allocateDirect(3 * 4 * 4);
+		ByteBuffer bBuf = ByteBuffer.allocateDirect(4 * 4 * 4);
 		mBackgroundColors = bBuf.order(ByteOrder.nativeOrder()).asFloatBuffer();
-		mBackgroundColors.put(FlowerConstants.COLOR_BG_TOP)
-				.put(FlowerConstants.COLOR_BG_BOTTOM)
-				.put(FlowerConstants.COLOR_BG_TOP)
-				.put(FlowerConstants.COLOR_BG_BOTTOM).position(0);
+	}
+
+	private float[] getColor(int keyId, SharedPreferences prefs) {
+		String key = mContext.getString(keyId);
+		int value = prefs.getInt(key, Color.CYAN);
+		float[] retVal = new float[4];
+		retVal[0] = (float) Color.red(value) / 255;
+		retVal[1] = (float) Color.green(value) / 255;
+		retVal[2] = (float) Color.blue(value) / 255;
+		retVal[3] = (float) Color.alpha(value) / 255;
+		return retVal;
 	}
 
 	@Override
-	public void onDrawFrame(GL10 unused) {
+	public synchronized void onDrawFrame(GL10 unused) {
 		long time = SystemClock.uptimeMillis();
 		if (time - mOffsetTime > 5000) {
 			mOffsetTime = time;
@@ -72,8 +80,8 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 		GLES20.glDisable(GLES20.GL_DEPTH_TEST);
 
 		// Set render target to fbo.
-		mOrnamentFbo.bind();
-		mOrnamentFbo.bindTexture(0);
+		mFlowerFbo.bind();
+		mFlowerFbo.bindTexture(0);
 
 		// Render background gradient.
 		mShaderBackground.useProgram();
@@ -85,13 +93,13 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 		GLES20.glVertexAttribPointer(aPosition, 2, GLES20.GL_BYTE, false, 0,
 				mScreenVertices);
 		GLES20.glEnableVertexAttribArray(aPosition);
-		GLES20.glVertexAttribPointer(aColor, 3, GLES20.GL_FLOAT, false, 0,
+		GLES20.glVertexAttribPointer(aColor, 4, GLES20.GL_FLOAT, false, 0,
 				mBackgroundColors);
 		GLES20.glEnableVertexAttribArray(aColor);
 		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
 		// Render scene.
-		mOrnamentPlants.onDrawFrame(mOffset);
+		mFlowerObjects.onDrawFrame(mOffset);
 
 		// Copy FBO to screen buffer.
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
@@ -104,7 +112,7 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 				mScreenVertices);
 		GLES20.glEnableVertexAttribArray(aPosition);
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mOrnamentFbo.getTexture(0));
+		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mFlowerFbo.getTexture(0));
 		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 	}
 
@@ -112,9 +120,9 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 	public void onSurfaceChanged(GL10 unused, int width, int height) {
 		mWidth = width;
 		mHeight = height;
-		mOrnamentFbo.init(mWidth, mHeight, 1);
-		mOrnamentPlants.onSurfaceChanged(mOrnamentFbo.getWidth(),
-				mOrnamentFbo.getHeight());
+		mFlowerFbo.init(mWidth, mHeight, 1);
+		mFlowerObjects.onSurfaceChanged(mFlowerFbo.getWidth(),
+				mFlowerFbo.getHeight());
 	}
 
 	@Override
@@ -136,7 +144,7 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 			mShaderBackground.setProgram(
 					mContext.getString(R.string.shader_background_vs),
 					mContext.getString(R.string.shader_background_fs));
-			mOrnamentPlants.onSurfaceCreated(mContext);
+			mFlowerObjects.onSurfaceCreated(mContext);
 		}
 	}
 
@@ -144,8 +152,56 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 		mOffsetScroll.set(xOffset * 2f, yOffset * 2f);
 	}
 
-	public void setPreferences(SharedPreferences prefs) {
+	public synchronized void setPreferences(SharedPreferences prefs) {
+		String key = mContext.getString(R.string.key_general_flower_count);
+		int flowerCount = Integer.parseInt(prefs.getString(key, "2"));
+		key = mContext.getString(R.string.key_general_spline_quality);
+		int splineQuality = prefs.getInt(key, 10);
+		key = mContext.getString(R.string.key_general_branch_propability);
+		float branchPropability = (float) prefs.getInt(key, 5) / 10;
+		key = mContext.getString(R.string.key_general_zoom);
+		float zoomLevel = (float) prefs.getInt(key, 4) / 10;
 
+		key = mContext.getString(R.string.key_colors_scheme);
+		int colorScheme = Integer.parseInt(prefs.getString(key, "1"));
+		float bgTop[], bgBottom[], flowerColors[][] = new float[2][];
+		switch (colorScheme) {
+		case 1:
+			bgTop = FlowerConstants.SCHEME_SUMMER_BG_TOP;
+			bgBottom = FlowerConstants.SCHEME_SUMMER_BG_BOTTOM;
+			flowerColors[0] = FlowerConstants.SCHEME_SUMMER_PLANT_1;
+			flowerColors[1] = FlowerConstants.SCHEME_SUMMER_PLANT_2;
+			break;
+		case 2:
+			bgTop = FlowerConstants.SCHEME_AUTUMN_BG_TOP;
+			bgBottom = FlowerConstants.SCHEME_AUTUMN_BG_BOTTOM;
+			flowerColors[0] = FlowerConstants.SCHEME_AUTUMN_PLANT_1;
+			flowerColors[1] = FlowerConstants.SCHEME_AUTUMN_PLANT_2;
+			break;
+		case 3:
+			bgTop = FlowerConstants.SCHEME_WINTER_BG_TOP;
+			bgBottom = FlowerConstants.SCHEME_WINTER_BG_BOTTOM;
+			flowerColors[0] = FlowerConstants.SCHEME_WINTER_PLANT_1;
+			flowerColors[1] = FlowerConstants.SCHEME_WINTER_PLANT_2;
+			break;
+		case 4:
+			bgTop = FlowerConstants.SCHEME_SPRING_BG_TOP;
+			bgBottom = FlowerConstants.SCHEME_SPRING_BG_BOTTOM;
+			flowerColors[0] = FlowerConstants.SCHEME_SPRING_PLANT_1;
+			flowerColors[1] = FlowerConstants.SCHEME_SPRING_PLANT_2;
+			break;
+		default:
+			bgTop = getColor(R.string.key_colors_bg_top, prefs);
+			bgBottom = getColor(R.string.key_colors_bg_bottom, prefs);
+			flowerColors[0] = getColor(R.string.key_colors_flower_1, prefs);
+			flowerColors[1] = getColor(R.string.key_colors_flower_2, prefs);
+			break;
+		}
+
+		mBackgroundColors.put(bgTop).put(bgBottom).put(bgTop).put(bgBottom)
+				.position(0);
+		mFlowerObjects.setPreferences(flowerCount, flowerColors, splineQuality,
+				branchPropability, zoomLevel);
 	}
 
 }

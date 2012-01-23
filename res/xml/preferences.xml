@@ -11,12 +11,12 @@
             android:title="Flower Count" />
 
         <fi.harism.wallpaper.flowers.prefs.FlowerSliderPreference
-            android:defaultValue="100"
+            android:defaultValue="4"
             android:key="@string/key_general_zoom"
             android:summary="Adjust flowers zoom value"
             android:title="Zoom" />
         <fi.harism.wallpaper.flowers.prefs.FlowerSliderPreference
-            android:defaultValue="50"
+            android:defaultValue="5"
             android:key="@string/key_general_branch_propability"
             android:summary="Adjusts propability on how often a branch is generated"
             android:title="Branch Propability" />

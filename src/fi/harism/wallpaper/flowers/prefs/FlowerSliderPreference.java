@@ -21,7 +21,7 @@ public final class FlowerSliderPreference extends DialogPreference {
 	@Override
 	protected void onBindDialogView(View view) {
 		super.onBindDialogView(view);
-		mSeekBar.setMax(100);
+		mSeekBar.setMax(10);
 		mSeekBar.setProgress(mValue);
 	}
 
