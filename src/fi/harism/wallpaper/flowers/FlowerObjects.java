@@ -336,7 +336,9 @@ public final class FlowerObjects {
 		while (time > lastElement.mStartTime + lastElement.mDuration) {
 			ElementRoot element = flower.getNextRootElement();
 			element.mStartTime = additionTime;
-			element.mDuration = FlowerUtils.randI(500, 2000);
+			element.mDuration = 1000 + (long) (500 * Math.sin(((SystemClock
+					.uptimeMillis() % 5000) * Math.PI * 2) / 5000)); // FlowerUtils.randI(500,
+																		// 1000);
 
 			FlowerUtils.rand(targetPos, -.5f, -.5f, .5f, .5f);
 			targetPos.offset(offset.x, offset.y);
@@ -441,7 +443,11 @@ public final class FlowerObjects {
 			}
 			for (int i = 0; i < mBranchPointCount; ++i) {
 				StructPoint point = mBranchPoints[i];
-				point.mScale = Math.max((endT - startT - .5f) * 2, 0f);
+				if (mBranchSplineCount == 1) {
+					point.mScale = Math.max((endT - startT - .5f) * 2, 0f);
+				} else {
+					point.mScale = Math.max(endT - startT, 0f);
+				}
 				point.mScale *= maxPointSize;
 				points.add(point);
 			}

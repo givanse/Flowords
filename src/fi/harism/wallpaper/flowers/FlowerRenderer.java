@@ -85,11 +85,18 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 
 		// Render background gradient.
 		mShaderBackground.useProgram();
+		int uAspectRatio = mShaderBackground.getHandle("uAspectRatio");
 		int uOffset = mShaderBackground.getHandle("uOffset");
+		int uDarkenWidth = mShaderBackground.getHandle("uDarkenWidth");
 		int aPosition = mShaderBackground.getHandle("aPosition");
 		int aColor = mShaderBackground.getHandle("aColor");
 
+		float aspectX = (float) Math.min(mWidth, mHeight) / mHeight;
+		float aspectY = (float) Math.min(mWidth, mHeight) / mWidth;
+		GLES20.glUniform2f(uAspectRatio, aspectX, aspectY);
 		GLES20.glUniform2f(uOffset, mOffset.x, mOffset.y);
+		GLES20.glUniform2f(uDarkenWidth, aspectX * 40f / mFlowerFbo.getWidth(),
+				aspectY * 40f / mFlowerFbo.getHeight());
 		GLES20.glVertexAttribPointer(aPosition, 2, GLES20.GL_BYTE, false, 0,
 				mScreenVertices);
 		GLES20.glEnableVertexAttribArray(aPosition);

@@ -2,6 +2,7 @@
 <resources>
     <string name="shader_background_vs">
         uniform vec2 uOffset;
+        uniform vec2 uAspectRatio;
         attribute vec2 aPosition;
         attribute vec4 aColor;
         varying vec4 vColor;
@@ -9,17 +10,18 @@
         void main() {
             gl_Position = vec4(aPosition, 0.0, 1.0);
             vColor = aColor;
-            vPosition = (aPosition + uOffset) * 8.0;
+            vPosition = (aPosition + uOffset) * uAspectRatio * 10.0;
         }
     </string>
     <string name="shader_background_fs">
         precision mediump float;
+        uniform vec2 uDarkenWidth;
         varying vec4 vColor;
         varying vec2 vPosition;
         void main() {
             gl_FragColor = vColor;
             vec2 f = fract(vPosition);
-            if (f.x &lt; 0.1 || f.y &lt; 0.1) {
+            if (f.x &lt; uDarkenWidth.x || f.y &lt; uDarkenWidth.y) {
                 gl_FragColor.rgb *= 0.98;
             }
         }
