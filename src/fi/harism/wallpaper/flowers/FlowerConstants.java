@@ -4,8 +4,8 @@ public final class FlowerConstants {
 
 	public static final float FLOWER_BRANCH_WIDTH_MAX = 0.1f;
 	public static final float FLOWER_BRANCH_WIDTH_MIN = 0.05f;
-	public static final float FLOWER_POINT_SIZE_MAX = .2f;
-	public static final float FLOWER_POINT_SIZE_MIN = .1f;
+	public static final float FLOWER_POINT_SCALE_MAX = .24f;
+	public static final float FLOWER_POINT_SCALE_MIN = .12f;
 	public static final int FLOWER_ROOT_ELEMENT_COUNT = 6;
 	public static final float FLOWER_ROOT_WIDTH_MAX = 0.12f;
 	public static final float FLOWER_ROOT_WIDTH_MIN = 0.06f;
