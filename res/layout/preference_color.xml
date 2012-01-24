@@ -17,7 +17,7 @@
         android:layout_alignTop="@id/color_view"
         android:layout_marginTop="0dp"
         android:layout_toRightOf="@id/color_view"
-        android:text="R" />
+        android:text="@string/preference_color_red" />
 
     <SeekBar
         android:id="@+id/color_red_seekbar"
@@ -30,7 +30,7 @@
         style="@style/preference_color_TextView"
         android:layout_below="@id/color_red_label"
         android:layout_toRightOf="@id/color_view"
-        android:text="G" />
+        android:text="@string/preference_color_green" />
 
     <SeekBar
         android:id="@+id/color_green_seekbar"
@@ -43,7 +43,7 @@
         style="@style/preference_color_TextView"
         android:layout_below="@id/color_green_label"
         android:layout_toRightOf="@id/color_view"
-        android:text="B" />
+        android:text="@string/preference_color_blue" />
 
     <SeekBar
         android:id="@+id/color_blue_seekbar"
@@ -56,7 +56,7 @@
         style="@style/preference_color_TextView"
         android:layout_below="@id/color_blue_label"
         android:layout_toRightOf="@id/color_view"
-        android:text="A" />
+        android:text="@string/preference_color_alpha" />
 
     <SeekBar
         android:id="@+id/color_alpha_seekbar"
