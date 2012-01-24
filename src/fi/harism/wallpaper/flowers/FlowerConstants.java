@@ -2,6 +2,7 @@ package fi.harism.wallpaper.flowers;
 
 public final class FlowerConstants {
 
+	// Flower related constants
 	public static final float FLOWER_BRANCH_WIDTH_MAX = 0.1f;
 	public static final float FLOWER_BRANCH_WIDTH_MIN = 0.05f;
 	public static final float FLOWER_POINT_SCALE_MAX = .24f;
@@ -30,4 +31,8 @@ public final class FlowerConstants {
 	public static final float[] SCHEME_WINTER_BG_TOP = { .8f, .8f, .85f, 1f };
 	public static final float[] SCHEME_WINTER_PLANT_1 = { .4f, .6f, .8f, .8f };
 	public static final float[] SCHEME_WINTER_PLANT_2 = { .5f, .7f, .9f, .8f };
+
+	// Maximum spline widths
+	public static final float SPLINE_WIDTH_MAX = FLOWER_ROOT_WIDTH_MAX;
+	public static final float SPLINE_WIDTH_MIN = FLOWER_ROOT_WIDTH_MIN;
 }

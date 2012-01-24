@@ -287,6 +287,11 @@ public final class FlowerObjects {
 		GLES20.glEnableVertexAttribArray(aSplinePos);
 
 		final int[] controlIds = { uControl0, uControl1, uControl2, uControl3 };
+		float boundX = FlowerConstants.SPLINE_WIDTH_MIN
+				+ mZoomLevel
+				* (FlowerConstants.SPLINE_WIDTH_MAX - FlowerConstants.SPLINE_WIDTH_MIN);
+		float boundY = 1f + boundX * mAspectRatio.y;
+		boundX = 1f + boundX * mAspectRatio.x;
 
 		for (StructSpline spline : splines) {
 			int visiblePointCount = 0;
@@ -294,7 +299,7 @@ public final class FlowerObjects {
 				float x = spline.mPoints[i].x - offset.x;
 				float y = spline.mPoints[i].y - offset.y;
 				GLES20.glUniform2f(controlIds[i], x, y);
-				if (x > -1f && x < 1f && y > -1f && y < 1f) {
+				if (Math.abs(x) < boundX && Math.abs(y) < boundY) {
 					++visiblePointCount;
 				}
 			}
