@@ -486,7 +486,7 @@ public final class FlowerObjects {
 		public final PointF mTargetPosition = new PointF();
 
 		public ElementFlower() {
-			for (int i = 0; i < 6; ++i) {
+			for (int i = 0; i < FlowerConstants.FLOWER_ROOT_ELEMENT_COUNT; ++i) {
 				mRootElements.add(new ElementRoot());
 			}
 		}
