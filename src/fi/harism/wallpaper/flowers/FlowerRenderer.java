@@ -65,7 +65,8 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 		if (time - mOffsetTime > 5000) {
 			mOffsetTime = time;
 			mOffsetSrc.set(mOffsetDst);
-			FlowerUtils.rand(mOffsetDst, -1f, -1f, 1f, 1f);
+			mOffsetDst.x = -1f + (float) (Math.random() * 2f);
+			mOffsetDst.y = -1f + (float) (Math.random() * 2f);
 		}
 		float t = (float) (time - mOffsetTime) / 5000;
 		t = t * t * (3 - 2 * t);

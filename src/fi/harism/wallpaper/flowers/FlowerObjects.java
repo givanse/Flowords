@@ -43,6 +43,18 @@ public final class FlowerObjects {
 		}
 	}
 
+	private float distance(PointF point1, PointF point2) {
+		float dx = point1.x - point2.x;
+		float dy = point1.y - point2.y;
+		return (float) Math.sqrt(dx * dx + dy * dy);
+	}
+
+	private float distance(PointF point1, PointF point2, PointF point3) {
+		float dx = point1.x + point2.x - point3.x;
+		float dy = point1.y + point2.y - point3.y;
+		return (float) Math.sqrt(dx * dx + dy * dy);
+	}
+
 	private void genArc(StructSpline spline, PointF start, PointF dir,
 			float length, PointF normal, float normalPos1, float normalPos2,
 			boolean flatEnd) {
@@ -74,15 +86,15 @@ public final class FlowerObjects {
 		genArc(spline, pos, dir, len, normal, normalLen, len - normalLen, false);
 		pos = spline.mPoints[3];
 
-		int rand = FlowerUtils.randI(0, 3);
-		if (rand == 0) {
+		float rand = rand(0, 3);
+		if (rand < 1) {
 			StructPoint point = branch.getPoint();
 			point.mPosition.set(pos);
 			double rotation = Math.PI * 2 * startDir / 8;
 			point.mRotationSin = (float) Math.sin(rotation);
 			point.mRotationCos = (float) Math.cos(rotation);
 		}
-		if (rand > 0) {
+		if (rand >= 1) {
 			spline.mWidthEnd = maxBranchWidth / 2;
 			dir = mDirections[(8 + startDir + 3 * rotateDir) % 8];
 			normal = mDirections[(8 + startDir + rotateDir) % 8];
@@ -98,7 +110,7 @@ public final class FlowerObjects {
 			point.mRotationSin = (float) Math.sin(rotation);
 			point.mRotationCos = (float) Math.cos(rotation);
 		}
-		if (rand > 1) {
+		if (rand >= 2) {
 			dir = mDirections[(8 + startDir) % 8];
 			normal = mDirections[(8 + startDir + 2 * rotateDir) % 8];
 			spline = branch.getSpline();
@@ -224,6 +236,10 @@ public final class FlowerObjects {
 		}
 	}
 
+	private float rand(float min, float max) {
+		return min + (float) (Math.random() * (max - min));
+	}
+
 	private void renderFlowers(Vector<StructPoint> flowers, float[] color,
 			PointF offset) {
 
@@ -340,24 +356,23 @@ public final class FlowerObjects {
 					.uptimeMillis() % 5000) * Math.PI * 2) / 5000)); // FlowerUtils.randI(500,
 																		// 1000);
 
-			FlowerUtils.rand(targetPos, -.5f, -.5f, .5f, .5f);
+			targetPos.set(rand(-.8f, .8f), rand(-.8f, .8f));
 			targetPos.offset(offset.x, offset.y);
 
-			float minDist = FlowerUtils.dist(currentPos,
-					mDirections[currentDirIdx], targetPos);
+			float minDist = distance(currentPos, mDirections[currentDirIdx],
+					targetPos);
 			int minDirIndex = currentDirIdx;
 			for (int i = 1; i < 8; ++i) {
 				PointF dir = mDirections[(currentDirIdx + i) % 8];
-				float dist = FlowerUtils.dist(currentPos, dir, targetPos);
+				float dist = distance(currentPos, dir, targetPos);
 				if (dist < minDist) {
 					minDist = dist;
 					minDirIndex = (currentDirIdx + i) % 8;
 				}
 			}
 
-			float randLen = FlowerUtils.randF(.3f, .5f);
-			randLen = Math.max(randLen,
-					FlowerUtils.dist(currentPos, targetPos) / 2f);
+			float randLen = rand(.3f, .5f);
+			randLen = Math.max(randLen, distance(currentPos, targetPos) / 2f);
 			// 2 * (sqrt(2) - 1) / 3
 			float normalLen = 0.27614237f * randLen;
 
@@ -371,7 +386,7 @@ public final class FlowerObjects {
 					genArc(spline, currentPos, dir, randLen, normal, normalLen,
 							randLen - normalLen, i == minDirIndex);
 
-					if (Math.random() <= mBranchPropability) {
+					if (Math.random() < mBranchPropability) {
 						ElementBranch b = element.getCurrentBranch();
 						int branchDir = Math.random() < 0.5 ? -k : k;
 						genBranch(b, currentPos, i, branchDir, randLen * .7f,
@@ -387,7 +402,7 @@ public final class FlowerObjects {
 				spline.mWidthStart = spline.mWidthEnd = maxRootWidth;
 				genLine(spline, currentPos, dir, randLen);
 
-				if (Math.random() <= mBranchPropability) {
+				if (Math.random() < mBranchPropability) {
 					ElementBranch b = element.getCurrentBranch();
 					int branchDir = Math.random() < 0.5 ? -1 : 1;
 					genBranch(b, currentPos, currentDirIdx, branchDir,
