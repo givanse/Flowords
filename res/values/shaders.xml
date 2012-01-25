@@ -45,10 +45,7 @@
         }
     </string>
     <string name="shader_spline_vs">
-        uniform vec2 uControl0;
-        uniform vec2 uControl1;
-        uniform vec2 uControl2;
-        uniform vec2 uControl3;
+        uniform vec2 uControlPts[4];
         uniform vec2 uWidth;
         uniform vec2 uBounds;
         uniform vec2 uAspectRatio;
@@ -56,9 +53,9 @@
         varying vec2 vLineCoord;
         void main() {
             float t = clamp(aSplinePos.x, uBounds.x, uBounds.y);
-            vec2 q0 = mix(uControl0, uControl1, t);
-            vec2 q1 = mix(uControl1, uControl2, t);
-            vec2 q2 = mix(uControl2, uControl3, t);
+            vec2 q0 = mix(uControlPts[0], uControlPts[1], t);
+            vec2 q1 = mix(uControlPts[1], uControlPts[2], t);
+            vec2 q2 = mix(uControlPts[2], uControlPts[3], t);
             vec2 r0 = mix(q0, q1, t);
             vec2 r1 = mix(q1, q2, t);
             
