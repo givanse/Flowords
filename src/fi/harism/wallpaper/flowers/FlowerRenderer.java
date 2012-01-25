@@ -93,13 +93,16 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 
 	@Override
 	public synchronized void onDrawFrame(GL10 unused) {
+		// Update offset.
 		long time = SystemClock.uptimeMillis();
+		// If time passed generate new target.
 		if (time - mOffsetTime > 5000) {
 			mOffsetTime = time;
 			mOffsetSrc.set(mOffsetDst);
 			mOffsetDst.x = -1f + (float) (Math.random() * 2f);
 			mOffsetDst.y = -1f + (float) (Math.random() * 2f);
 		}
+		// Calculate final offset values.
 		float t = (float) (time - mOffsetTime) / 5000;
 		t = t * t * (3 - 2 * t);
 		mOffset.x = mOffsetScroll.x + mOffsetSrc.x + t
@@ -186,11 +189,27 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 		}
 	}
 
+	/**
+	 * Sets scroll offset. Called from wallpaper engine once user scrolls
+	 * between home screens.
+	 * 
+	 * @param xOffset
+	 *            Offset value between [0, 1].
+	 * @param yOffset
+	 *            Offset value between [0, 1]
+	 */
 	public void setOffset(float xOffset, float yOffset) {
 		mOffsetScroll.set(xOffset * 2f, yOffset * 2f);
 	}
 
+	/**
+	 * Updates preference values from provided ShaderPrefence instance.
+	 * 
+	 * @param prefs
+	 *            New preferences.
+	 */
 	public synchronized void setPreferences(SharedPreferences prefs) {
+		// Get general preferences values.
 		String key = mContext.getString(R.string.key_general_flower_count);
 		int flowerCount = Integer.parseInt(prefs.getString(key, "2"));
 		key = mContext.getString(R.string.key_general_spline_quality);
@@ -200,6 +219,7 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 		key = mContext.getString(R.string.key_general_zoom);
 		float zoomLevel = (float) prefs.getInt(key, 4) / 10;
 
+		// Get color preference values.
 		key = mContext.getString(R.string.key_colors_scheme);
 		int colorScheme = Integer.parseInt(prefs.getString(key, "1"));
 		float bgTop[], bgBottom[], flowerColors[][] = new float[2][];
