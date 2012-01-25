@@ -1,7 +1,3 @@
-
-<b>This project is very much unmaturized at this point (especially when it comes
-to commenting)</b>
-
 Introduction
 ============
 
