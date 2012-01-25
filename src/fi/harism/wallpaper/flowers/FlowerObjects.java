@@ -54,8 +54,7 @@ public final class FlowerObjects {
 	}
 
 	private void genArc(StructSpline spline, PointF startPos, PointF dir,
-			float length, PointF normal, /* , float normalPos1, float normalPos2, */
-			boolean straightEnd) {
+			float length, PointF normal, boolean straightEnd) {
 
 		// 2 * (sqrt(2) - 1) / 3
 		final float NORMAL_FACTOR = 0.27614237f;
@@ -270,10 +269,7 @@ public final class FlowerObjects {
 	public void renderSplines(Vector<StructSpline> splines, float[] color,
 			PointF offset) {
 		mShaderSpline.useProgram();
-		int uControl0 = mShaderSpline.getHandle("uControl0");
-		int uControl1 = mShaderSpline.getHandle("uControl1");
-		int uControl2 = mShaderSpline.getHandle("uControl2");
-		int uControl3 = mShaderSpline.getHandle("uControl3");
+		int uControlPts = mShaderSpline.getHandle("uControlPts");
 		int uWidth = mShaderSpline.getHandle("uWidth");
 		int uBounds = mShaderSpline.getHandle("uBounds");
 		int uColor = mShaderSpline.getHandle("uColor");
@@ -286,7 +282,7 @@ public final class FlowerObjects {
 				mBufferSpline);
 		GLES20.glEnableVertexAttribArray(aSplinePos);
 
-		final int[] controlIds = { uControl0, uControl1, uControl2, uControl3 };
+		final float[] controlPts = new float[8];
 		float boundX = FlowerConstants.SPLINE_WIDTH_MIN
 				+ mZoomLevel
 				* (FlowerConstants.SPLINE_WIDTH_MAX - FlowerConstants.SPLINE_WIDTH_MIN);
@@ -298,12 +294,14 @@ public final class FlowerObjects {
 			for (int i = 0; i < 4; ++i) {
 				float x = spline.mPoints[i].x - offset.x;
 				float y = spline.mPoints[i].y - offset.y;
-				GLES20.glUniform2f(controlIds[i], x, y);
+				controlPts[i * 2 + 0] = x;
+				controlPts[i * 2 + 1] = y;
 				if (Math.abs(x) < boundX && Math.abs(y) < boundY) {
 					++visiblePointCount;
 				}
 			}
 			if (visiblePointCount != 0) {
+				GLES20.glUniform2fv(uControlPts, 4, controlPts, 0);
 				GLES20.glUniform2f(uWidth, spline.mWidthStart, spline.mWidthEnd);
 				GLES20.glUniform2f(uBounds, spline.mStartT, spline.mEndT);
 
@@ -358,9 +356,7 @@ public final class FlowerObjects {
 		while (time >= lastElement.mStartTime + lastElement.mDuration) {
 			ElementRoot element = flower.getNextRootElement();
 			element.mStartTime = additionTime;
-			element.mDuration = 1000 + (long) (500 * Math.sin(((SystemClock
-					.uptimeMillis() % 5000) * Math.PI * 2) / 5000)); // FlowerUtils.randI(500,
-																		// 1000);
+			element.mDuration = 500 + (long) (Math.random() * 500);
 
 			targetPos.set(rand(-.8f, .8f), rand(-.8f, .8f));
 			targetPos.offset(offset.x, offset.y);
