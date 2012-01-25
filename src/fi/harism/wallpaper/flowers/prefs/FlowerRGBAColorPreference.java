@@ -1,3 +1,19 @@
+/*
+   Copyright 2012 Harri Smått
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ */
+
 package fi.harism.wallpaper.flowers.prefs;
 
 import android.content.Context;
@@ -10,17 +26,31 @@ import android.view.View;
 import android.widget.SeekBar;
 import fi.harism.wallpaper.flowers.R;
 
+/**
+ * RGBA color chooser dialog preferece.
+ */
 public class FlowerRGBAColorPreference extends DialogPreference implements
 		SeekBar.OnSeekBarChangeListener {
 
+	// Color value SeekBars.
 	private SeekBar mSeekBarR, mSeekBarG, mSeekBarB, mSeekBarA;
+	// Current color value.
 	private int mValue;
+	// Color preview View.
 	private View mViewColor;
 
+	/**
+	 * Default constructor.
+	 */
 	public FlowerRGBAColorPreference(Context context, AttributeSet attrs) {
 		super(context, attrs);
 	}
 
+	/**
+	 * Generates current color value from color SeekBars.
+	 * 
+	 * @return Current color value.
+	 */
 	private int getCurrentColor() {
 		return Color.argb(mSeekBarA.getProgress(), mSeekBarR.getProgress(),
 				mSeekBarG.getProgress(), mSeekBarB.getProgress());
@@ -30,7 +60,9 @@ public class FlowerRGBAColorPreference extends DialogPreference implements
 	protected void onBindDialogView(View view) {
 		super.onBindDialogView(view);
 
+		// Do not apply alpha to color preview.
 		mViewColor.setBackgroundColor(mValue | 0xFF000000);
+		// Set SeekBar values.
 		mSeekBarR.setProgress(Color.red(mValue));
 		mSeekBarG.setProgress(Color.green(mValue));
 		mSeekBarB.setProgress(Color.blue(mValue));
@@ -38,11 +70,13 @@ public class FlowerRGBAColorPreference extends DialogPreference implements
 	}
 
 	@Override
-	public View onCreateDialogView() {
+	protected View onCreateDialogView() {
 		View view = LayoutInflater.from(getContext()).inflate(
 				R.layout.preference_color, null);
 
+		// Get color preview View.
 		mViewColor = view.findViewById(R.id.color_view);
+		// Get and adjust color SeekBars.
 		mSeekBarR = (SeekBar) view.findViewById(R.id.color_red_seekbar);
 		mSeekBarR.setMax(255);
 		mSeekBarR.setOnSeekBarChangeListener(this);
@@ -78,6 +112,7 @@ public class FlowerRGBAColorPreference extends DialogPreference implements
 	@Override
 	public void onProgressChanged(SeekBar seekBar, int progress,
 			boolean fromUser) {
+		// Do not apply alpha to preview color View.
 		mViewColor.setBackgroundColor(getCurrentColor() | 0xFF000000);
 	}
 

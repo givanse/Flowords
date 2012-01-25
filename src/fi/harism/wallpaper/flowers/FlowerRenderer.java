@@ -1,3 +1,19 @@
+/*
+   Copyright 2012 Harri Smått
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ */
+
 package fi.harism.wallpaper.flowers;
 
 import java.nio.ByteBuffer;
@@ -17,15 +33,28 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.widget.Toast;
 
+/**
+ * Main renderer class.
+ */
 public final class FlowerRenderer implements GLSurfaceView.Renderer {
 
+	// Buffer for background colors.
 	private FloatBuffer mBackgroundColors;
+	// Current context.
 	private Context mContext;
+	// FBO for offscreen rendering.
 	private FlowerFbo mFlowerFbo = new FlowerFbo();
+	// Actual flower renderer instance.
 	private FlowerObjects mFlowerObjects = new FlowerObjects();
-	private PointF mOffset = new PointF(), mOffsetScroll = new PointF();
+	// "Final" calculated offset value.
+	private final PointF mOffset = new PointF();
+	// Scroll offset value.
+	private final PointF mOffsetScroll = new PointF();
+	// Additional animated offset source and destination values.
 	private PointF mOffsetSrc = new PointF(), mOffsetDst = new PointF();
+	// Animated offset time value for iterating between src and dst.
 	private long mOffsetTime;
+	// Vertex buffer for full scene coordinates.
 	private ByteBuffer mScreenVertices;
 
 	// Shader for rendering background gradient.
@@ -35,6 +64,9 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 	// Surface/screen dimensions.
 	private int mWidth, mHeight;
 
+	/**
+	 * Default constructor.
+	 */
 	public FlowerRenderer(Context context) {
 		mContext = context;
 
