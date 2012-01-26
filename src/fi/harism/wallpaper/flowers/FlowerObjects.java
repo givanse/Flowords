@@ -1,3 +1,19 @@
+/*
+   Copyright 2012 Harri Smått
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ */
+
 package fi.harism.wallpaper.flowers;
 
 import java.nio.ByteBuffer;
@@ -10,43 +26,68 @@ import android.graphics.PointF;
 import android.opengl.GLES20;
 import android.os.SystemClock;
 
+/**
+ * Main flower handling and rendering class.
+ */
 public final class FlowerObjects {
 
+	// Flower movement directions.
 	private static final float[] DIRECTIONS = { 0, 1, 1, 1, 1, 0, 1, -1, 0, -1,
 			-1, -1, -1, 0, -1, 1 };
+	// Render area aspect ratio.
 	private final PointF mAspectRatio = new PointF();
+	// Branch propability preference value between [0, 1].
 	private float mBranchPropability;
-
+	// Spline rendering buffer.
 	private FloatBuffer mBufferSpline;
+	// Texture rendering buffer.
 	private ByteBuffer mBufferTexture;
-
+	// Container for retrieving points and rendering them (=textures).
+	private final Vector<StructPoint> mContainerPoint = new Vector<StructPoint>();
+	// Container for retrieving splines and rendering them.
+	private final Vector<StructSpline> mContainerSpline = new Vector<StructSpline>();
+	// Flower movement directions. These are calculated from DIRECTIONS so that
+	// first length is set to 1, and then multiplied with aspect ratio.
 	private final PointF[] mDirections = new PointF[8];
+	// Flower element objects.
 	private ElementFlower[] mFlowerElements = new ElementFlower[0];
+	// Flower FBO used for flower texture.
 	private final FlowerFbo mFlowerFbo = new FlowerFbo();
-	private final Vector<StructPoint> mPointContainer = new Vector<StructPoint>();
+	// Shader for rendering flower texture.
 	private final FlowerShader mShaderPoint = new FlowerShader();
+	// Shader for rendering splines.
 	private final FlowerShader mShaderSpline = new FlowerShader();
+	// Shader for rendering flower textures.
 	private final FlowerShader mShaderTexture = new FlowerShader();
-	private final Vector<StructSpline> mSplineContainer = new Vector<StructSpline>();
-
+	// Spline vertex count,
 	private int mSplineVertexCount;
+	// Zoom level preference value, between [0, 1].
 	private float mZoomLevel;
 
+	/**
+	 * Default constructor.
+	 */
 	public FlowerObjects() {
-		final byte TEXTURE_VERTICES[] = { -1, 1, -1, -1, 1, 1, 1, -1 };
+		final byte[] TEXTURE_COORDS = { -1, 1, -1, -1, 1, 1, 1, -1 };
 		mBufferTexture = ByteBuffer.allocateDirect(2 * 4);
-		mBufferTexture.put(TEXTURE_VERTICES).position(0);
+		mBufferTexture.put(TEXTURE_COORDS).position(0);
 		for (int i = 0; i < mDirections.length; ++i) {
 			mDirections[i] = new PointF();
 		}
 	}
 
+	/**
+	 * Calculates distance between point1 and point2.
+	 */
 	private float distance(PointF point1, PointF point2) {
 		float dx = point1.x - point2.x;
 		float dy = point1.y - point2.y;
 		return (float) Math.sqrt(dx * dx + dy * dy);
 	}
 
+	/**
+	 * Calculates distance between point1 + point2 and point3.
+	 */
 	private float distance(PointF point1, PointF point2, PointF point3) {
 		float dx = point1.x + point2.x - point3.x;
 		float dy = point1.y + point2.y - point3.y;
@@ -137,26 +178,40 @@ public final class FlowerObjects {
 		}
 	}
 
+	/**
+	 * Renders flowers into scene.
+	 * 
+	 * @param offset
+	 *            Global offset value.
+	 */
 	public void onDrawFrame(PointF offset) {
 		GLES20.glEnable(GLES20.GL_BLEND);
 		GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 
 		long renderTime = SystemClock.uptimeMillis();
 		for (int i = 0; i < mFlowerElements.length; ++i) {
-			mSplineContainer.clear();
-			mPointContainer.clear();
+			mContainerPoint.clear();
+			mContainerSpline.clear();
 
 			ElementFlower flower = mFlowerElements[i];
 			update(flower, renderTime, offset);
-			flower.getRenderStructs(mSplineContainer, mPointContainer,
+			flower.getRenderStructs(mContainerSpline, mContainerPoint,
 					renderTime);
-			renderSplines(mSplineContainer, flower.mColor, offset);
-			renderFlowers(mPointContainer, flower.mColor, offset);
+			renderSplines(mContainerSpline, flower.mColor, offset);
+			renderFlowers(mContainerPoint, flower.mColor, offset);
 		}
 
 		GLES20.glDisable(GLES20.GL_BLEND);
 	}
 
+	/**
+	 * Called once underlying surface size has changed.
+	 * 
+	 * @param width
+	 *            Surface width.
+	 * @param height
+	 *            Surface height.
+	 */
 	public void onSurfaceChanged(int width, int height) {
 		mAspectRatio.x = (float) Math.min(width, height) / width;
 		mAspectRatio.y = (float) Math.min(width, height) / height;
@@ -172,6 +227,12 @@ public final class FlowerObjects {
 		}
 	}
 
+	/**
+	 * Called once Surface has been created.
+	 * 
+	 * @param context
+	 *            Context to read resources from.
+	 */
 	public void onSurfaceCreated(Context context) {
 		mShaderSpline.setProgram(context.getString(R.string.shader_spline_vs),
 				context.getString(R.string.shader_spline_fs));
@@ -230,10 +291,16 @@ public final class FlowerObjects {
 		GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
 	}
 
+	/**
+	 * Generates random value between [min, max).
+	 */
 	private float rand(float min, float max) {
 		return min + (float) (Math.random() * (max - min));
 	}
 
+	/**
+	 * Renders flower textures.
+	 */
 	private void renderFlowers(Vector<StructPoint> flowers, float[] color,
 			PointF offset) {
 
@@ -264,6 +331,9 @@ public final class FlowerObjects {
 		}
 	}
 
+	/**
+	 * Renders splines.
+	 */
 	public void renderSplines(Vector<StructSpline> splines, float[] color,
 			PointF offset) {
 		mShaderSpline.useProgram();
@@ -318,6 +388,9 @@ public final class FlowerObjects {
 		}
 	}
 
+	/**
+	 * Updates preference values.
+	 */
 	public void setPreferences(int flowerCount, float[][] flowerColors,
 			int splineQuality, float branchPropability, float zoomLevel) {
 		if (flowerCount != mFlowerElements.length) {
@@ -349,6 +422,9 @@ public final class FlowerObjects {
 		mZoomLevel = zoomLevel;
 	}
 
+	/**
+	 * Animates flower element regarding to current time value.
+	 */
 	private void update(ElementFlower flower, long time, PointF offset) {
 		float maxRootWidth = FlowerConstants.FLOWER_ROOT_WIDTH_MIN
 				+ mZoomLevel
@@ -426,6 +502,9 @@ public final class FlowerObjects {
 		flower.mCurrentDirIndex = currentDirIdx;
 	}
 
+	/**
+	 * Branch element for handling branch data.
+	 */
 	private final class ElementBranch {
 		public int mBranchPointCount;
 		private final StructPoint[] mBranchPoints = new StructPoint[2];
@@ -487,6 +566,9 @@ public final class FlowerObjects {
 		}
 	}
 
+	/**
+	 * Flower element for handling flower related data.
+	 */
 	private final class ElementFlower {
 
 		public float[] mColor = new float[4];
@@ -547,6 +629,9 @@ public final class FlowerObjects {
 
 	}
 
+	/**
+	 * Root element for handling root "spline" related data.
+	 */
 	private final class ElementRoot {
 
 		private final ElementBranch[] mBranchElements = new ElementBranch[5];
@@ -597,12 +682,18 @@ public final class FlowerObjects {
 		}
 	}
 
+	/**
+	 * Holder for point data.
+	 */
 	private final class StructPoint {
 		public final PointF mPosition = new PointF();
 		public float mRotationSin, mRotationCos;
 		public float mScale;
 	}
 
+	/**
+	 * Holder for spline data.
+	 */
 	private final class StructSpline {
 		public final PointF mPoints[] = new PointF[4];
 		public float mStartT = 0f, mEndT = 1f;
