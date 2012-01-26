@@ -27,17 +27,17 @@ import android.widget.SeekBar;
 import fi.harism.wallpaper.flowers.R;
 
 /**
- * RGBA color chooser dialog preferece.
+ * RGBA color chooser dialog preference.
  */
 public class FlowerRGBAColorPreference extends DialogPreference implements
 		SeekBar.OnSeekBarChangeListener {
 
-	// Color value SeekBars.
-	private SeekBar mSeekBarR, mSeekBarG, mSeekBarB, mSeekBarA;
+	// Color value dialog SeekBars.
+	private SeekBar mDlgSeekBarR, mDlgSeekBarG, mDlgSeekBarB, mDlgSeekBarA;
+	// Color value dialog preview View.
+	private View mDlgViewColor;
 	// Current color value.
 	private int mValue;
-	// Color preview View.
-	private View mViewColor;
 
 	/**
 	 * Default constructor.
@@ -52,8 +52,9 @@ public class FlowerRGBAColorPreference extends DialogPreference implements
 	 * @return Current color value.
 	 */
 	private int getCurrentColor() {
-		return Color.argb(mSeekBarA.getProgress(), mSeekBarR.getProgress(),
-				mSeekBarG.getProgress(), mSeekBarB.getProgress());
+		return Color.argb(mDlgSeekBarA.getProgress(),
+				mDlgSeekBarR.getProgress(), mDlgSeekBarG.getProgress(),
+				mDlgSeekBarB.getProgress());
 	}
 
 	@Override
@@ -61,12 +62,12 @@ public class FlowerRGBAColorPreference extends DialogPreference implements
 		super.onBindDialogView(view);
 
 		// Do not apply alpha to color preview.
-		mViewColor.setBackgroundColor(mValue | 0xFF000000);
+		mDlgViewColor.setBackgroundColor(mValue | 0xFF000000);
 		// Set SeekBar values.
-		mSeekBarR.setProgress(Color.red(mValue));
-		mSeekBarG.setProgress(Color.green(mValue));
-		mSeekBarB.setProgress(Color.blue(mValue));
-		mSeekBarA.setProgress(Color.alpha(mValue));
+		mDlgSeekBarR.setProgress(Color.red(mValue));
+		mDlgSeekBarG.setProgress(Color.green(mValue));
+		mDlgSeekBarB.setProgress(Color.blue(mValue));
+		mDlgSeekBarA.setProgress(Color.alpha(mValue));
 	}
 
 	@Override
@@ -75,20 +76,20 @@ public class FlowerRGBAColorPreference extends DialogPreference implements
 				R.layout.preference_color, null);
 
 		// Get color preview View.
-		mViewColor = view.findViewById(R.id.color_view);
+		mDlgViewColor = view.findViewById(R.id.color_view);
 		// Get and adjust color SeekBars.
-		mSeekBarR = (SeekBar) view.findViewById(R.id.color_red_seekbar);
-		mSeekBarR.setMax(255);
-		mSeekBarR.setOnSeekBarChangeListener(this);
-		mSeekBarG = (SeekBar) view.findViewById(R.id.color_green_seekbar);
-		mSeekBarG.setMax(255);
-		mSeekBarG.setOnSeekBarChangeListener(this);
-		mSeekBarB = (SeekBar) view.findViewById(R.id.color_blue_seekbar);
-		mSeekBarB.setMax(255);
-		mSeekBarB.setOnSeekBarChangeListener(this);
-		mSeekBarA = (SeekBar) view.findViewById(R.id.color_alpha_seekbar);
-		mSeekBarA.setMax(255);
-		mSeekBarA.setOnSeekBarChangeListener(this);
+		mDlgSeekBarR = (SeekBar) view.findViewById(R.id.color_red_seekbar);
+		mDlgSeekBarR.setMax(255);
+		mDlgSeekBarR.setOnSeekBarChangeListener(this);
+		mDlgSeekBarG = (SeekBar) view.findViewById(R.id.color_green_seekbar);
+		mDlgSeekBarG.setMax(255);
+		mDlgSeekBarG.setOnSeekBarChangeListener(this);
+		mDlgSeekBarB = (SeekBar) view.findViewById(R.id.color_blue_seekbar);
+		mDlgSeekBarB.setMax(255);
+		mDlgSeekBarB.setOnSeekBarChangeListener(this);
+		mDlgSeekBarA = (SeekBar) view.findViewById(R.id.color_alpha_seekbar);
+		mDlgSeekBarA.setMax(255);
+		mDlgSeekBarA.setOnSeekBarChangeListener(this);
 
 		return view;
 	}
@@ -113,7 +114,7 @@ public class FlowerRGBAColorPreference extends DialogPreference implements
 	public void onProgressChanged(SeekBar seekBar, int progress,
 			boolean fromUser) {
 		// Do not apply alpha to preview color View.
-		mViewColor.setBackgroundColor(getCurrentColor() | 0xFF000000);
+		mDlgViewColor.setBackgroundColor(getCurrentColor() | 0xFF000000);
 	}
 
 	@Override
