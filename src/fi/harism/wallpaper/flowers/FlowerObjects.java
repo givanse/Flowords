@@ -116,7 +116,8 @@ public final class FlowerObjects {
 		// Move third control point to (startPos + (length - normalLen) * dir).
 		spline.mPoints[2].offset(dir.x * (length - normalLen), dir.y
 				* (length - normalLen));
-		// If straight end is not requested move third control point among normal.
+		// If straight end is not requested move third control point among
+		// normal.
 		if (!straightEnd) {
 			spline.mPoints[2]
 					.offset(normal.x * normalLen, normal.y * normalLen);
@@ -241,24 +242,7 @@ public final class FlowerObjects {
 		for (ElementFlower flower : mFlowerElements) {
 			flower.reset();
 		}
-	}
 
-	/**
-	 * Called once Surface has been created.
-	 * 
-	 * @param context
-	 *            Context to read resources from.
-	 */
-	public void onSurfaceCreated(Context context) {
-		mShaderSpline.setProgram(context.getString(R.string.shader_spline_vs),
-				context.getString(R.string.shader_spline_fs));
-		mShaderTexture.setProgram(
-				context.getString(R.string.shader_texture_vs),
-				context.getString(R.string.shader_texture_fs));
-		mShaderPoint.setProgram(context.getString(R.string.shader_point_vs),
-				context.getString(R.string.shader_point_fs));
-
-		mFlowerFbo.reset();
 		mFlowerFbo.init(256, 256, 1);
 		mFlowerFbo.bind();
 		mFlowerFbo.bindTexture(0);
@@ -305,6 +289,24 @@ public final class FlowerObjects {
 		GLES20.glUniform4f(uColor, 0, 0, 0, 0);
 		GLES20.glUniform1f(uPointSize, 72);
 		GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
+	}
+
+	/**
+	 * Called once Surface has been created.
+	 * 
+	 * @param context
+	 *            Context to read resources from.
+	 */
+	public void onSurfaceCreated(Context context) {
+		mShaderSpline.setProgram(context.getString(R.string.shader_spline_vs),
+				context.getString(R.string.shader_spline_fs));
+		mShaderTexture.setProgram(
+				context.getString(R.string.shader_texture_vs),
+				context.getString(R.string.shader_texture_fs));
+		mShaderPoint.setProgram(context.getString(R.string.shader_point_vs),
+				context.getString(R.string.shader_point_fs));
+
+		mFlowerFbo.reset();
 	}
 
 	/**
