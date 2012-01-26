@@ -2,7 +2,7 @@
 <resources>
 
     <!-- General strings -->
-    <string name="app_name">Flowers</string>
+    <string name="app_name">Flowers Wallpaper</string>
     <string name="preferences_name">Flowers Preferences</string>
     <string name="author">harism</string>
     <string name="description">Flowers, live OpenGL 2.0 ES wallpaper.</string>
@@ -29,10 +29,10 @@
     <string name="colors_title">Colors</string>
     <string name="colors_scheme_title">Color Scheme</string>
     <string name="colors_scheme_summary">Select predefined color scheme or custom to create your own</string>
-    <string name="colors_flower_1_title">Flower #1</string>
-    <string name="colors_flower_1_summary">Select flower color</string>
-    <string name="colors_flower_2_title">Flower #2</string>
-    <string name="colors_flower_2_summary">Select flower color</string>
+    <string name="colors_flower_1_title">Flower Color 1</string>
+    <string name="colors_flower_1_summary">Select first flower color</string>
+    <string name="colors_flower_2_title">Flower Color 2</string>
+    <string name="colors_flower_2_summary">Select second flower color</string>
     <string name="colors_bg_top_title">Background Top</string>
     <string name="colors_bg_top_summary">Select background gradient color</string>
     <string name="colors_bg_bottom_title">Background Bottom</string>
