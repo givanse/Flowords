@@ -167,7 +167,21 @@ public final class FlowerObjects {
 			dir.x *= mAspectRatio.x * lenInv;
 			dir.y *= mAspectRatio.y * lenInv;
 		}
+		for (ElementFlower flower : mFlowerElements) {
+			flower.reset();
+		}
+	}
 
+	public void onSurfaceCreated(Context context) {
+		mShaderSpline.setProgram(context.getString(R.string.shader_spline_vs),
+				context.getString(R.string.shader_spline_fs));
+		mShaderTexture.setProgram(
+				context.getString(R.string.shader_texture_vs),
+				context.getString(R.string.shader_texture_fs));
+		mShaderPoint.setProgram(context.getString(R.string.shader_point_vs),
+				context.getString(R.string.shader_point_fs));
+
+		mFlowerFbo.reset();
 		mFlowerFbo.init(256, 256, 1);
 		mFlowerFbo.bind();
 		mFlowerFbo.bindTexture(0);
@@ -214,22 +228,6 @@ public final class FlowerObjects {
 		GLES20.glUniform4f(uColor, 0, 0, 0, 0);
 		GLES20.glUniform1f(uPointSize, 72);
 		GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
-	}
-
-	public void onSurfaceCreated(Context context) {
-		mShaderSpline.setProgram(context.getString(R.string.shader_spline_vs),
-				context.getString(R.string.shader_spline_fs));
-		mShaderTexture.setProgram(
-				context.getString(R.string.shader_texture_vs),
-				context.getString(R.string.shader_texture_fs));
-		mShaderPoint.setProgram(context.getString(R.string.shader_point_vs),
-				context.getString(R.string.shader_point_fs));
-
-		mFlowerFbo.reset();
-
-		for (ElementFlower flower : mFlowerElements) {
-			flower.reset();
-		}
 	}
 
 	private float rand(float min, float max) {
@@ -322,22 +320,30 @@ public final class FlowerObjects {
 
 	public void setPreferences(int flowerCount, float[][] flowerColors,
 			int splineQuality, float branchPropability, float zoomLevel) {
-		mFlowerElements = new ElementFlower[flowerCount];
+		if (flowerCount != mFlowerElements.length) {
+			mFlowerElements = new ElementFlower[flowerCount];
+			for (int i = 0; i < mFlowerElements.length; ++i) {
+				mFlowerElements[i] = new ElementFlower();
+				mFlowerElements[i].mColor = flowerColors[i];
+			}
+		}
 		for (int i = 0; i < mFlowerElements.length; ++i) {
-			mFlowerElements[i] = new ElementFlower();
 			mFlowerElements[i].mColor = flowerColors[i];
 		}
 
-		mSplineVertexCount = splineQuality + 2;
-		ByteBuffer bBuffer = ByteBuffer
-				.allocateDirect(4 * 4 * mSplineVertexCount);
-		mBufferSpline = bBuffer.order(ByteOrder.nativeOrder()).asFloatBuffer();
-		for (int i = 0; i < mSplineVertexCount; ++i) {
-			float t = (float) i / (mSplineVertexCount - 1);
-			mBufferSpline.put(t).put(1);
-			mBufferSpline.put(t).put(-1);
+		if (mSplineVertexCount != splineQuality + 2) {
+			mSplineVertexCount = splineQuality + 2;
+			ByteBuffer bBuffer = ByteBuffer
+					.allocateDirect(4 * 4 * mSplineVertexCount);
+			mBufferSpline = bBuffer.order(ByteOrder.nativeOrder())
+					.asFloatBuffer();
+			for (int i = 0; i < mSplineVertexCount; ++i) {
+				float t = (float) i / (mSplineVertexCount - 1);
+				mBufferSpline.put(t).put(1);
+				mBufferSpline.put(t).put(-1);
+			}
+			mBufferSpline.position(0);
 		}
-		mBufferSpline.position(0);
 
 		mBranchPropability = branchPropability;
 		mZoomLevel = zoomLevel;
