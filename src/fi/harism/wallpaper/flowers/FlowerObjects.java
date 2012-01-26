@@ -301,9 +301,9 @@ public final class FlowerObjects {
 					leafPositions[i * 2 + 1], 36, paint);
 		}
 		paint.setColor(borderColor);
-		canvas.drawCircle(127.5f, 127.5f, 48, paint);
+		canvas.drawCircle(128, 128, 48, paint);
 		paint.setColor(Color.BLACK);
-		canvas.drawCircle(127.5f, 127.5f, 36, paint);
+		canvas.drawCircle(128, 128, 36, paint);
 
 		GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
 		bitmap.recycle();
