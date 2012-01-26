@@ -15,13 +15,13 @@
     </string>
     <string name="shader_background_fs">
         precision mediump float;
-        uniform vec2 uDarkenWidth;
+        uniform vec2 uLineWidth;
         varying vec4 vColor;
         varying vec2 vPosition;
         void main() {
             gl_FragColor = vColor;
             vec2 f = fract(vPosition);
-            if (f.x &lt; uDarkenWidth.x || f.y &lt; uDarkenWidth.y) {
+            if (f.x &lt; uLineWidth.x || f.y &lt; uLineWidth.y) {
                 gl_FragColor.rgb *= 0.98;
             }
         }
@@ -104,25 +104,6 @@
         varying vec2 vTextureCoord;
         void main() {
             gl_FragColor = uColor * texture2D(sTexture, vTextureCoord).r;
-        }
-    </string>
-    <string name="shader_point_vs">
-        uniform float uPointSize;
-        attribute vec2 aPosition;
-        void main() {
-            gl_Position = vec4(aPosition, 0.0, 1.0);
-            gl_PointSize = uPointSize;
-        }
-    </string>
-    <string name="shader_point_fs">
-        precision mediump float;
-        uniform vec4 uColor;
-        void main() {
-            if (length(gl_PointCoord - 0.5) >= 0.5) {
-                discard;
-            } else {
-                gl_FragColor = uColor;
-            }
         }
     </string>
 </resources>

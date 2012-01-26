@@ -22,8 +22,13 @@ import java.nio.FloatBuffer;
 import java.util.Vector;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.PointF;
 import android.opengl.GLES20;
+import android.opengl.GLUtils;
 import android.os.SystemClock;
 
 /**
@@ -51,10 +56,8 @@ public final class FlowerObjects {
 	private final PointF[] mDirections = new PointF[8];
 	// Flower element objects.
 	private ElementFlower[] mFlowerElements = new ElementFlower[0];
-	// Flower FBO used for flower texture.
-	private final FlowerFbo mFlowerFbo = new FlowerFbo();
-	// Shader for rendering flower texture.
-	private final FlowerShader mShaderPoint = new FlowerShader();
+	// Flower texture id.
+	private final int mFlowerTextureId[] = { -1 };
 	// Shader for rendering splines.
 	private final FlowerShader mShaderSpline = new FlowerShader();
 	// Shader for rendering flower textures.
@@ -242,53 +245,6 @@ public final class FlowerObjects {
 		for (ElementFlower flower : mFlowerElements) {
 			flower.reset();
 		}
-
-		mFlowerFbo.init(256, 256, 1);
-		mFlowerFbo.bind();
-		mFlowerFbo.bindTexture(0);
-		GLES20.glClearColor(0f, 0f, 0f, 0f);
-		GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
-
-		ByteBuffer bBuffer = ByteBuffer.allocateDirect(6 * 2 * 4);
-		FloatBuffer fBuffer = bBuffer.order(ByteOrder.nativeOrder())
-				.asFloatBuffer();
-		fBuffer.put(0).put(0);
-		float dist = 1.7f / 3f;
-		for (int i = 0; i < 5; ++i) {
-			double r = Math.PI * 2 * i / 5;
-			fBuffer.put((float) Math.sin(r) * dist).put(
-					(float) Math.cos(r) * dist);
-		}
-		fBuffer.position(0);
-
-		mShaderPoint.useProgram();
-		int uPointSize = mShaderPoint.getHandle("uPointSize");
-		int uColor = mShaderPoint.getHandle("uColor");
-		int aPosition = mShaderPoint.getHandle("aPosition");
-
-		GLES20.glVertexAttribPointer(aPosition, 2, GLES20.GL_FLOAT, false, 0,
-				fBuffer);
-		GLES20.glEnableVertexAttribArray(aPosition);
-
-		GLES20.glUniform4f(uColor, .8f, 0, 0, 0);
-		GLES20.glUniform1f(uPointSize, 144);
-		GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
-		GLES20.glUniform1f(uPointSize, 96);
-		GLES20.glDrawArrays(GLES20.GL_POINTS, 1, 6);
-
-		GLES20.glUniform4f(uColor, 1f, 0, 0, 0);
-		GLES20.glUniform1f(uPointSize, 120);
-		GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
-		GLES20.glUniform1f(uPointSize, 72);
-		GLES20.glDrawArrays(GLES20.GL_POINTS, 1, 6);
-
-		GLES20.glUniform4f(uColor, .8f, 0, 0, 0);
-		GLES20.glUniform1f(uPointSize, 96);
-		GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
-
-		GLES20.glUniform4f(uColor, 0, 0, 0, 0);
-		GLES20.glUniform1f(uPointSize, 72);
-		GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
 	}
 
 	/**
@@ -303,10 +259,54 @@ public final class FlowerObjects {
 		mShaderTexture.setProgram(
 				context.getString(R.string.shader_texture_vs),
 				context.getString(R.string.shader_texture_fs));
-		mShaderPoint.setProgram(context.getString(R.string.shader_point_vs),
-				context.getString(R.string.shader_point_fs));
 
-		mFlowerFbo.reset();
+		GLES20.glDeleteTextures(1, mFlowerTextureId, 0);
+		GLES20.glGenTextures(1, mFlowerTextureId, 0);
+		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mFlowerTextureId[0]);
+		GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S,
+				GLES20.GL_CLAMP_TO_EDGE);
+		GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T,
+				GLES20.GL_CLAMP_TO_EDGE);
+		GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
+				GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+		GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
+				GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+
+		Bitmap bitmap = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888);
+		bitmap.eraseColor(Color.BLACK);
+
+		Canvas canvas = new Canvas(bitmap);
+		Paint paint = new Paint();
+		paint.setStyle(Paint.Style.FILL);
+
+		int borderColor = Color.rgb((int) (.8f * 255), 0, 0);
+		int mainColor = Color.rgb(255, 0, 0);
+
+		float leafDist = 1.7f * 128 / 3f;
+		float leafPositions[] = new float[10];
+		for (int i = 0; i < 5; ++i) {
+			double r = Math.PI * 2 * i / 5;
+			leafPositions[i * 2 + 0] = 128 + (float) (Math.sin(r) * leafDist);
+			leafPositions[i * 2 + 1] = 128 + (float) (Math.cos(r) * leafDist);
+		}
+
+		paint.setColor(borderColor);
+		for (int i = 0; i < 5; ++i) {
+			canvas.drawCircle(leafPositions[i * 2 + 0],
+					leafPositions[i * 2 + 1], 48, paint);
+		}
+		paint.setColor(mainColor);
+		for (int i = 0; i < 5; ++i) {
+			canvas.drawCircle(leafPositions[i * 2 + 0],
+					leafPositions[i * 2 + 1], 36, paint);
+		}
+		paint.setColor(borderColor);
+		canvas.drawCircle(127.5f, 127.5f, 48, paint);
+		paint.setColor(Color.BLACK);
+		canvas.drawCircle(127.5f, 127.5f, 36, paint);
+
+		GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
+		bitmap.recycle();
 	}
 
 	/**
@@ -337,7 +337,7 @@ public final class FlowerObjects {
 		GLES20.glEnableVertexAttribArray(aPosition);
 
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mFlowerFbo.getTexture(0));
+		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mFlowerTextureId[0]);
 
 		for (StructPoint point : flowers) {
 			GLES20.glUniform2f(uOffset, point.mPosition.x - offset.x,
