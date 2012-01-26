@@ -140,7 +140,7 @@ public final class FlowerObjects {
 				* (FlowerConstants.FLOWER_BRANCH_WIDTH_MAX - FlowerConstants.FLOWER_BRANCH_WIDTH_MIN);
 		PointF dir = mDirections[(8 + startDir) % 8];
 		PointF normal = mDirections[(8 + startDir - 2 * rotateDir) % 8];
-		StructSpline spline = branch.getSpline();
+		StructSpline spline = branch.getNextSpline();
 		spline.mWidthStart = maxBranchWidth;
 		spline.mWidthEnd = 0f;
 		genArc(spline, startPos, dir, len, normal, false);
@@ -148,7 +148,7 @@ public final class FlowerObjects {
 
 		float rand = rand(0, 3);
 		if (rand < 1) {
-			StructPoint point = branch.getPoint();
+			StructPoint point = branch.getNextPoint();
 			point.mPosition.set(startPos);
 			double rotation = Math.PI * 2 * startDir / 8;
 			point.mRotationSin = (float) Math.sin(rotation);
@@ -158,12 +158,12 @@ public final class FlowerObjects {
 			spline.mWidthEnd = maxBranchWidth / 2;
 			dir = mDirections[(8 + startDir + 2 * rotateDir) % 8];
 			normal = mDirections[(8 + startDir) % 8];
-			spline = branch.getSpline();
+			spline = branch.getNextSpline();
 			spline.mWidthStart = maxBranchWidth / 2;
 			spline.mWidthEnd = 0f;
 			genArc(spline, startPos, dir, len, normal, false);
 
-			StructPoint point = branch.getPoint();
+			StructPoint point = branch.getNextPoint();
 			point.mPosition.set(spline.mPoints[3]);
 			double rotation = Math.PI * 2 * startDir / 8;
 			point.mRotationSin = (float) Math.sin(rotation);
@@ -172,12 +172,12 @@ public final class FlowerObjects {
 		if (rand >= 2) {
 			dir = mDirections[(8 + startDir - rotateDir) % 8];
 			normal = mDirections[(8 + startDir + rotateDir) % 8];
-			spline = branch.getSpline();
+			spline = branch.getNextSpline();
 			spline.mWidthStart = maxBranchWidth / 2;
 			spline.mWidthEnd = 0f;
 			genArc(spline, startPos, dir, len * .5f, normal, false);
 
-			StructPoint point = branch.getPoint();
+			StructPoint point = branch.getNextPoint();
 			point.mPosition.set(spline.mPoints[3]);
 			double rotation = Math.PI * 2 * ((startDir + 1) % 8) / 8;
 			point.mRotationSin = (float) Math.sin(rotation);
@@ -444,7 +444,8 @@ public final class FlowerObjects {
 	 * Animates flower element regarding to current time value.
 	 */
 	private void update(ElementFlower flower, long time, PointF offset) {
-		float maxRootWidth = FlowerConstants.FLOWER_ROOT_WIDTH_MIN
+		// TODO: it might be best to do scaling during rendering instead.
+		final float ROOT_WIDTH = FlowerConstants.FLOWER_ROOT_WIDTH_MIN
 				+ mZoomLevel
 				* (FlowerConstants.FLOWER_ROOT_WIDTH_MAX - FlowerConstants.FLOWER_ROOT_WIDTH_MIN);
 
@@ -481,8 +482,8 @@ public final class FlowerObjects {
 				for (int i = currentDirIdx + k; i * k <= minDirIndex * k; i += 2 * k) {
 					PointF dir = mDirections[i];
 					PointF normal = mDirections[(8 + i - 2 * k) % 8];
-					StructSpline spline = element.getSpline();
-					spline.mWidthStart = spline.mWidthEnd = maxRootWidth;
+					StructSpline spline = element.getNextSpline();
+					spline.mWidthStart = spline.mWidthEnd = ROOT_WIDTH;
 					genArc(spline, currentPos, dir, splineLen, normal,
 							i == minDirIndex);
 
@@ -500,8 +501,8 @@ public final class FlowerObjects {
 				currentDirIdx = minDirIndex;
 			} else {
 				PointF dir = mDirections[currentDirIdx];
-				StructSpline spline = element.getSpline();
-				spline.mWidthStart = spline.mWidthEnd = maxRootWidth;
+				StructSpline spline = element.getNextSpline();
+				spline.mWidthStart = spline.mWidthEnd = ROOT_WIDTH;
 				genLine(spline, currentPos, dir, splineLen);
 
 				if (Math.random() < mBranchPropability) {
@@ -522,7 +523,8 @@ public final class FlowerObjects {
 	}
 
 	/**
-	 * Branch element for handling branch data.
+	 * Branch element for handling branch data. Namely splines and points that
+	 * create a branch.
 	 */
 	private final class ElementBranch {
 		public int mBranchPointCount;
@@ -530,6 +532,9 @@ public final class FlowerObjects {
 		public int mBranchSplineCount;
 		private final StructSpline[] mBranchSplines = new StructSpline[3];
 
+		/**
+		 * Default constructor.
+		 */
 		public ElementBranch() {
 			for (int i = 0; i < mBranchSplines.length; ++i) {
 				mBranchSplines[i] = new StructSpline();
@@ -539,15 +544,27 @@ public final class FlowerObjects {
 			}
 		}
 
-		public StructPoint getPoint() {
+		/**
+		 * Returns next point structure.
+		 */
+		public StructPoint getNextPoint() {
 			return mBranchPoints[mBranchPointCount++];
 		}
 
+		/**
+		 * Returns next splien structure.
+		 */
+		public StructSpline getNextSpline() {
+			return mBranchSplines[mBranchSplineCount++];
+		}
+
+		/**
+		 * Getter for splines and points this branch holds. Parameters startT
+		 * and endT are values between [0, 1] plus additionally startT < endT.
+		 */
 		public void getRenderStructs(Vector<StructSpline> splines,
 				Vector<StructPoint> points, float startT, float endT) {
-			float pointScaleFactor = FlowerConstants.FLOWER_POINT_SCALE_MIN
-					+ mZoomLevel
-					* (FlowerConstants.FLOWER_POINT_SCALE_MAX - FlowerConstants.FLOWER_POINT_SCALE_MIN);
+			// First iterate over splines.
 			for (int i = 0; i < mBranchSplineCount; ++i) {
 				StructSpline spline = mBranchSplines[i];
 				switch (i) {
@@ -565,28 +582,34 @@ public final class FlowerObjects {
 				}
 				splines.add(spline);
 			}
+			// Scale factor is calculated from current zoom level.
+			// TODO: scaling might be best done during rendering.
+			final float PT_SCALE_FACTOR = FlowerConstants.FLOWER_POINT_SCALE_MIN
+					+ mZoomLevel
+					* (FlowerConstants.FLOWER_POINT_SCALE_MAX - FlowerConstants.FLOWER_POINT_SCALE_MIN);
+			// Iterate over points.
 			for (int i = 0; i < mBranchPointCount; ++i) {
 				StructPoint point = mBranchPoints[i];
 				float scale = endT - startT;
 				if (mBranchSplineCount == 1) {
 					scale = scale < 1f ? Math.max((scale - .5f) * 2, 0f) : 1f;
 				}
-				point.mScale = scale * pointScaleFactor;
+				point.mScale = scale * PT_SCALE_FACTOR;
 				points.add(point);
 			}
 		}
 
-		public StructSpline getSpline() {
-			return mBranchSplines[mBranchSplineCount++];
-		}
-
+		/**
+		 * Resets branch to initial state.
+		 */
 		public void reset() {
 			mBranchSplineCount = mBranchPointCount = 0;
 		}
 	}
 
 	/**
-	 * Flower element for handling flower related data.
+	 * Flower element for handling flower related data. Namely root elements
+	 * which are used to build a flower.
 	 */
 	private final class ElementFlower {
 
@@ -597,12 +620,19 @@ public final class FlowerObjects {
 		private final Vector<ElementRoot> mRootElements = new Vector<ElementRoot>();
 		public final PointF mTargetPosition = new PointF();
 
+		/**
+		 * Default constructor.
+		 */
 		public ElementFlower() {
 			for (int i = 0; i < FlowerConstants.FLOWER_ROOT_ELEMENT_COUNT; ++i) {
 				mRootElements.add(new ElementRoot());
 			}
 		}
 
+		/**
+		 * Returns last active root element. If there are none, returns next
+		 * root element.
+		 */
 		public ElementRoot getLastRootElement() {
 			if (mRootElementCount == 0) {
 				return getNextRootElement();
@@ -611,6 +641,9 @@ public final class FlowerObjects {
 			}
 		}
 
+		/**
+		 * Returns next root element.
+		 */
 		public ElementRoot getNextRootElement() {
 			ElementRoot element;
 			if (mRootElementCount < mRootElements.size()) {
@@ -623,6 +656,10 @@ public final class FlowerObjects {
 			return element;
 		}
 
+		/**
+		 * Getter for spline and point structures for rendering. Time is current
+		 * rendering time used for deciding which root element is fading in.
+		 */
 		public void getRenderStructs(Vector<StructSpline> splines,
 				Vector<StructPoint> points, long time) {
 			ElementRoot lastElement = mRootElements.get(mRootElementCount - 1);
@@ -640,6 +677,9 @@ public final class FlowerObjects {
 			}
 		}
 
+		/**
+		 * Resets this flower element to its initial state.
+		 */
 		public void reset() {
 			mRootElementCount = 0;
 			mCurrentDirIndex = 0;
@@ -649,7 +689,8 @@ public final class FlowerObjects {
 	}
 
 	/**
-	 * Root element for handling root "spline" related data.
+	 * Root element for handling root related data. Root element consists of
+	 * splines for actual root and branch elements.
 	 */
 	private final class ElementRoot {
 
@@ -658,6 +699,9 @@ public final class FlowerObjects {
 		private final StructSpline[] mRootSplines = new StructSpline[5];
 		private long mStartTime, mDuration;
 
+		/**
+		 * Default constructor.
+		 */
 		public ElementRoot() {
 			for (int i = 0; i < 5; ++i) {
 				mRootSplines[i] = new StructSpline();
@@ -665,22 +709,42 @@ public final class FlowerObjects {
 			}
 		}
 
+		/**
+		 * Returns branch for current root spline.
+		 */
 		public ElementBranch getCurrentBranch() {
 			return mBranchElements[mRootSplineCount - 1];
 		}
 
+		/**
+		 * Returns next spline structure.
+		 */
+		public StructSpline getNextSpline() {
+			mBranchElements[mRootSplineCount].reset();
+			return mRootSplines[mRootSplineCount++];
+		}
+
+		/**
+		 * Getter for spline and point structs for rendering. Values startT and
+		 * endT are between [0, 1] plus additionally startT <= endT.
+		 */
 		public void getRenderStructs(Vector<StructSpline> splines,
 				Vector<StructPoint> points, float startT, float endT) {
 			for (int i = 0; i < mRootSplineCount; ++i) {
-				float localStartT = (float) i / mRootSplineCount;
-				float localEndT = (float) (i + 1) / mRootSplineCount;
 				StructSpline spline = mRootSplines[i];
-				spline.mStartT = Math.min(
-						Math.max((startT - localStartT)
-								/ (localEndT - localStartT), 0f), 1f);
-				spline.mEndT = Math.min(
-						Math.max((endT - localStartT)
-								/ (localEndT - localStartT), 0f), 1f);
+				if (startT != 0f || endT != 1f) {
+					float localStartT = (float) i / mRootSplineCount;
+					float localEndT = (float) (i + 1) / mRootSplineCount;
+					spline.mStartT = Math.min(
+							Math.max((startT - localStartT)
+									/ (localEndT - localStartT), 0f), 1f);
+					spline.mEndT = Math.min(
+							Math.max((endT - localStartT)
+									/ (localEndT - localStartT), 0f), 1f);
+				} else {
+					spline.mStartT = 0f;
+					spline.mEndT = 1f;
+				}
 
 				if (spline.mStartT != spline.mEndT) {
 					splines.add(spline);
@@ -690,11 +754,9 @@ public final class FlowerObjects {
 			}
 		}
 
-		public StructSpline getSpline() {
-			mBranchElements[mRootSplineCount].reset();
-			return mRootSplines[mRootSplineCount++];
-		}
-
+		/**
+		 * Resets root element to its initial state.
+		 */
 		public void reset() {
 			mRootSplineCount = 0;
 			mStartTime = mDuration = 0;
