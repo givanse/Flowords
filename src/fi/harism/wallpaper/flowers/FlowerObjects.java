@@ -94,35 +94,48 @@ public final class FlowerObjects {
 		return (float) Math.sqrt(dx * dx + dy * dy);
 	}
 
+	/**
+	 * Sets spline control points based on given parameters.
+	 */
 	private void genArc(StructSpline spline, PointF startPos, PointF dir,
 			float length, PointF normal, boolean straightEnd) {
 
+		// Bezier curve circle estimation.
 		// 2 * (sqrt(2) - 1) / 3
 		final float NORMAL_FACTOR = 0.27614237f;
 		final float normalLen = length * NORMAL_FACTOR;
 
+		// Initially set all control points to startPos.
 		for (PointF point : spline.mPoints) {
 			point.set(startPos);
 		}
+		// Move second control point into target direction plus same length in
+		// normal direction.
 		spline.mPoints[1].offset((dir.x + normal.x) * normalLen,
 				(dir.y + normal.y) * normalLen);
+		// Move third control point to (startPos + (length - normalLen) * dir).
 		spline.mPoints[2].offset(dir.x * (length - normalLen), dir.y
 				* (length - normalLen));
+		// If straight end is not requested move third control point among normal.
 		if (!straightEnd) {
 			spline.mPoints[2]
 					.offset(normal.x * normalLen, normal.y * normalLen);
 		}
+		// Set last control point to (startPos + dir * length).
 		spline.mPoints[3].offset(dir.x * length, dir.y * length);
 	}
 
+	/**
+	 * Sets branch values based on given parameters.
+	 */
 	private void genBranch(ElementBranch branch, PointF startPos, int startDir,
 			int rotateDir, float len) {
 
 		float maxBranchWidth = FlowerConstants.FLOWER_BRANCH_WIDTH_MIN
 				+ mZoomLevel
 				* (FlowerConstants.FLOWER_BRANCH_WIDTH_MAX - FlowerConstants.FLOWER_BRANCH_WIDTH_MIN);
-		PointF dir = mDirections[(8 + startDir + rotateDir) % 8];
-		PointF normal = mDirections[(8 + startDir - rotateDir) % 8];
+		PointF dir = mDirections[(8 + startDir) % 8];
+		PointF normal = mDirections[(8 + startDir - 2 * rotateDir) % 8];
 		StructSpline spline = branch.getSpline();
 		spline.mWidthStart = maxBranchWidth;
 		spline.mWidthEnd = 0f;
@@ -139,8 +152,8 @@ public final class FlowerObjects {
 		}
 		if (rand >= 1) {
 			spline.mWidthEnd = maxBranchWidth / 2;
-			dir = mDirections[(8 + startDir + 3 * rotateDir) % 8];
-			normal = mDirections[(8 + startDir + rotateDir) % 8];
+			dir = mDirections[(8 + startDir + 2 * rotateDir) % 8];
+			normal = mDirections[(8 + startDir) % 8];
 			spline = branch.getSpline();
 			spline.mWidthStart = maxBranchWidth / 2;
 			spline.mWidthEnd = 0f;
@@ -153,8 +166,8 @@ public final class FlowerObjects {
 			point.mRotationCos = (float) Math.cos(rotation);
 		}
 		if (rand >= 2) {
-			dir = mDirections[(8 + startDir) % 8];
-			normal = mDirections[(8 + startDir + 2 * rotateDir) % 8];
+			dir = mDirections[(8 + startDir - rotateDir) % 8];
+			normal = mDirections[(8 + startDir + rotateDir) % 8];
 			spline = branch.getSpline();
 			spline.mWidthStart = maxBranchWidth / 2;
 			spline.mWidthEnd = 0f;
@@ -168,6 +181,9 @@ public final class FlowerObjects {
 		}
 	}
 
+	/**
+	 * Sets spline to straight line between (start, start + length * dir).
+	 */
 	private void genLine(StructSpline spline, PointF start, PointF dir,
 			float length) {
 		for (int i = 0; i < 4; ++i) {
@@ -473,7 +489,8 @@ public final class FlowerObjects {
 						int branchDir = Math.random() < 0.5 ? -k : k;
 						float branchLen = Math.min(splineLen, .5f)
 								* rand(.6f, .8f);
-						genBranch(b, currentPos, i, branchDir, branchLen);
+						genBranch(b, currentPos, i + branchDir, branchDir,
+								branchLen);
 					}
 
 					currentPos.set(spline.mPoints[3]);
@@ -489,8 +506,8 @@ public final class FlowerObjects {
 					ElementBranch b = element.getCurrentBranch();
 					int branchDir = Math.random() < 0.5 ? -1 : 1;
 					float branchLen = Math.min(splineLen, .5f) * rand(.6f, .8f);
-					genBranch(b, currentPos, currentDirIdx, branchDir,
-							branchLen);
+					genBranch(b, currentPos, currentDirIdx + branchDir,
+							branchDir, branchLen);
 				}
 
 				currentPos.set(spline.mPoints[3]);
