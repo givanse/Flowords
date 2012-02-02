@@ -9,3 +9,6 @@ See LICENSE for more information.
 Compiled application will be released on Android market from time to time. Check
 http://market.android.com/details?id=fi.harism.wallpaper.flowers for taking a
 brief look on the project.
+
+Original idea for this wallpaper comes from a demo by
+[Moppi Productions](http://www.youtube.com/watch?v=PlWv_rVcVDA).
