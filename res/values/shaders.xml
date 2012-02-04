@@ -84,15 +84,14 @@
         }
     </string>
     <string name="shader_texture_vs">
+        uniform mat2 uRotationM;
         uniform vec2 uAspectRatio;
         uniform vec2 uOffset;
-        uniform vec2 uRotation;
         uniform float uScale;
         attribute vec2 aPosition;
         varying vec2 vTextureCoord;
         void main() {
-            vec2 pos = vec2(aPosition.x * uRotation.y - aPosition.y * uRotation.x,
-                            aPosition.x * uRotation.x + aPosition.y * uRotation.y);
+            vec2 pos = uRotationM * aPosition;
             gl_Position = vec4(pos * uAspectRatio * uScale + uOffset, 0.0, 1.0);
             vTextureCoord = (aPosition.xy + 1.0) * 0.5;
         }

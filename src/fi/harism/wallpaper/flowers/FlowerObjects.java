@@ -150,7 +150,7 @@ public final class FlowerObjects {
 		if (rand < 1) {
 			StructPoint point = branch.getNextPoint();
 			point.mPosition.set(startPos);
-			double rotation = Math.PI * 2 * startDir / 8;
+			final float rotation = rand(0, (float) (Math.PI * 2));
 			point.mRotationSin = (float) Math.sin(rotation);
 			point.mRotationCos = (float) Math.cos(rotation);
 		}
@@ -165,7 +165,7 @@ public final class FlowerObjects {
 
 			StructPoint point = branch.getNextPoint();
 			point.mPosition.set(spline.mPoints[3]);
-			double rotation = Math.PI * 2 * startDir / 8;
+			final float rotation = rand(0, (float) (Math.PI * 2));
 			point.mRotationSin = (float) Math.sin(rotation);
 			point.mRotationCos = (float) Math.cos(rotation);
 		}
@@ -179,7 +179,7 @@ public final class FlowerObjects {
 
 			StructPoint point = branch.getNextPoint();
 			point.mPosition.set(spline.mPoints[3]);
-			double rotation = Math.PI * 2 * ((startDir + 1) % 8) / 8;
+			final float rotation = rand(0, (float) (Math.PI * 2));
 			point.mRotationSin = (float) Math.sin(rotation);
 			point.mRotationCos = (float) Math.cos(rotation);
 		}
@@ -326,7 +326,7 @@ public final class FlowerObjects {
 		int uAspectRatio = mShaderTexture.getHandle("uAspectRatio");
 		int uOffset = mShaderTexture.getHandle("uOffset");
 		int uScale = mShaderTexture.getHandle("uScale");
-		int uRotation = mShaderTexture.getHandle("uRotation");
+		int uRotationM = mShaderTexture.getHandle("uRotationM");
 		int uColor = mShaderTexture.getHandle("uColor");
 		int aPosition = mShaderTexture.getHandle("aPosition");
 
@@ -340,10 +340,11 @@ public final class FlowerObjects {
 		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mFlowerTextureId[0]);
 
 		for (StructPoint point : flowers) {
+			final float rotationM[] = { point.mRotationCos, point.mRotationSin,
+					-point.mRotationSin, point.mRotationCos };
+			GLES20.glUniformMatrix2fv(uRotationM, 1, false, rotationM, 0);
 			GLES20.glUniform2f(uOffset, point.mPosition.x - offset.x,
 					point.mPosition.y - offset.y);
-			GLES20.glUniform2f(uRotation, point.mRotationSin,
-					point.mRotationCos);
 			GLES20.glUniform1f(uScale, point.mScale);
 			GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 		}
