@@ -60,8 +60,6 @@ public final class FlowerService extends WallpaperService {
 
 			mGLSurfaceView = new WallpaperGLSurfaceView(FlowerService.this);
 			mGLSurfaceView.setEGLContextClientVersion(2);
-			mGLSurfaceView
-					.setEGLConfigChooser(new FlowerEGLConfigChooser(false));
 			mGLSurfaceView.setRenderer(mRenderer);
 			mGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
 			mGLSurfaceView.onPause();
