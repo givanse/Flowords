@@ -6,3 +6,4 @@ proguard/
 project.properties
 .classpath
 .project
+.settings/
