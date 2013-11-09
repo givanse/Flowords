@@ -1,5 +1,4 @@
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:harism="http://schemas.android.com/apk/res/fi.harism.glsl" >
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory android:title="@string/general_title" >
         <ListPreference
@@ -10,24 +9,25 @@
             android:summary="@string/general_flower_count_summary"
             android:title="@string/general_flower_count_title" />
 
-        <com.givanse.flowords.prefs.FlowerSliderPreference
+        <com.givanse.flowords.preferences.DialogSlider
             android:defaultValue="3"
             android:key="@string/key_general_zoom"
             android:summary="@string/general_zoom_summary"
             android:title="@string/general_zoom_title" />
-        <com.givanse.flowords.prefs.FlowerSliderPreference
+        <com.givanse.flowords.preferences.DialogSlider
             android:defaultValue="5"
             android:key="@string/key_general_branch_propability"
             android:summary="@string/general_branch_propability_summary"
             android:title="@string/general_branch_propability_title" />
-        <com.givanse.flowords.prefs.FlowerSliderPreference
+        <com.givanse.flowords.preferences.DialogSlider
             android:defaultValue="6"
             android:key="@string/key_general_spline_quality"
             android:summary="@string/general_spline_quality_summary"
             android:title="@string/general_spline_quality_title" />
     </PreferenceCategory>
+
     <PreferenceCategory android:title="Colors" >
-        <com.givanse.flowords.prefs.FlowerColorSchemePreference
+        <com.givanse.flowords.preferences.ColorScheme
             android:defaultValue="1"
             android:entries="@array/colors_scheme_entries"
             android:entryValues="@array/colors_scheme_values"
@@ -35,26 +35,26 @@
             android:summary="@string/colors_scheme_summary"
             android:title="@string/colors_scheme_title" />
 
-        <com.givanse.flowords.prefs.FlowerRGBAColorPreference
+        <com.givanse.flowords.preferences.RGBAColor
             android:defaultValue="#80AA8060"
             android:dependency="@string/key_colors_scheme"
             android:key="@string/key_colors_flower_1"
             android:summary="@string/colors_flower_1_summary"
             android:title="@string/colors_flower_1_title" />
-        <com.givanse.flowords.prefs.FlowerRGBAColorPreference
+        <com.givanse.flowords.preferences.RGBAColor
             android:defaultValue="#80AA80A0"
             android:dependency="@string/key_colors_scheme"
             android:key="@string/key_colors_flower_2"
             android:summary="@string/colors_flower_2_summary"
             android:title="@string/colors_flower_2_title" />
 
-        <com.givanse.flowords.prefs.FlowerRGBColorPreference
+        <com.givanse.flowords.preferences.RGBColor
             android:defaultValue="#808080"
             android:dependency="@string/key_colors_scheme"
             android:key="@string/key_colors_bg_top"
             android:summary="@string/colors_bg_top_summary"
             android:title="@string/colors_bg_top_title" />
-        <com.givanse.flowords.prefs.FlowerRGBColorPreference
+        <com.givanse.flowords.preferences.RGBColor
             android:defaultValue="#AA8060"
             android:dependency="@string/key_colors_scheme"
             android:key="@string/key_colors_bg_bottom"

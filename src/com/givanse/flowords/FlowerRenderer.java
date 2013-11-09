@@ -19,12 +19,9 @@ package com.givanse.flowords;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-
+import com.givanse.flowords.R;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
-
-import fi.harism.wallpaper.flowers.R;
-
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;

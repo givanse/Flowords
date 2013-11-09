@@ -20,9 +20,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.Vector;
-
-import fi.harism.wallpaper.flowers.R;
-
+import com.givanse.flowords.R;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;

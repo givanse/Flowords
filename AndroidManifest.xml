@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     android:installLocation="auto"
-    package="fi.harism.wallpaper.flowers"
+    package="com.givanse.flowords"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -31,7 +31,7 @@
         </service>
 
         <activity
-            android:name=".prefs.FlowerPreferenceActivity"
+            android:name=".preferences.PreferencesActivity"
             android:exported="true"
             android:label="@string/preferences_name" />
     </application>
