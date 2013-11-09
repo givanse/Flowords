@@ -12,13 +12,16 @@
  * limitations under the License.
  */
 
-package com.givanse.flowords;
+package com.givanse.flowords.engine;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.Vector;
+
 import com.givanse.flowords.R;
+import com.givanse.flowords.R.string;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;

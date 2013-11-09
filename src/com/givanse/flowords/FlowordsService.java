@@ -14,6 +14,8 @@
 
 package com.givanse.flowords;
 
+import com.givanse.flowords.engine.FlowerRenderer;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.opengl.GLSurfaceView;
@@ -24,7 +26,7 @@ import android.view.SurfaceHolder;
 /**
  * Wallpaper entry point.
  */
-public final class FlowerService extends WallpaperService {
+public final class FlowordsService extends WallpaperService {
 
 	@Override
 	public Engine onCreateEngine() {
@@ -35,7 +37,7 @@ public final class FlowerService extends WallpaperService {
 	 * Private wallpaper engine implementation.
 	 */
 	private final class WallpaperEngine extends Engine implements
-			SharedPreferences.OnSharedPreferenceChangeListener {
+			                SharedPreferences.OnSharedPreferenceChangeListener {
 
 		// Slightly modified GLSurfaceView.
 		private WallpaperGLSurfaceView mGLSurfaceView;
@@ -49,14 +51,15 @@ public final class FlowerService extends WallpaperService {
 			// android.os.Debug.waitForDebugger();
 
 			super.onCreate(surfaceHolder);
-			mRenderer = new FlowerRenderer(FlowerService.this);
 
 			mPreferences = PreferenceManager
-					.getDefaultSharedPreferences(FlowerService.this);
+					       .getDefaultSharedPreferences(FlowordsService.this);
 			mPreferences.registerOnSharedPreferenceChangeListener(this);
+
+			mRenderer = new FlowerRenderer(FlowordsService.this);
 			mRenderer.setPreferences(mPreferences);
 
-			mGLSurfaceView = new WallpaperGLSurfaceView(FlowerService.this);
+			mGLSurfaceView = new WallpaperGLSurfaceView(FlowordsService.this);
 			mGLSurfaceView.setEGLContextClientVersion(2);
 			mGLSurfaceView.setRenderer(mRenderer);
 			mGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
@@ -75,16 +78,17 @@ public final class FlowerService extends WallpaperService {
 
 		@Override
 		public void onOffsetsChanged(float xOffset, float yOffset,
-				float xOffsetStep, float yOffsetStep, int xPixelOffset,
-				int yPixelOffset) {
-			super.onOffsetsChanged(xOffset, yOffset, xOffsetStep, yOffsetStep,
-					xPixelOffset, yPixelOffset);
+				                     float xOffsetStep, float yOffsetStep, 
+                                     int xPixelOffset, int yPixelOffset) {
+			super.onOffsetsChanged(xOffset, yOffset, 
+                                   xOffsetStep, yOffsetStep,
+					               xPixelOffset, yPixelOffset);
 			mRenderer.setOffset(xOffset, yOffset);
 		}
 
 		@Override
 		public void onSharedPreferenceChanged(
-				SharedPreferences sharedPreferences, String key) {
+                              SharedPreferences sharedPreferences, String key) {
 			mRenderer.setPreferences(sharedPreferences);
 		}
 
@@ -104,8 +108,10 @@ public final class FlowerService extends WallpaperService {
 		 * service. Instead am using GLSurfaceView and trick it into hooking
 		 * into Engine provided SurfaceHolder instead of SurfaceView provided
 		 * one GLSurfaceView extends.
+         * http://github.com/GLWallpaperService/GLWallpaperService 
 		 */
 		private final class WallpaperGLSurfaceView extends GLSurfaceView {
+
 			public WallpaperGLSurfaceView(Context context) {
 				super(context);
 			}
@@ -124,6 +130,7 @@ public final class FlowerService extends WallpaperService {
 				super.onDetachedFromWindow();
 			}
 		}
-	}
+
+	} // inner class WallpaperEngine
 
 }

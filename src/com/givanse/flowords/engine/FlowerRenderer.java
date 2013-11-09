@@ -12,12 +12,15 @@
  * limitations under the License.
  */
 
-package com.givanse.flowords;
+package com.givanse.flowords.engine;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+
 import com.givanse.flowords.R;
+import com.givanse.flowords.R.string;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import android.content.Context;

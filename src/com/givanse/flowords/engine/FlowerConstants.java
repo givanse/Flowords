@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package com.givanse.flowords;
+package com.givanse.flowords.engine;
 
 /**
  * Wallpaper constant values.
