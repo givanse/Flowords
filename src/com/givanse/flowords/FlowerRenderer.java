@@ -14,7 +14,7 @@
    limitations under the License.
  */
 
-package fi.harism.wallpaper.flowers;
+package com.givanse.flowords;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -22,6 +22,8 @@ import java.nio.FloatBuffer;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+
+import fi.harism.wallpaper.flowers.R;
 
 import android.content.Context;
 import android.content.SharedPreferences;

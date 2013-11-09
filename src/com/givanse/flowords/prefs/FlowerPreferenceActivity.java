@@ -14,7 +14,7 @@
    limitations under the License.
  */
 
-package fi.harism.wallpaper.flowers.prefs;
+package com.givanse.flowords.prefs;
 
 import android.os.Bundle;
 import android.preference.PreferenceActivity;

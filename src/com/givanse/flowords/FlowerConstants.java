@@ -14,7 +14,7 @@
    limitations under the License.
  */
 
-package fi.harism.wallpaper.flowers;
+package com.givanse.flowords;
 
 /**
  * Wallpaper constant values.

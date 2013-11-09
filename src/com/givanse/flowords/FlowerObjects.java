@@ -14,12 +14,14 @@
    limitations under the License.
  */
 
-package fi.harism.wallpaper.flowers;
+package com.givanse.flowords;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.Vector;
+
+import fi.harism.wallpaper.flowers.R;
 
 import android.content.Context;
 import android.graphics.Bitmap;

@@ -2,13 +2,13 @@
 <resources>
 
     <!-- General strings -->
-    <string name="app_name">Peppy Flowers</string>
-    <string name="preferences_name">Peppy Flowers Preferences</string>
-    <string name="author">harism</string>
-    <string name="description">Peppy Flowers, live OpenGL 2.0 ES wallpaper.</string>
+    <string name="app_name">Flowords</string>
+    <string name="preferences_name">Flowords Preferences</string>
+    <string name="author">givanse</string>
+    <string name="description">words dynamically written with flowers</string>
 
     <!-- Error strings -->
-    <string name="error_shader_compiler">Peppy Flowers error; GLSL shader compiler not supported.</string>
+    <string name="error_shader_compiler">Flowords error; GLSL shader compiler not supported.</string>
 
     <!-- Layout strings -->
     <string name="preference_color_red">R</string>
