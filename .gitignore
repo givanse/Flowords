@@ -3,3 +3,6 @@ bin/
 gen/
 doc/
 proguard/
+project.properties
+.classpath
+.project
