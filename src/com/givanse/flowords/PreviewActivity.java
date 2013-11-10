@@ -10,8 +10,6 @@ import android.content.res.Resources;
 import android.widget.Toast;
 
 public class PreviewActivity extends Activity {
-
-	private int REQUEST_CODE = 1;
 	
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +27,7 @@ public class PreviewActivity extends Activity {
                     									".FlowordsService");
             intent = new Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER);
             intent.putExtra(WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT, component);
-            this.startActivityForResult(intent, REQUEST_CODE);
+            this.startActivity(intent);
 	    } else {
 	    	/*
 			 * Open live wallpaper picker (API Level 15 or lower).
