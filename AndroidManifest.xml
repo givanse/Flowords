@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    android:installLocation="auto"
     package="com.givanse.flowords"
+    android:installLocation="auto"
     android:versionCode="1"
     android:versionName="1.0" >
 
-    <uses-sdk android:minSdkVersion="11"
-              android:targetSdkVersion="18" />
+    <uses-sdk
+        android:minSdkVersion="11"
+        android:targetSdkVersion="18" />
 
     <uses-feature android:glEsVersion="0x00020000" />
-    <uses-feature android:name="android.software.live_wallpaper" 
-                  android:required="true" />
+    <uses-feature
+        android:name="android.software.live_wallpaper"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -31,9 +33,20 @@
         </service>
 
         <activity
-            android:name=".preferences.PreferencesActivity"
+            android:name="com.givanse.flowords.PreviewActivity"
+            android:label="@string/title_activity_preview" 
+            android:theme="@android:style/Theme.NoDisplay" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+        <activity
+            android:name="com.givanse.flowords.preferences.PreferencesActivity"
             android:exported="true"
             android:label="@string/preferences_name" />
+        
     </application>
 
 </manifest>
