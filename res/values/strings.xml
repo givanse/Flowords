@@ -5,7 +5,7 @@
     <string name="app_name">Flowords</string>
     <string name="preferences_name">Flowords Preferences</string>
     <string name="author">givanse</string>
-    <string name="description">words dynamically written with flowers</string>
+    <string name="description">Words dynamically written with flowers</string>
 
     <!-- Error strings -->
     <string name="error_shader_compiler">Flowords error; GLSL shader compiler not supported.</string>
