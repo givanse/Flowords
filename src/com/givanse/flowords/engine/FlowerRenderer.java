@@ -34,25 +34,27 @@ import android.widget.Toast;
  * Main renderer class.
  */
 public final class FlowerRenderer implements GLSurfaceView.Renderer {
-
-	// Buffer for background colors.
-	private FloatBuffer mBackgroundColors;
+	
 	// Current context.
 	private Context mContext;
 	// FBO for offscreen rendering.
 	private HelperFrameBufferObject helperFBO = new HelperFrameBufferObject();
 	// Actual flower renderer instance.
 	private FlowerObjects mFlowerObjects = new FlowerObjects();
-	// "Final" calculated offset value.
-	private final PointF mOffset = new PointF();
 	// Scroll offset value.
 	private final PointF mOffsetScroll = new PointF();
+
 	// Additional animated offset source and destination values.
-	private PointF mOffsetSrc = new PointF(), mOffsetDst = new PointF();
+	private PointF mOffsetSrc = new PointF();
+	private PointF mOffsetDst = new PointF();
+	private final PointF mOffsetFinal = new PointF();
+
 	// Animated offset time value for iterating between src and dst.
 	private long mOffsetTime;
-	// Vertex buffer for full scene coordinates.
-	private ByteBuffer mScreenVertices;
+	private final int updateRate = 5000; // milliseconds 
+	
+	private FloatBuffer buffBckdColors;         // Buffer for background colors.
+	private ByteBuffer mScreenVertices;//Vertex buffer for full scene coordinates.
 	
 	// Shader for rendering background gradient.
 	private final HelperShader mShaderBackground = new HelperShader();
@@ -63,7 +65,7 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 		
 	// Surface/screen dimensions.
 	private int mWidth, mHeight;
-
+	
 	/**
 	 * Default constructor.
 	 */
@@ -71,13 +73,13 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 		mContext = context;
 
 		// Create screen coordinates buffer.
-		final byte SCREEN_COORDS[] = { -1, 1, -1, -1, 1, 1, 1, -1 };
-		mScreenVertices = ByteBuffer.allocateDirect(2 * 4);
-		mScreenVertices.put(SCREEN_COORDS).position(0);
+		final byte screenCoords[] = { -1, 1, -1, -1, 1, 1, 1, -1 }; // 8
+		mScreenVertices = ByteBuffer.allocateDirect(2 * 4); // 8
+		mScreenVertices.put(screenCoords).position(0);
 
 		// Create background color float buffer.
-		ByteBuffer bBuf = ByteBuffer.allocateDirect(4 * 4 * 4);
-		mBackgroundColors = bBuf.order(ByteOrder.nativeOrder()).asFloatBuffer();
+		ByteBuffer bBuf = ByteBuffer.allocateDirect(4 * 4 * 4); // 64
+		buffBckdColors = bBuf.order(ByteOrder.nativeOrder()).asFloatBuffer();
 	}
 
 	/**
@@ -106,19 +108,19 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 		// Update offset.
 		long time = SystemClock.uptimeMillis();
 		// If time passed generate new target.
-		if (time - mOffsetTime > 5000) {
+		if (time - mOffsetTime > this.updateRate) {
 			mOffsetTime = time;
 			mOffsetSrc.set(mOffsetDst);
 			mOffsetDst.x = -1f + (float) (Math.random() * 2f);
 			mOffsetDst.y = -1f + (float) (Math.random() * 2f);
 		}
 		// Calculate final offset values.
-		float t = (float) (time - mOffsetTime) / 5000;
+		float t = (float) (time - mOffsetTime) / this.updateRate;
 		t = t * t * (3 - 2 * t);
-		mOffset.x = mOffsetScroll.x + mOffsetSrc.x + t
-				* (mOffsetDst.x - mOffsetSrc.x);
-		mOffset.y = mOffsetScroll.y + mOffsetSrc.y + t
-				* (mOffsetDst.y - mOffsetSrc.y);
+		mOffsetFinal.x = mOffsetScroll.x + mOffsetSrc.x + t *
+				    (mOffsetDst.x - mOffsetSrc.x);
+		mOffsetFinal.y = mOffsetScroll.y + mOffsetSrc.y + t *
+				    (mOffsetDst.y - mOffsetSrc.y);
 
 		// Disable unneeded rendering flags.
 		GLES20.glDisable(GLES20.GL_CULL_FACE);
@@ -140,20 +142,20 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 		float aspectX = (float) Math.min(mWidth, mHeight) / mHeight;
 		float aspectY = (float) Math.min(mWidth, mHeight) / mWidth;
 		GLES20.glUniform2f(uAspectRatio, aspectX, aspectY);
-		GLES20.glUniform2f(uOffset, mOffset.x, mOffset.y);
+		GLES20.glUniform2f(uOffset, mOffsetFinal.x, mOffsetFinal.y);
 		GLES20.glUniform2f(uLineWidth, 
 						   aspectX * 40f / this.helperFBO.getWidth(),
 				           aspectY * 40f / this.helperFBO.getHeight());
 		GLES20.glVertexAttribPointer(aPosition, 2, GLES20.GL_BYTE, false, 0,
-				mScreenVertices);
+				                     mScreenVertices);
 		GLES20.glEnableVertexAttribArray(aPosition);
 		GLES20.glVertexAttribPointer(aColor, 4, GLES20.GL_FLOAT, false, 0,
-				mBackgroundColors);
+				                     buffBckdColors);
 		GLES20.glEnableVertexAttribArray(aColor);
 		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
 		// Render scene.
-		mFlowerObjects.onDrawFrame(mOffset);
+		mFlowerObjects.onDrawFrame(mOffsetFinal);
 
 		// Copy FBO to screen buffer.
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
@@ -188,18 +190,20 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 	public void onSurfaceCreated(GL10 unused, EGLConfig config) {
 		// Check if shader compiler is supported.
 		GLES20.glGetBooleanv(GLES20.GL_SHADER_COMPILER,
-				mShaderCompilerSupported, 0);
+				             mShaderCompilerSupported, 0);
 
 		// If not, show user an error message and return immediately.
 		if (mShaderCompilerSupported[0] == false) {
 			Handler handler = new Handler(mContext.getMainLooper());
 			handler.post(new Runnable() {
-				@Override
-				public void run() {
-					Toast.makeText(mContext, R.string.error_shader_compiler,
-							Toast.LENGTH_LONG).show();
-				}
-			});
+					@Override
+					public void run() {
+						Toast.makeText(mContext, 
+									   R.string.error_shader_compiler,
+							           Toast.LENGTH_LONG).show();
+					}
+				});
+			
 			return;
 		}
 
@@ -235,54 +239,58 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 		// Get general preferences values.
 		String key = mContext.getString(R.string.key_general_flower_count);
 		int flowerCount = Integer.parseInt(prefs.getString(key, "2"));
+		
 		key = mContext.getString(R.string.key_general_spline_quality);
 		int splineQuality = prefs.getInt(key, 10);
+		
 		key = mContext.getString(R.string.key_general_branch_propability);
 		float branchPropability = (float) prefs.getInt(key, 5) / 10;
+		
 		key = mContext.getString(R.string.key_general_zoom);
 		float zoomLevel = (float) prefs.getInt(key, 4) / 10;
 
 		// Get color preference values.
 		key = mContext.getString(R.string.key_colors_scheme);
 		int colorScheme = Integer.parseInt(prefs.getString(key, "1"));
-		float bgTop[], bgBottom[], flowerColors[][] = new float[2][];
+		float bckdTop[], bckdBottom[], flowerColors[][] = new float[2][];
 		switch (colorScheme) {
 		case 1:
-			bgTop = FlowerConstants.SCHEME_SUMMER_BG_TOP;
-			bgBottom = FlowerConstants.SCHEME_SUMMER_BG_BOTTOM;
+			bckdTop = FlowerConstants.SCHEME_SUMMER_BG_TOP;
+			bckdBottom = FlowerConstants.SCHEME_SUMMER_BG_BOTTOM;
 			flowerColors[0] = FlowerConstants.SCHEME_SUMMER_PLANT_1;
 			flowerColors[1] = FlowerConstants.SCHEME_SUMMER_PLANT_2;
 			break;
 		case 2:
-			bgTop = FlowerConstants.SCHEME_AUTUMN_BG_TOP;
-			bgBottom = FlowerConstants.SCHEME_AUTUMN_BG_BOTTOM;
+			bckdTop = FlowerConstants.SCHEME_AUTUMN_BG_TOP;
+			bckdBottom = FlowerConstants.SCHEME_AUTUMN_BG_BOTTOM;
 			flowerColors[0] = FlowerConstants.SCHEME_AUTUMN_PLANT_1;
 			flowerColors[1] = FlowerConstants.SCHEME_AUTUMN_PLANT_2;
 			break;
 		case 3:
-			bgTop = FlowerConstants.SCHEME_WINTER_BG_TOP;
-			bgBottom = FlowerConstants.SCHEME_WINTER_BG_BOTTOM;
+			bckdTop = FlowerConstants.SCHEME_WINTER_BG_TOP;
+			bckdBottom = FlowerConstants.SCHEME_WINTER_BG_BOTTOM;
 			flowerColors[0] = FlowerConstants.SCHEME_WINTER_PLANT_1;
 			flowerColors[1] = FlowerConstants.SCHEME_WINTER_PLANT_2;
 			break;
 		case 4:
-			bgTop = FlowerConstants.SCHEME_SPRING_BG_TOP;
-			bgBottom = FlowerConstants.SCHEME_SPRING_BG_BOTTOM;
+			bckdTop = FlowerConstants.SCHEME_SPRING_BG_TOP;
+			bckdBottom = FlowerConstants.SCHEME_SPRING_BG_BOTTOM;
 			flowerColors[0] = FlowerConstants.SCHEME_SPRING_PLANT_1;
 			flowerColors[1] = FlowerConstants.SCHEME_SPRING_PLANT_2;
 			break;
 		default:
-			bgTop = getColor(R.string.key_colors_bg_top, prefs);
-			bgBottom = getColor(R.string.key_colors_bg_bottom, prefs);
+			bckdTop = getColor(R.string.key_colors_bg_top, prefs);
+			bckdBottom = getColor(R.string.key_colors_bg_bottom, prefs);
 			flowerColors[0] = getColor(R.string.key_colors_flower_1, prefs);
 			flowerColors[1] = getColor(R.string.key_colors_flower_2, prefs);
 			break;
 		}
 
-		mBackgroundColors.put(bgTop).put(bgBottom).put(bgTop).put(bgBottom)
-				.position(0);
+		buffBckdColors.put(bckdTop).put(bckdBottom)
+					  .put(bckdTop).put(bckdBottom)
+				      .position(0);
 		mFlowerObjects.setPreferences(flowerCount, flowerColors, splineQuality,
-				branchPropability, zoomLevel);
+				                      branchPropability, zoomLevel);
 	}
 
 }
