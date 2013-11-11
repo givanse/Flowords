@@ -17,10 +17,7 @@ package com.givanse.flowords.engine;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-
 import com.givanse.flowords.R;
-import com.givanse.flowords.R.string;
-
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import android.content.Context;
@@ -43,7 +40,7 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 	// Current context.
 	private Context mContext;
 	// FBO for offscreen rendering.
-	private FlowerFbo mFlowerFbo = new FlowerFbo();
+	private HelperFrameBufferObject helperFBO = new HelperFrameBufferObject();
 	// Actual flower renderer instance.
 	private FlowerObjects mFlowerObjects = new FlowerObjects();
 	// "Final" calculated offset value.
@@ -126,9 +123,9 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 		GLES20.glDisable(GLES20.GL_BLEND);
 		GLES20.glDisable(GLES20.GL_DEPTH_TEST);
 
-		// Set render target to fbo.
-		mFlowerFbo.bind();
-		mFlowerFbo.bindTexture(0);
+		// Set render target to FBO.
+		this.helperFBO.bind();
+		this.helperFBO.bindTexture(0);
 
 		// Render background gradient.
 		mShaderBackground.useProgram();
@@ -142,8 +139,9 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 		float aspectY = (float) Math.min(mWidth, mHeight) / mWidth;
 		GLES20.glUniform2f(uAspectRatio, aspectX, aspectY);
 		GLES20.glUniform2f(uOffset, mOffset.x, mOffset.y);
-		GLES20.glUniform2f(uLineWidth, aspectX * 40f / mFlowerFbo.getWidth(),
-				aspectY * 40f / mFlowerFbo.getHeight());
+		GLES20.glUniform2f(uLineWidth, 
+						   aspectX * 40f / this.helperFBO.getWidth(),
+				           aspectY * 40f / this.helperFBO.getHeight());
 		GLES20.glVertexAttribPointer(aPosition, 2, GLES20.GL_BYTE, false, 0,
 				mScreenVertices);
 		GLES20.glEnableVertexAttribArray(aPosition);
@@ -164,7 +162,8 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 				mScreenVertices);
 		GLES20.glEnableVertexAttribArray(aPosition);
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mFlowerFbo.getTexture(0));
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 
+				             this.helperFBO.getTexture(0));
 		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 	}
 
@@ -176,11 +175,11 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 			return;
 		}
 
-		mWidth = width;
-		mHeight = height;
-		mFlowerFbo.init(mWidth, mHeight, 1);
-		mFlowerObjects.onSurfaceChanged(mFlowerFbo.getWidth(),
-				mFlowerFbo.getHeight());
+		this.mWidth = width;
+		this.mHeight = height;
+		this.helperFBO.setTexturesPrefs(this.mWidth, this.mHeight, 1);
+		mFlowerObjects.onSurfaceChanged(this.helperFBO.getWidth(),
+									    this.helperFBO.getHeight());
 	}
 
 	@Override

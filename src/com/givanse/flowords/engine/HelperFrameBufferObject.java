@@ -19,7 +19,7 @@ import android.opengl.GLES20;
 /**
  * Helper class for handling frame buffer objects.
  */
-public final class FlowerFbo {
+public final class HelperFrameBufferObject {
 
 	// Optional depth buffer handle.
 	private int mDepthBufferHandle = -1;
@@ -49,8 +49,9 @@ public final class FlowerFbo {
 	 */
 	public void bindTexture(int index) {
 		GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER,
-				GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D,
-				mTextureHandles[index], 0);
+									  GLES20.GL_COLOR_ATTACHMENT0, 
+									  GLES20.GL_TEXTURE_2D,
+									  mTextureHandles[index], 0);
 	}
 
 	/**
@@ -83,8 +84,8 @@ public final class FlowerFbo {
 	}
 
 	/**
-	 * Initializes FBO with given parameters. Calls simply init(int, int, int,
-	 * boolean) without render buffer generations.
+	 * Calls this.init(int, int, int, boolean, boolean) without render buffer 
+	 * generations.
 	 * 
 	 * @param width
 	 *            Width in pixels.
@@ -93,8 +94,8 @@ public final class FlowerFbo {
 	 * @param textureCount
 	 *            Number of textures to generate.
 	 */
-	public void init(int width, int height, int textureCount) {
-		init(width, height, textureCount, false, false);
+	public void setTexturesPrefs(int width, int height, int textureCount) {
+		this.setTexturesPrefs(width, height, textureCount, false, false);
 	}
 
 	/**
@@ -113,15 +114,14 @@ public final class FlowerFbo {
 	 *            genStencilBuffer If true, stencil buffer is allocated for this
 	 *            FBO
 	 */
-	public void init(int width, int height, int textureCount,
+	private void setTexturesPrefs(int width, int height, int textureCount,
 			boolean genDepthBuffer, boolean genStencilBuffer) {
 
-		// Just in case.
-		reset();
+		reset(); // Just in case.
 
 		// Store FBO size.
-		mWidth = width;
-		mHeight = height;
+		this.mWidth = width;
+		this.mHeight = height;
 
 		// Genereta FBO.
 		int handle[] = { 0 };
@@ -135,16 +135,21 @@ public final class FlowerFbo {
 		for (int texture : mTextureHandles) {
 			GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texture);
 			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
-					GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+					               GLES20.GL_TEXTURE_WRAP_S, 
+					               GLES20.GL_CLAMP_TO_EDGE);
 			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
-					GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+								   GLES20.GL_TEXTURE_WRAP_T, 
+								   GLES20.GL_CLAMP_TO_EDGE);
 			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
-					GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+					               GLES20.GL_TEXTURE_MIN_FILTER, 
+					               GLES20.GL_NEAREST);
 			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
-					GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-			GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA,
-					mWidth, mHeight, 0, GLES20.GL_RGBA,
-					GLES20.GL_UNSIGNED_BYTE, null);
+								   GLES20.GL_TEXTURE_MAG_FILTER, 
+								   GLES20.GL_LINEAR);
+			GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, 
+								GLES20.GL_RGBA, this.mWidth, this.mHeight, 0, 
+								GLES20.GL_RGBA,
+								GLES20.GL_UNSIGNED_BYTE, null);
 		}
 
 		// Generate depth buffer.
@@ -152,24 +157,29 @@ public final class FlowerFbo {
 			GLES20.glGenRenderbuffers(1, handle, 0);
 			mDepthBufferHandle = handle[0];
 			GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER,
-					mDepthBufferHandle);
+									  mDepthBufferHandle);
 			GLES20.glRenderbufferStorage(GLES20.GL_RENDERBUFFER,
-					GLES20.GL_DEPTH_COMPONENT16, width, height);
+										 GLES20.GL_DEPTH_COMPONENT16, 
+										 width, height);
 			GLES20.glFramebufferRenderbuffer(GLES20.GL_FRAMEBUFFER,
-					GLES20.GL_DEPTH_ATTACHMENT, GLES20.GL_RENDERBUFFER,
-					mDepthBufferHandle);
+											 GLES20.GL_DEPTH_ATTACHMENT, 
+											 GLES20.GL_RENDERBUFFER,
+											 mDepthBufferHandle);
 		}
+		
 		// Generate stencil buffer.
 		if (genStencilBuffer) {
 			GLES20.glGenRenderbuffers(1, handle, 0);
 			mStencilBufferHandle = handle[0];
 			GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER,
-					mStencilBufferHandle);
+									  mStencilBufferHandle);
 			GLES20.glRenderbufferStorage(GLES20.GL_RENDERBUFFER,
-					GLES20.GL_STENCIL_INDEX8, width, height);
+										 GLES20.GL_STENCIL_INDEX8, 
+										 width, height);
 			GLES20.glFramebufferRenderbuffer(GLES20.GL_FRAMEBUFFER,
-					GLES20.GL_STENCIL_ATTACHMENT, GLES20.GL_RENDERBUFFER,
-					mStencilBufferHandle);
+											 GLES20.GL_STENCIL_ATTACHMENT, 
+											 GLES20.GL_RENDERBUFFER,
+											 mStencilBufferHandle);
 		}
 	}
 
