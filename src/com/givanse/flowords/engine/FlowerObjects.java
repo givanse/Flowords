@@ -35,8 +35,8 @@ import android.os.SystemClock;
 public final class FlowerObjects {
 
 	// Flower movement directions.
-	private static final float[] DIRECTIONS = { 0, 1, 1, 1, 1, 0, 1, -1, 0, -1,
-			-1, -1, -1, 0, -1, 1 };
+	private static final float[] directions = 
+		               { 0, 1, 1, 1, 1, 0, 1, -1, 0, -1, -1, -1, -1, 0, -1, 1 };
 	// Render area aspect ratio.
 	private final PointF mAspectRatio = new PointF();
 	// Branch propability preference value between [0, 1].
@@ -49,7 +49,7 @@ public final class FlowerObjects {
 	private final Vector<StructPoint> mContainerPoint = new Vector<StructPoint>();
 	// Container for retrieving splines and rendering them.
 	private final Vector<StructSpline> mContainerSpline = new Vector<StructSpline>();
-	// Flower movement directions. These are calculated from DIRECTIONS so that
+	// Flower movement directions. These are calculated from directions so that
 	// first length is set to 1, and then multiplied with aspect ratio.
 	private final PointF[] mDirections = new PointF[8];
 	// Flower element objects.
@@ -69,9 +69,9 @@ public final class FlowerObjects {
 	 * Default constructor.
 	 */
 	public FlowerObjects() {
-		final byte[] TEXTURE_COORDS = { -1, 1, -1, -1, 1, 1, 1, -1 };
-		mBufferTexture = ByteBuffer.allocateDirect(2 * 4);
-		mBufferTexture.put(TEXTURE_COORDS).position(0);
+		final byte[] textureCoordinates = { -1, 1, -1, -1, 1, 1, 1, -1 };
+		mBufferTexture = ByteBuffer.allocateDirect(2 * 4); // 8
+		mBufferTexture.put(textureCoordinates).position(0);
 		for (int i = 0; i < mDirections.length; ++i) {
 			mDirections[i] = new PointF();
 		}
@@ -99,7 +99,7 @@ public final class FlowerObjects {
 	 * Sets spline control points based on given parameters.
 	 */
 	private void genArc(StructSpline spline, PointF startPos, PointF dir,
-			float length, PointF normal, boolean straightEnd) {
+			            float length, PointF normal, boolean straightEnd) {
 
 		// Bezier curve circle estimation.
 		// 2 * (sqrt(2) - 1) / 3
@@ -131,11 +131,12 @@ public final class FlowerObjects {
 	 * Sets branch values based on given parameters.
 	 */
 	private void genBranch(ElementBranch branch, PointF startPos, int startDir,
-			int rotateDir, float len) {
+			               int rotateDir, float len) {
 
-		float maxBranchWidth = FlowerConstants.FLOWER_BRANCH_WIDTH_MIN
-				+ mZoomLevel
-				* (FlowerConstants.FLOWER_BRANCH_WIDTH_MAX - FlowerConstants.FLOWER_BRANCH_WIDTH_MIN);
+		float maxBranchWidth = FlowerConstants.FLOWER_BRANCH_WIDTH_MIN + 
+							   mZoomLevel *
+							   (FlowerConstants.FLOWER_BRANCH_WIDTH_MAX - 
+						       FlowerConstants.FLOWER_BRANCH_WIDTH_MIN);
 		PointF dir = mDirections[(8 + startDir) % 8];
 		PointF normal = mDirections[(8 + startDir - 2 * rotateDir) % 8];
 		StructSpline spline = branch.getNextSpline();
@@ -187,7 +188,7 @@ public final class FlowerObjects {
 	 * Sets spline to straight line between (start, start + length * dir).
 	 */
 	private void genLine(StructSpline spline, PointF start, PointF dir,
-			float length) {
+			             float length) {
 		for (int i = 0; i < 4; ++i) {
 			float t = (i * length) / 3;
 			PointF point = spline.mPoints[i];
@@ -213,8 +214,9 @@ public final class FlowerObjects {
 
 			ElementFlower flower = mFlowerElements[i];
 			update(flower, renderTime, offset);
-			flower.getRenderStructs(mContainerSpline, mContainerPoint,
-					renderTime);
+			flower.getRenderStructs(mContainerSpline, 
+									mContainerPoint,
+									renderTime);
 			renderSplines(mContainerSpline, flower.mColor, offset);
 			renderFlowers(mContainerPoint, flower.mColor, offset);
 		}
@@ -235,7 +237,7 @@ public final class FlowerObjects {
 		mAspectRatio.y = (float) Math.min(width, height) / height;
 		for (int i = 0; i < 8; ++i) {
 			PointF dir = mDirections[i];
-			dir.set(DIRECTIONS[i * 2 + 0], DIRECTIONS[i * 2 + 1]);
+			dir.set(directions[i * 2 + 0], directions[i * 2 + 1]);
 			float lenInv = 1f / dir.length();
 			dir.x *= mAspectRatio.x * lenInv;
 			dir.y *= mAspectRatio.y * lenInv;
@@ -319,7 +321,7 @@ public final class FlowerObjects {
 	 * Renders flower textures.
 	 */
 	private void renderFlowers(Vector<StructPoint> flowers, float[] color,
-			PointF offset) {
+			                   PointF offset) {
 
 		this.mShaderTexture.useProgram();
 		int uAspectRatio = this.mShaderTexture.getHandleID("uAspectRatio");
@@ -332,18 +334,21 @@ public final class FlowerObjects {
 		GLES20.glUniform2f(uAspectRatio, mAspectRatio.x, mAspectRatio.y);
 		GLES20.glUniform4fv(uColor, 1, color, 0);
 		GLES20.glVertexAttribPointer(aPosition, 2, GLES20.GL_BYTE, false, 0,
-				mBufferTexture);
+				                     mBufferTexture);
 		GLES20.glEnableVertexAttribArray(aPosition);
 
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
 		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mFlowerTextureId[0]);
 
 		for (StructPoint point : flowers) {
-			final float rotationM[] = { point.mRotationCos, point.mRotationSin,
-					-point.mRotationSin, point.mRotationCos };
+			final float rotationM[] = { point.mRotationCos, 
+										point.mRotationSin,
+					                    -point.mRotationSin, 
+					                    point.mRotationCos };
 			GLES20.glUniformMatrix2fv(uRotationM, 1, false, rotationM, 0);
-			GLES20.glUniform2f(uOffset, point.mPosition.x - offset.x,
-					point.mPosition.y - offset.y);
+			GLES20.glUniform2f(uOffset, 
+							   point.mPosition.x - offset.x,
+							   point.mPosition.y - offset.y);
 			GLES20.glUniform1f(uScale, point.mScale);
 			GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 		}
@@ -366,13 +371,14 @@ public final class FlowerObjects {
 		GLES20.glUniform2f(uAspectRatio, mAspectRatio.x, mAspectRatio.y);
 		GLES20.glUniform4fv(uColor, 1, color, 0);
 		GLES20.glVertexAttribPointer(aSplinePos, 2, GLES20.GL_FLOAT, false, 0,
-				mBufferSpline);
+									 mBufferSpline);
 		GLES20.glEnableVertexAttribArray(aSplinePos);
 
 		final float[] controlPts = new float[8];
-		float boundX = FlowerConstants.SPLINE_WIDTH_MIN
-				+ mZoomLevel
-				* (FlowerConstants.SPLINE_WIDTH_MAX - FlowerConstants.SPLINE_WIDTH_MIN);
+		float boundX = FlowerConstants.SPLINE_WIDTH_MIN +
+					   mZoomLevel * 
+					   (FlowerConstants.SPLINE_WIDTH_MAX - 
+					   FlowerConstants.SPLINE_WIDTH_MIN);
 		float boundY = 1f + boundX * mAspectRatio.y;
 		boundX = 1f + boundX * mAspectRatio.x;
 
@@ -393,15 +399,17 @@ public final class FlowerObjects {
 				GLES20.glUniform2f(uBounds, spline.mStartT, spline.mEndT);
 
 				if (spline.mStartT != 0f || spline.mEndT != 1f) {
-					int startIdx = (int) Math.floor(spline.mStartT
-							* (mSplineVertexCount - 1)) * 2;
-					int endIdx = 2 + (int) Math.ceil(spline.mEndT
-							* (mSplineVertexCount - 1)) * 2;
-					GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, startIdx,
-							endIdx - startIdx);
+					int startIdx = (int) Math.floor(spline.mStartT *
+							             (mSplineVertexCount - 1)) * 2;
+					int endIdx = 2 + (int) Math.ceil(spline.mEndT * 
+							     (mSplineVertexCount - 1)) * 2;
+					GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 
+										startIdx,
+									    endIdx - startIdx);
 				} else {
-					GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0,
-							mSplineVertexCount * 2);
+					GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 
+										0,
+										mSplineVertexCount * 2);
 				}
 			}
 		}
@@ -411,7 +419,8 @@ public final class FlowerObjects {
 	 * Updates preference values.
 	 */
 	public void setPreferences(int flowerCount, float[][] flowerColors,
-			int splineQuality, float branchPropability, float zoomLevel) {
+							   int splineQuality, float branchPropability, 
+							   float zoomLevel) {
 		if (flowerCount != mFlowerElements.length) {
 			mFlowerElements = new ElementFlower[flowerCount];
 			for (int i = 0; i < mFlowerElements.length; ++i) {
@@ -425,10 +434,10 @@ public final class FlowerObjects {
 
 		if (mSplineVertexCount != splineQuality + 2) {
 			mSplineVertexCount = splineQuality + 2;
-			ByteBuffer bBuffer = ByteBuffer
-					.allocateDirect(4 * 4 * mSplineVertexCount);
+			ByteBuffer bBuffer = 
+					      ByteBuffer.allocateDirect(4 * 4 * mSplineVertexCount);
 			mBufferSpline = bBuffer.order(ByteOrder.nativeOrder())
-					.asFloatBuffer();
+								   .asFloatBuffer();
 			for (int i = 0; i < mSplineVertexCount; ++i) {
 				float t = (float) i / (mSplineVertexCount - 1);
 				mBufferSpline.put(t).put(1);
@@ -446,9 +455,10 @@ public final class FlowerObjects {
 	 */
 	private void update(ElementFlower flower, long time, PointF offset) {
 		// TODO: it might be best to do scaling during rendering instead.
-		final float ROOT_WIDTH = FlowerConstants.FLOWER_ROOT_WIDTH_MIN
-				+ mZoomLevel
-				* (FlowerConstants.FLOWER_ROOT_WIDTH_MAX - FlowerConstants.FLOWER_ROOT_WIDTH_MIN);
+		final float ROOT_WIDTH = FlowerConstants.FLOWER_ROOT_WIDTH_MIN +
+								 mZoomLevel * 
+								 (FlowerConstants.FLOWER_ROOT_WIDTH_MAX - 
+								 FlowerConstants.FLOWER_ROOT_WIDTH_MIN);
 
 		PointF targetPos = flower.mTargetPosition;
 		PointF currentPos = flower.mCurrentPosition;
@@ -464,7 +474,7 @@ public final class FlowerObjects {
 			targetPos.offset(offset.x, offset.y);
 
 			float minDist = distance(currentPos, mDirections[currentDirIdx],
-					targetPos);
+					                 targetPos);
 			int minDirIndex = currentDirIdx;
 			for (int i = 1; i < 8; ++i) {
 				PointF dir = mDirections[(currentDirIdx + i) % 8];
@@ -480,7 +490,8 @@ public final class FlowerObjects {
 
 			if (minDirIndex != currentDirIdx) {
 				int k = minDirIndex > currentDirIdx ? 1 : -1;
-				for (int i = currentDirIdx + k; i * k <= minDirIndex * k; i += 2 * k) {
+				for (int i = currentDirIdx + k; 
+					 i * k <= minDirIndex * k; i += 2 * k) {
 					PointF dir = mDirections[i];
 					PointF normal = mDirections[(8 + i - 2 * k) % 8];
 					StructSpline spline = element.getNextSpline();
@@ -491,10 +502,10 @@ public final class FlowerObjects {
 					if (Math.random() < mBranchPropability) {
 						ElementBranch b = element.getCurrentBranch();
 						int branchDir = Math.random() < 0.5 ? -k : k;
-						float branchLen = Math.min(splineLen, .5f)
-								* rand(.6f, .8f);
+						float branchLen = Math.min(splineLen, .5f) * 
+								          rand(.6f, .8f);
 						genBranch(b, currentPos, i + branchDir, branchDir,
-								branchLen);
+								  branchLen);
 					}
 
 					currentPos.set(spline.mPoints[3]);
@@ -511,7 +522,7 @@ public final class FlowerObjects {
 					int branchDir = Math.random() < 0.5 ? -1 : 1;
 					float branchLen = Math.min(splineLen, .5f) * rand(.6f, .8f);
 					genBranch(b, currentPos, currentDirIdx + branchDir,
-							branchDir, branchLen);
+							  branchDir, branchLen);
 				}
 
 				currentPos.set(spline.mPoints[3]);
@@ -564,30 +575,35 @@ public final class FlowerObjects {
 		 * and endT are values between [0, 1] plus additionally startT < endT.
 		 */
 		public void getRenderStructs(Vector<StructSpline> splines,
-				Vector<StructPoint> points, float startT, float endT) {
+				                     Vector<StructPoint> points, 
+				                     float startT, float endT) {
 			// First iterate over splines.
 			for (int i = 0; i < mBranchSplineCount; ++i) {
 				StructSpline spline = mBranchSplines[i];
 				switch (i) {
 				case 0:
-					spline.mStartT = startT > 0f ? Math.min(startT * 2, 1f)
-							: 0f;
+					spline.mStartT = startT > 0f ? Math.min(startT * 2, 1f) : 
+						                           0f;
 					spline.mEndT = endT < 1f ? Math.min(endT * 2, 1f) : 1f;
 					break;
 				default:
-					spline.mStartT = startT > 0f ? Math.max((startT - .5f) * 2,
-							0f) : 0f;
-					spline.mEndT = endT < 1f ? Math.max((endT - .5f) * 2, 0f)
-							: 1f;
+					spline.mStartT = startT > 0f ? 
+							         Math.max((startT - .5f) * 2, 0f) : 
+							         0f;
+					spline.mEndT = endT < 1f ? 
+							       Math.max((endT - .5f) * 2, 0f) : 
+							       1f;
 					break;
 				}
 				splines.add(spline);
 			}
 			// Scale factor is calculated from current zoom level.
 			// TODO: scaling might be best done during rendering.
-			final float PT_SCALE_FACTOR = FlowerConstants.FLOWER_POINT_SCALE_MIN
-					+ mZoomLevel
-					* (FlowerConstants.FLOWER_POINT_SCALE_MAX - FlowerConstants.FLOWER_POINT_SCALE_MIN);
+			final float PT_SCALE_FACTOR = 
+					                   FlowerConstants.FLOWER_POINT_SCALE_MIN +
+					                   mZoomLevel * 
+					                   (FlowerConstants.FLOWER_POINT_SCALE_MAX -
+					                   FlowerConstants.FLOWER_POINT_SCALE_MIN);
 			// Iterate over points.
 			for (int i = 0; i < mBranchPointCount; ++i) {
 				StructPoint point = mBranchPoints[i];
@@ -662,10 +678,10 @@ public final class FlowerObjects {
 		 * rendering time used for deciding which root element is fading in.
 		 */
 		public void getRenderStructs(Vector<StructSpline> splines,
-				Vector<StructPoint> points, long time) {
+				                     Vector<StructPoint> points, long time) {
 			ElementRoot lastElement = mRootElements.get(mRootElementCount - 1);
-			float t = (float) (time - lastElement.mStartTime)
-					/ lastElement.mDuration;
+			float t = (float) (time - lastElement.mStartTime) / 
+					  lastElement.mDuration;
 			for (int i = 0; i < mRootElementCount; ++i) {
 				ElementRoot element = mRootElements.get(i);
 				if (i == mRootElementCount - 1) {
@@ -730,18 +746,17 @@ public final class FlowerObjects {
 		 * endT are between [0, 1] plus additionally startT <= endT.
 		 */
 		public void getRenderStructs(Vector<StructSpline> splines,
-				Vector<StructPoint> points, float startT, float endT) {
+				                     Vector<StructPoint> points, float startT, 
+				                     float endT) {
 			for (int i = 0; i < mRootSplineCount; ++i) {
 				StructSpline spline = mRootSplines[i];
 				if (startT != 0f || endT != 1f) {
 					float localStartT = (float) i / mRootSplineCount;
 					float localEndT = (float) (i + 1) / mRootSplineCount;
-					spline.mStartT = Math.min(
-							Math.max((startT - localStartT)
-									/ (localEndT - localStartT), 0f), 1f);
-					spline.mEndT = Math.min(
-							Math.max((endT - localStartT)
-									/ (localEndT - localStartT), 0f), 1f);
+					spline.mStartT = Math.min(Math.max((startT - localStartT) / 
+							         (localEndT - localStartT), 0f), 1f);
+					spline.mEndT = Math.min(Math.max((endT - localStartT) / 
+							       (localEndT - localStartT), 0f), 1f);
 				} else {
 					spline.mStartT = 0f;
 					spline.mEndT = 1f;
@@ -749,8 +764,9 @@ public final class FlowerObjects {
 
 				if (spline.mStartT != spline.mEndT) {
 					splines.add(spline);
-					mBranchElements[i].getRenderStructs(splines, points,
-							spline.mStartT, spline.mEndT);
+					mBranchElements[i].getRenderStructs(splines, points, 
+							                            spline.mStartT, 
+							                            spline.mEndT);
 				}
 			}
 		}
