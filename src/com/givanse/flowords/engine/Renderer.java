@@ -33,7 +33,7 @@ import android.widget.Toast;
 /**
  * Main renderer class.
  */
-public final class FlowerRenderer implements GLSurfaceView.Renderer {
+public final class Renderer implements GLSurfaceView.Renderer {
 	
 	// Current context.
 	private Context mContext;
@@ -69,7 +69,7 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 	/**
 	 * Default constructor.
 	 */
-	public FlowerRenderer(Context context) {
+	public Renderer(Context context) {
 		mContext = context;
 
 		// Create screen coordinates buffer.

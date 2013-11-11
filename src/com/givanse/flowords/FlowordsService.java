@@ -14,7 +14,7 @@
 
 package com.givanse.flowords;
 
-import com.givanse.flowords.engine.FlowerRenderer;
+import com.givanse.flowords.engine.Renderer;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -42,7 +42,7 @@ public final class FlowordsService extends WallpaperService {
 		// Slightly modified GLSurfaceView.
 		private WallpaperGLSurfaceView mGLSurfaceView;
 		private SharedPreferences mPreferences;
-		private FlowerRenderer mRenderer;
+		private Renderer mRenderer;
 
 		@Override
 		public void onCreate(SurfaceHolder surfaceHolder) {
@@ -56,7 +56,7 @@ public final class FlowordsService extends WallpaperService {
 					       .getDefaultSharedPreferences(FlowordsService.this);
 			mPreferences.registerOnSharedPreferenceChangeListener(this);
 
-			mRenderer = new FlowerRenderer(FlowordsService.this);
+			mRenderer = new Renderer(FlowordsService.this);
 			mRenderer.setPreferences(mPreferences);
 
 			mGLSurfaceView = new WallpaperGLSurfaceView(FlowordsService.this);
