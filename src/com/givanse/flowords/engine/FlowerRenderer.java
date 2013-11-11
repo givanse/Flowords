@@ -53,12 +53,14 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 	private long mOffsetTime;
 	// Vertex buffer for full scene coordinates.
 	private ByteBuffer mScreenVertices;
+	
 	// Shader for rendering background gradient.
-	private final FlowerShader mShaderBackground = new FlowerShader();
+	private final HelperShader mShaderBackground = new HelperShader();
+	// Shader for copying offscreen texture on screen.
+	private final HelperShader mShaderCopy = new HelperShader();
 	// Flag for indicating whether shader compiler is supported.
 	private final boolean[] mShaderCompilerSupported = new boolean[1];
-	// Shader for copying offscreen texture on screen.
-	private final FlowerShader mShaderCopy = new FlowerShader();
+		
 	// Surface/screen dimensions.
 	private int mWidth, mHeight;
 
@@ -128,12 +130,12 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 		this.helperFBO.bindTexture(0);
 
 		// Render background gradient.
-		mShaderBackground.useProgram();
-		int uAspectRatio = mShaderBackground.getHandle("uAspectRatio");
-		int uOffset = mShaderBackground.getHandle("uOffset");
-		int uLineWidth = mShaderBackground.getHandle("uLineWidth");
-		int aPosition = mShaderBackground.getHandle("aPosition");
-		int aColor = mShaderBackground.getHandle("aColor");
+		this.mShaderBackground.useProgram();
+		int uAspectRatio = this.mShaderBackground.getHandleID("uAspectRatio");
+		int uOffset = this.mShaderBackground.getHandleID("uOffset");
+		int uLineWidth = this.mShaderBackground.getHandleID("uLineWidth");
+		int aPosition = this.mShaderBackground.getHandleID("aPosition");
+		int aColor = this.mShaderBackground.getHandleID("aColor");
 
 		float aspectX = (float) Math.min(mWidth, mHeight) / mHeight;
 		float aspectY = (float) Math.min(mWidth, mHeight) / mWidth;
@@ -156,8 +158,8 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 		// Copy FBO to screen buffer.
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
 		GLES20.glViewport(0, 0, mWidth, mHeight);
-		mShaderCopy.useProgram();
-		aPosition = mShaderCopy.getHandle("aPosition");
+		this.mShaderCopy.useProgram();
+		aPosition = this.mShaderCopy.getHandleID("aPosition");
 		GLES20.glVertexAttribPointer(aPosition, 2, GLES20.GL_BYTE, false, 0,
 				mScreenVertices);
 		GLES20.glEnableVertexAttribArray(aPosition);
@@ -201,11 +203,12 @@ public final class FlowerRenderer implements GLSurfaceView.Renderer {
 			return;
 		}
 
-		mShaderCopy.setProgram(mContext.getString(R.string.shader_copy_vs),
-				mContext.getString(R.string.shader_copy_fs));
-		mShaderBackground.setProgram(
-				mContext.getString(R.string.shader_background_vs),
-				mContext.getString(R.string.shader_background_fs));
+		this.mShaderCopy.setProgram(
+				                   mContext.getString(R.string.shader_copy_vs),
+				                   mContext.getString(R.string.shader_copy_fs));
+		this.mShaderBackground.setProgram(
+				             mContext.getString(R.string.shader_background_vs),
+				             mContext.getString(R.string.shader_background_fs));
 		mFlowerObjects.onSurfaceCreated(mContext);
 	}
 

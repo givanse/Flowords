@@ -18,10 +18,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.Vector;
-
 import com.givanse.flowords.R;
-import com.givanse.flowords.R.string;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -60,9 +57,9 @@ public final class FlowerObjects {
 	// Flower texture id.
 	private final int mFlowerTextureId[] = { -1 };
 	// Shader for rendering splines.
-	private final FlowerShader mShaderSpline = new FlowerShader();
+	private final HelperShader mShaderSpline = new HelperShader();
 	// Shader for rendering flower textures.
-	private final FlowerShader mShaderTexture = new FlowerShader();
+	private final HelperShader mShaderTexture = new HelperShader();
 	// Spline vertex count,
 	private int mSplineVertexCount;
 	// Zoom level preference value, between [0, 1].
@@ -255,11 +252,12 @@ public final class FlowerObjects {
 	 *            Context to read resources from.
 	 */
 	public void onSurfaceCreated(Context context) {
-		mShaderSpline.setProgram(context.getString(R.string.shader_spline_vs),
-				context.getString(R.string.shader_spline_fs));
-		mShaderTexture.setProgram(
-				context.getString(R.string.shader_texture_vs),
-				context.getString(R.string.shader_texture_fs));
+		this.mShaderSpline.setProgram(
+				                  context.getString(R.string.shader_spline_vs),
+				                  context.getString(R.string.shader_spline_fs));
+		this.mShaderTexture.setProgram(
+				                 context.getString(R.string.shader_texture_vs),
+				                 context.getString(R.string.shader_texture_fs));
 
 		GLES20.glDeleteTextures(1, mFlowerTextureId, 0);
 		GLES20.glGenTextures(1, mFlowerTextureId, 0);
@@ -323,13 +321,13 @@ public final class FlowerObjects {
 	private void renderFlowers(Vector<StructPoint> flowers, float[] color,
 			PointF offset) {
 
-		mShaderTexture.useProgram();
-		int uAspectRatio = mShaderTexture.getHandle("uAspectRatio");
-		int uOffset = mShaderTexture.getHandle("uOffset");
-		int uScale = mShaderTexture.getHandle("uScale");
-		int uRotationM = mShaderTexture.getHandle("uRotationM");
-		int uColor = mShaderTexture.getHandle("uColor");
-		int aPosition = mShaderTexture.getHandle("aPosition");
+		this.mShaderTexture.useProgram();
+		int uAspectRatio = this.mShaderTexture.getHandleID("uAspectRatio");
+		int uOffset = this.mShaderTexture.getHandleID("uOffset");
+		int uScale = this.mShaderTexture.getHandleID("uScale");
+		int uRotationM = this.mShaderTexture.getHandleID("uRotationM");
+		int uColor = this.mShaderTexture.getHandleID("uColor");
+		int aPosition = this.mShaderTexture.getHandleID("aPosition");
 
 		GLES20.glUniform2f(uAspectRatio, mAspectRatio.x, mAspectRatio.y);
 		GLES20.glUniform4fv(uColor, 1, color, 0);
@@ -354,15 +352,16 @@ public final class FlowerObjects {
 	/**
 	 * Renders splines.
 	 */
-	public void renderSplines(Vector<StructSpline> splines, float[] color,
-			PointF offset) {
-		mShaderSpline.useProgram();
-		int uControlPts = mShaderSpline.getHandle("uControlPts");
-		int uWidth = mShaderSpline.getHandle("uWidth");
-		int uBounds = mShaderSpline.getHandle("uBounds");
-		int uColor = mShaderSpline.getHandle("uColor");
-		int uAspectRatio = mShaderSpline.getHandle("uAspectRatio");
-		int aSplinePos = mShaderSpline.getHandle("aSplinePos");
+	public void renderSplines(Vector<StructSpline> splines, 
+							  float[] color,
+							  PointF offset) {
+		this.mShaderSpline.useProgram();
+		int uControlPts = this.mShaderSpline.getHandleID("uControlPts");
+		int uWidth = this.mShaderSpline.getHandleID("uWidth");
+		int uBounds = this.mShaderSpline.getHandleID("uBounds");
+		int uColor = this.mShaderSpline.getHandleID("uColor");
+		int uAspectRatio = this.mShaderSpline.getHandleID("uAspectRatio");
+		int aSplinePos = this.mShaderSpline.getHandleID("aSplinePos");
 
 		GLES20.glUniform2f(uAspectRatio, mAspectRatio.x, mAspectRatio.y);
 		GLES20.glUniform4fv(uColor, 1, color, 0);

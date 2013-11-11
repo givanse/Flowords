@@ -21,12 +21,13 @@ import android.util.Log;
 /**
  * Helper class for handling shaders.
  */
-public final class FlowerShader {
+public final class HelperShader {
 
 	// Shader program handle.
 	private int mProgram = -1;
 	// HashMap for storing uniform/attribute handles.
-	private final HashMap<String, Integer> mShaderHandleMap = new HashMap<String, Integer>();
+	private final HashMap<String, Integer> mShaderHandleMap = 
+			                                     new HashMap<String, Integer>();
 
 	/**
 	 * Get id for given handle name. This method checks for both attribute and
@@ -36,15 +37,18 @@ public final class FlowerShader {
 	 *            Name of handle.
 	 * @return Id for given handle or -1 if none found.
 	 */
-	public int getHandle(String name) {
+	public int getHandleID(String name) {
 		if (mShaderHandleMap.containsKey(name)) {
 			return mShaderHandleMap.get(name);
 		}
+		
 		int handle = GLES20.glGetAttribLocation(mProgram, name);
 		if (handle == -1) {
 			handle = GLES20.glGetUniformLocation(mProgram, name);
 		}
+		
 		if (handle == -1) {
+			// TODO: disable this line.
 			// One should never leave log messages but am not going to follow
 			// this rule. This line comes handy if you see repeating 'not found'
 			// messages on LogCat - usually for typos otherwise annoying to
@@ -53,6 +57,7 @@ public final class FlowerShader {
 		} else {
 			mShaderHandleMap.put(name, handle);
 		}
+		
 		return handle;
 	}
 
@@ -64,10 +69,10 @@ public final class FlowerShader {
 	 *            List of handle names.
 	 * @return array of handle ids.
 	 */
-	public int[] getHandles(String... names) {
+	public int[] getHandlesIDs(String... names) {
 		int[] res = new int[names.length];
 		for (int i = 0; i < names.length; ++i) {
-			res[i] = getHandle(names[i]);
+			res[i] = getHandleID(names[i]);
 		}
 		return res;
 	}
@@ -81,7 +86,7 @@ public final class FlowerShader {
 	 *            String presentation for shader
 	 * @return id for compiled shader
 	 */
-	private int loadShader(int shaderType, String source) {
+	private int compileShader(int shaderType, String source) {
 		int shader = GLES20.glCreateShader(shaderType);
 		if (shader != 0) {
 			GLES20.glShaderSource(shader, source);
@@ -99,7 +104,7 @@ public final class FlowerShader {
 
 	/**
 	 * Compiles vertex and fragment shaders and links them into a program one
-	 * can use for rendering. Once OpenGL context is lost and onSurfaceCreated
+	 * can use for rendering. Once OpenGL context is lost and onSurfaceCreated()
 	 * is called, there is no need to reset existing GlslShader objects but one
 	 * can simply reload shader.
 	 * 
@@ -109,9 +114,10 @@ public final class FlowerShader {
 	 *            String presentation for fragment shader
 	 */
 	public void setProgram(String vertexSource, String fragmentSource) {
-		int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexSource);
-		int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER,
-				fragmentSource);
+		int vertexShader = compileShader(GLES20.GL_VERTEX_SHADER, 
+										 vertexSource);
+		int fragmentShader = compileShader(GLES20.GL_FRAGMENT_SHADER,
+										   fragmentSource);
 		int program = GLES20.glCreateProgram();
 		if (program != 0) {
 			GLES20.glAttachShader(program, vertexShader);
