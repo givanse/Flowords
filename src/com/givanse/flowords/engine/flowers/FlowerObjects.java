@@ -12,13 +12,14 @@
  * limitations under the License.
  */
 
-package com.givanse.flowords.engine;
+package com.givanse.flowords.engine.flowers;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.Vector;
 import com.givanse.flowords.R;
+import com.givanse.flowords.engine.HelperShader;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -256,10 +257,10 @@ public final class FlowerObjects {
 		int currentDirIdx = flower.mCurrentDirIndex;
 		ElementRoot lastElement = flower.getLastRootElement();
 		long additionTime = renderTime;
-		while (renderTime >= lastElement.mStartTime + lastElement.mDuration) {
+		while (renderTime >= lastElement.getStartTime() + lastElement.getDuration()) {
 			ElementRoot element = flower.getNextRootElement();
-			element.mStartTime = additionTime;
-			element.mDuration = 500 + (long) (Math.random() * 500);
+			element.setStartTime(additionTime);
+			element.setDuration(500 + (long) (Math.random() * 500));
 
 			targetPos.set(rand(-.8f, .8f), rand(-.8f, .8f));
 			targetPos.offset(offset.x, offset.y);
@@ -319,7 +320,7 @@ public final class FlowerObjects {
 				currentPos.set(spline.mPoints[3]);
 			}
 
-			additionTime += element.mDuration;
+			additionTime += element.getDuration();
 			lastElement = element;
 		}
 		flower.mCurrentDirIndex = currentDirIdx;
@@ -348,7 +349,8 @@ public final class FlowerObjects {
 			this.update(flower, renderTime, offset);
 			flower.getRenderStructs(splinesList, 
 									pointsList,
-									renderTime);
+									renderTime,
+									this.zoomLvl);
 			this.renderSplines(splinesList, flower.mColor, offset);
 			this.renderFlowers(pointsList, flower.mColor, offset);
 		}
@@ -537,293 +539,5 @@ public final class FlowerObjects {
         mBranchPropability = branchPropability;                                  
         this.zoomLvl = zoomLevel;                                                  
     }
-
-    /**
-     * INNER CLASSES
-     */
-
-	/**
-	 * Branch element for handling branch data. Namely splines and points that
-	 * create a branch.
-	 */
-	private final class Branch {
-		
-		public static final float WIDTH_MAX = 0.1f;
-        public static final float WIDTH_MIN = 0.05f;
-        
-		public int mBranchPointCount;
-		private final Point[] mBranchPoints = new Point[2];
-		public int mBranchSplineCount;
-		private final Spline[] mBranchSplines = new Spline[3];
-
-		/**
-		 * Default constructor.
-		 */
-		public Branch() {
-			for (int i = 0; i < mBranchSplines.length; ++i) {
-				mBranchSplines[i] = new Spline();
-			}
-			for (int i = 0; i < mBranchPoints.length; ++i) {
-				mBranchPoints[i] = new Point();
-			}
-		}
-
-		/**
-		 * Returns next point structure.
-		 */
-		public Point getNextPoint() {
-			return mBranchPoints[mBranchPointCount++];
-		}
-
-		/**
-		 * Returns next splien structure.
-		 */
-		public Spline getNextSpline() {
-			return mBranchSplines[mBranchSplineCount++];
-		}
-
-		/**
-		 * Getter for splines and points this branch holds. Parameters startT
-		 * and endT are values between [0, 1] plus additionally startT < endT.
-		 */
-		public void getRenderStructs(Vector<Spline> splines,
-				                     Vector<Point> points, 
-				                     float startT, float endT) {
-			// First iterate over splines.
-			for (int i = 0; i < mBranchSplineCount; ++i) {
-				Spline spline = mBranchSplines[i];
-				switch (i) {
-				case 0:
-					spline.mStartT = startT > 0f ? Math.min(startT * 2, 1f) : 
-						                           0f;
-					spline.mEndT = endT < 1f ? Math.min(endT * 2, 1f) : 1f;
-					break;
-				default:
-					spline.mStartT = startT > 0f ? 
-							         Math.max((startT - .5f) * 2, 0f) : 
-							         0f;
-					spline.mEndT = endT < 1f ? 
-							       Math.max((endT - .5f) * 2, 0f) : 
-							       1f;
-					break;
-				}
-				splines.add(spline);
-			}
-			// Scale factor is calculated from current zoom level.
-			// TODO: scaling might be best done during rendering.
-			final float PT_SCALE_FACTOR = 
-					                   Flower.POINT_SCALE_MIN +
-					                   zoomLvl *       // this == FlowerObjects
-					                   (Flower.POINT_SCALE_MAX -
-					                   Flower.POINT_SCALE_MIN);
-			// Iterate over points.
-			for (int i = 0; i < mBranchPointCount; ++i) {
-				Point point = mBranchPoints[i];
-				float scale = endT - startT;
-				if (mBranchSplineCount == 1) {
-					scale = scale < 1f ? Math.max((scale - .5f) * 2, 0f) : 1f;
-				}
-				point.mScale = scale * PT_SCALE_FACTOR;
-				points.add(point);
-			}
-		}
-
-		/**
-		 * Resets branch to initial state.
-		 */
-		public void reset() {
-			mBranchSplineCount = mBranchPointCount = 0;
-		}
-	}
-
-	/**
-	 * Flower element for handling flower related data. Namely root elements
-	 * which are used to build a flower.
-	 */
-	private final class Flower {
-
-        public static final float POINT_SCALE_MAX = .24f;
-        public static final float POINT_SCALE_MIN = .12f;
-        public static final int ROOT_ELEMENT_COUNT = 6;
-        public static final float ROOT_WIDTH_MAX = 0.12f;
-        public static final float ROOT_WIDTH_MIN = 0.06f;
-
-		public float[] mColor = new float[4];
-		public int mCurrentDirIndex;
-		public final PointF mCurrentPosition = new PointF();
-		private int mRootElementCount;
-		private final Vector<ElementRoot> mRootElements = new Vector<ElementRoot>();
-		public final PointF mTargetPosition = new PointF();
-
-		/**
-		 * Default constructor.
-		 */
-		public Flower() {
-			for (int i = 0; i < Flower.ROOT_ELEMENT_COUNT; ++i) {
-				mRootElements.add(new ElementRoot());
-			}
-		}
-
-		/**
-		 * Returns last active root element. If there are none, returns next
-		 * root element.
-		 */
-		public ElementRoot getLastRootElement() {
-			if (mRootElementCount == 0) {
-				return getNextRootElement();
-			} else {
-				return mRootElements.get(mRootElementCount - 1);
-			}
-		}
-
-		/**
-		 * Returns next root element.
-		 */
-		public ElementRoot getNextRootElement() {
-			ElementRoot element;
-			if (mRootElementCount < mRootElements.size()) {
-				element = mRootElements.get(mRootElementCount++);
-			} else {
-				element = mRootElements.remove(0);
-				mRootElements.add(element);
-			}
-			element.reset();
-			return element;
-		}
-
-		/**
-		 * Getter for spline and point structures for rendering. Time is current
-		 * rendering time used for deciding which root element is fading in.
-		 */
-		public void getRenderStructs(Vector<Spline> splines,
-				                     Vector<Point> points, long time) {
-			ElementRoot lastElement = mRootElements.get(mRootElementCount - 1);
-			float t = (float) (time - lastElement.mStartTime) / 
-					  lastElement.mDuration;
-			for (int i = 0; i < mRootElementCount; ++i) {
-				ElementRoot element = mRootElements.get(i);
-				if (i == mRootElementCount - 1) {
-					element.getRenderStructs(splines, points, 0f, t);
-				} else if (i == 0 && mRootElementCount == mRootElements.size()) {
-					element.getRenderStructs(splines, points, t, 1f);
-				} else {
-					element.getRenderStructs(splines, points, 0f, 1f);
-				}
-			}
-		}
-
-		/**
-		 * Resets this flower element to its initial state.
-		 */
-		public void reset() {
-			mRootElementCount = 0;
-			mCurrentDirIndex = 0;
-			mCurrentPosition.set(0, 0);
-		}
-
-	}
-
-	/**
-	 * Root element for handling root related data. Root element consists of
-	 * splines for actual root and branch elements.
-	 */
-	private final class ElementRoot {
-
-		private final Branch[] mBranchElements = new Branch[5];
-		private int mRootSplineCount;
-		private final Spline[] mRootSplines = new Spline[5];
-		private long mStartTime, mDuration;
-
-		/**
-		 * Default constructor.
-		 */
-		public ElementRoot() {
-			for (int i = 0; i < 5; ++i) {
-				mRootSplines[i] = new Spline();
-				mBranchElements[i] = new Branch();
-			}
-		}
-
-		/**
-		 * Returns branch for current root spline.
-		 */
-		public Branch getCurrentBranch() {
-			return mBranchElements[mRootSplineCount - 1];
-		}
-
-		/**
-		 * Returns next spline structure.
-		 */
-		public Spline getNextSpline() {
-			mBranchElements[mRootSplineCount].reset();
-			return mRootSplines[mRootSplineCount++];
-		}
-
-		/**
-		 * Getter for spline and point structs for rendering. Values startT and
-		 * endT are between [0, 1] plus additionally startT <= endT.
-		 */
-		public void getRenderStructs(Vector<Spline> splines,
-				                     Vector<Point> points, float startT, 
-				                     float endT) {
-			for (int i = 0; i < mRootSplineCount; ++i) {
-				Spline spline = mRootSplines[i];
-				if (startT != 0f || endT != 1f) {
-					float localStartT = (float) i / mRootSplineCount;
-					float localEndT = (float) (i + 1) / mRootSplineCount;
-					spline.mStartT = Math.min(Math.max((startT - localStartT) / 
-							         (localEndT - localStartT), 0f), 1f);
-					spline.mEndT = Math.min(Math.max((endT - localStartT) / 
-							       (localEndT - localStartT), 0f), 1f);
-				} else {
-					spline.mStartT = 0f;
-					spline.mEndT = 1f;
-				}
-
-				if (spline.mStartT != spline.mEndT) {
-					splines.add(spline);
-					mBranchElements[i].getRenderStructs(splines, points, 
-							                            spline.mStartT, 
-							                            spline.mEndT);
-				}
-			}
-		}
-
-		/**
-		 * Resets root element to its initial state.
-		 */
-		public void reset() {
-			mRootSplineCount = 0;
-			mStartTime = mDuration = 0;
-		}
-	}
-
-	/**
-	 * Holder for point data.
-	 */
-	private final class Point {
-		public final PointF mPosition = new PointF();
-		public float mRotationSin, mRotationCos;
-		public float mScale;
-	}
-
-	/**
-	 * Holder for spline data.
-	 */
-	private final class Spline {
-		
-		public static final float WIDTH_MAX = Flower.ROOT_WIDTH_MAX;
-		public static final float WIDTH_MIN = Flower.ROOT_WIDTH_MIN;
-		
-		public final PointF mPoints[] = new PointF[4];
-		public float mStartT = 0f, mEndT = 1f;
-		public float mWidthStart, mWidthEnd;
-
-		public Spline() {
-			for (int i = 0; i < mPoints.length; ++i) {
-				mPoints[i] = new PointF();
-			}
-		}
-	}
-
+    
 }
