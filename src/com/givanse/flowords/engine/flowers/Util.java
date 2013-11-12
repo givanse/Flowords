@@ -25,7 +25,7 @@ class Util {
 	/**
 	 * Generates random value between [min, max).
 	 */
-	public static float rand(float min, float max) {
+	public static float random(float min, float max) {
 		return min + (float) (Math.random() * (max - min));
 	}
 }

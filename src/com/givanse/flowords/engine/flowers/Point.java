@@ -25,7 +25,7 @@ class Point {
 	}
 	
 	public void setRandomRotationCos() {
-		this.setRotationCos(FlowerObjects.rand(0, (float) (Math.PI * 2)));
+		this.setRotationCos(Util.random(0, (float) (Math.PI * 2)));
 	}
 	
 	public float getRotationSin() {
@@ -33,7 +33,7 @@ class Point {
 	}
 	
 	public void setRandomRotationSin() {
-		this.setRotationSin(FlowerObjects.rand(0, (float) (Math.PI * 2)));
+		this.setRotationSin(Util.random(0, (float) (Math.PI * 2)));
 	}
 	
 	public float getScale() {

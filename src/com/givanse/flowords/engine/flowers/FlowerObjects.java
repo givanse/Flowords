@@ -132,7 +132,7 @@ public final class FlowerObjects {
 		genArc(spline, startPos, dir, len, normal, false);
 		startPos = spline.getKnot(KNOT_ID.FOURTH);
 
-		float rand = Util.rand(0, 3);
+		float rand = Util.random(0, 3);
 		if (rand < 1) {
 			Point point = branch.getNextPoint();
 			point.setPosition(startPos);
@@ -237,8 +237,8 @@ public final class FlowerObjects {
 			element.setStartTime(additionTime);
 			element.setDuration(500 + (long) (Math.random() * 500));
 
-			targetPos.set(Util.rand(-.8f, .8f), 
-					      Util.rand(-.8f, .8f));
+			targetPos.set(Util.random(-.8f, .8f), 
+					      Util.random(-.8f, .8f));
 			targetPos.offset(offset.x, offset.y);
 
 			float minDist = Util.getDistance(currentPos, mDirections[currentDirIdx],
@@ -253,7 +253,7 @@ public final class FlowerObjects {
 				}
 			}
 
-			final float splineLen = Math.max(Util.rand(.3f, .5f),
+			final float splineLen = Math.max(Util.random(.3f, .5f),
 					Util.getDistance(currentPos, targetPos) / 2f);
 
 			if (minDirIndex != currentDirIdx) {
@@ -272,7 +272,7 @@ public final class FlowerObjects {
 						Branch b = element.getCurrentBranch();
 						int branchDir = Math.random() < 0.5 ? -k : k;
 						float branchLen = Math.min(splineLen, .5f) * 
-								          Util.rand(.6f, .8f);
+								          Util.random(.6f, .8f);
 						setBranchVals(b, currentPos, i + branchDir, branchDir,
 								  branchLen);
 					}
@@ -291,7 +291,7 @@ public final class FlowerObjects {
 					Branch b = element.getCurrentBranch();
 					int branchDir = Math.random() < 0.5 ? -1 : 1;
 					float branchLen = Math.min(splineLen, .5f) * 
-							          Util.rand(.6f, .8f);
+							          Util.random(.6f, .8f);
 					setBranchVals(b, currentPos, currentDirIdx + branchDir,
 							  branchDir, branchLen);
 				}
