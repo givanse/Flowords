@@ -155,7 +155,7 @@ public final class Renderer implements GLSurfaceView.Renderer {
 		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
 		// Render scene.
-		mFlowerObjects.onDrawFrame(mOffsetFinal);
+		this.mFlowerObjects.drawFrame(mOffsetFinal);
 
 		// Copy FBO to screen buffer.
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
@@ -255,28 +255,28 @@ public final class Renderer implements GLSurfaceView.Renderer {
 		float bckdTop[], bckdBottom[], flowerColors[][] = new float[2][];
 		switch (colorScheme) {
 		case 1:
-			bckdTop = FlowerConstants.SCHEME_SUMMER_BG_TOP;
-			bckdBottom = FlowerConstants.SCHEME_SUMMER_BG_BOTTOM;
-			flowerColors[0] = FlowerConstants.SCHEME_SUMMER_PLANT_1;
-			flowerColors[1] = FlowerConstants.SCHEME_SUMMER_PLANT_2;
+			bckdTop = ColorSchemes.SUMMER_BG_TOP;
+			bckdBottom = ColorSchemes.SUMMER_BG_BOTTOM;
+			flowerColors[0] = ColorSchemes.SUMMER_PLANT_1;
+			flowerColors[1] = ColorSchemes.SUMMER_PLANT_2;
 			break;
 		case 2:
-			bckdTop = FlowerConstants.SCHEME_AUTUMN_BG_TOP;
-			bckdBottom = FlowerConstants.SCHEME_AUTUMN_BG_BOTTOM;
-			flowerColors[0] = FlowerConstants.SCHEME_AUTUMN_PLANT_1;
-			flowerColors[1] = FlowerConstants.SCHEME_AUTUMN_PLANT_2;
+			bckdTop = ColorSchemes.AUTUMN_BG_TOP;
+			bckdBottom = ColorSchemes.AUTUMN_BG_BOTTOM;
+			flowerColors[0] = ColorSchemes.AUTUMN_PLANT_1;
+			flowerColors[1] = ColorSchemes.AUTUMN_PLANT_2;
 			break;
 		case 3:
-			bckdTop = FlowerConstants.SCHEME_WINTER_BG_TOP;
-			bckdBottom = FlowerConstants.SCHEME_WINTER_BG_BOTTOM;
-			flowerColors[0] = FlowerConstants.SCHEME_WINTER_PLANT_1;
-			flowerColors[1] = FlowerConstants.SCHEME_WINTER_PLANT_2;
+			bckdTop = ColorSchemes.WINTER_BG_TOP;
+			bckdBottom = ColorSchemes.WINTER_BG_BOTTOM;
+			flowerColors[0] = ColorSchemes.WINTER_PLANT_1;
+			flowerColors[1] = ColorSchemes.WINTER_PLANT_2;
 			break;
 		case 4:
-			bckdTop = FlowerConstants.SCHEME_SPRING_BG_TOP;
-			bckdBottom = FlowerConstants.SCHEME_SPRING_BG_BOTTOM;
-			flowerColors[0] = FlowerConstants.SCHEME_SPRING_PLANT_1;
-			flowerColors[1] = FlowerConstants.SCHEME_SPRING_PLANT_2;
+			bckdTop = ColorSchemes.SPRING_BG_TOP;
+			bckdBottom = ColorSchemes.SPRING_BG_BOTTOM;
+			flowerColors[0] = ColorSchemes.SPRING_PLANT_1;
+			flowerColors[1] = ColorSchemes.SPRING_PLANT_2;
 			break;
 		default:
 			bckdTop = getColor(R.string.key_colors_bg_top, prefs);
