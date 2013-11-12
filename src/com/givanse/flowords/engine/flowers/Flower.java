@@ -1,7 +1,6 @@
 package com.givanse.flowords.engine.flowers;
 
 import java.util.Vector;
-
 import android.graphics.PointF;
 
 /**
@@ -16,19 +15,19 @@ class Flower {
     public static final float ROOT_WIDTH_MAX = 0.12f;
     public static final float ROOT_WIDTH_MIN = 0.06f;
 
-	public float[] mColor = new float[4];
-	public int mCurrentDirIndex;
-	public final PointF mCurrentPosition = new PointF();
-	private int mRootElementCount;
-	private final Vector<Root> mRootElements = new Vector<Root>();
-	public final PointF mTargetPosition = new PointF();
+	private float[] color = new float[4];
+	private int dirIndex;
+	private int rootsCount;
+	private final Vector<Root> roots = new Vector<Root>();
+	private final PointF currentPosition = new PointF();
+	private final PointF targetPosition = new PointF();
 
 	/**
 	 * Default constructor.
 	 */
 	public Flower() {
 		for (int i = 0; i < Flower.ROOT_ELEMENT_COUNT; ++i) {
-			mRootElements.add(new Root());
+			roots.add(new Root());
 		}
 	}
 
@@ -37,10 +36,10 @@ class Flower {
 	 * root element.
 	 */
 	public Root getLastRootElement() {
-		if (mRootElementCount == 0) {
+		if (rootsCount == 0) {
 			return getNextRootElement();
 		} else {
-			return mRootElements.get(mRootElementCount - 1);
+			return roots.get(rootsCount - 1);
 		}
 	}
 
@@ -49,11 +48,11 @@ class Flower {
 	 */
 	public Root getNextRootElement() {
 		Root element;
-		if (mRootElementCount < mRootElements.size()) {
-			element = mRootElements.get(mRootElementCount++);
+		if (rootsCount < roots.size()) {
+			element = roots.get(rootsCount++);
 		} else {
-			element = mRootElements.remove(0);
-			mRootElements.add(element);
+			element = roots.remove(0);
+			roots.add(element);
 		}
 		element.reset();
 		return element;
@@ -65,14 +64,14 @@ class Flower {
 	 */
 	public void getRenderStructs(Vector<Spline> splines,
 			                     Vector<Point> points, long time, float zoomLvl) {
-		Root lastElement = mRootElements.get(mRootElementCount - 1);
+		Root lastElement = roots.get(rootsCount - 1);
 		float t = (float) (time - lastElement.getStartTime()) / 
 				  lastElement.getDuration();
-		for (int i = 0; i < mRootElementCount; ++i) {
-			Root element = mRootElements.get(i);
-			if (i == mRootElementCount - 1) {
+		for (int i = 0; i < rootsCount; ++i) {
+			Root element = roots.get(i);
+			if (i == rootsCount - 1) {
 				element.getRenderStructs(splines, points, 0f, t, zoomLvl);
-			} else if (i == 0 && mRootElementCount == mRootElements.size()) {
+			} else if (i == 0 && rootsCount == roots.size()) {
 				element.getRenderStructs(splines, points, t, 1f, zoomLvl);
 			} else {
 				element.getRenderStructs(splines, points, 0f, 1f, zoomLvl);
@@ -84,9 +83,32 @@ class Flower {
 	 * Resets this flower element to its initial state.
 	 */
 	public void reset() {
-		mRootElementCount = 0;
-		mCurrentDirIndex = 0;
-		mCurrentPosition.set(0, 0);
+		rootsCount = 0;
+		setDirIndex(0);
+		currentPosition.set(0, 0);
 	}
 
+	public PointF getTargetPosition() {
+		return targetPosition;
+	}
+
+	public float[] getColor() {
+		return color;
+	}
+
+	public void setColor(float[] color) {
+		this.color = color;
+	}
+
+	public int getDirIndex() {
+		return dirIndex;
+	}
+
+	public void setDirIndex(int dirIndex) {
+		this.dirIndex = dirIndex;
+	}
+
+	public PointF getCurrentPosition() {
+		return currentPosition;
+	}
 }

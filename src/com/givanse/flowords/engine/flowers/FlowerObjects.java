@@ -21,7 +21,6 @@ import java.util.Vector;
 import com.givanse.flowords.R;
 import com.givanse.flowords.engine.HelperShader;
 import com.givanse.flowords.engine.flowers.Spline.KNOT_ID;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -228,8 +227,8 @@ public final class FlowerObjects {
 								(Flower.ROOT_WIDTH_MAX - Flower.ROOT_WIDTH_MIN);
 
 		PointF targetPos = flower.getTargetPosition();
-		PointF currentPos = flower.mCurrentPosition;
-		int currentDirIdx = flower.mCurrentDirIndex;
+		PointF currentPos = flower.getCurrentPosition();
+		int currentDirIdx = flower.getDirIndex();
 		Root lastElement = flower.getLastRootElement();
 		long additionTime = renderTime;
 		while (renderTime >= lastElement.getStartTime() + lastElement.getDuration()) {
@@ -302,7 +301,7 @@ public final class FlowerObjects {
 			additionTime += element.getDuration();
 			lastElement = element;
 		}
-		flower.mCurrentDirIndex = currentDirIdx;
+		flower.setDirIndex(currentDirIdx);
 	}
 
     /**
@@ -330,8 +329,8 @@ public final class FlowerObjects {
 									pointsList,
 									renderTime,
 									this.zoomLvl);
-			this.renderSplines(splinesList, flower.mColor, offset);
-			this.renderFlowers(pointsList, flower.mColor, offset);
+			this.renderSplines(splinesList, flower.getColor(), offset);
+			this.renderFlowers(pointsList, flower.getColor(), offset);
 		}
 
 		GLES20.glDisable(GLES20.GL_BLEND);
@@ -494,11 +493,11 @@ public final class FlowerObjects {
             flowersList = new Flower[flowerCount];                    
             for (int i = 0; i < flowersList.length; ++i) {                   
                 flowersList[i] = new Flower();                        
-                flowersList[i].mColor = flowerColors[i];                     
+                flowersList[i].setColor(flowerColors[i]);                     
             }                                                                    
         }                                                                        
         for (int i = 0; i < flowersList.length; ++i) {                       
-            flowersList[i].mColor = flowerColors[i];                         
+            flowersList[i].setColor(flowerColors[i]);                         
         }                                                                        
                                                                                  
         if (mSplineVertexCount != splineQuality + 2) {                           
