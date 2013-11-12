@@ -50,20 +50,20 @@ class Root {
 			if (startT != 0f || endT != 1f) {
 				float localStartT = (float) i / this.mRootSplineCount;
 				float localEndT = (float) (i + 1) / this.mRootSplineCount;
-				spline.mStartT = Math.min(Math.max((startT - localStartT) / 
-						                  (localEndT - localStartT), 0f), 1f);
-				spline.mEndT = Math.min(Math.max((endT - localStartT) / 
-						                (localEndT - localStartT), 0f), 1f);
+				spline.setStart(Math.min(Math.max((startT - localStartT) / 
+						                  (localEndT - localStartT), 0f), 1f));
+				spline.setEnd(Math.min(Math.max((endT - localStartT) / 
+						                (localEndT - localStartT), 0f), 1f));
 			} else {
-				spline.mStartT = 0f;
-				spline.mEndT = 1f;
+				spline.setStart(0f);
+				spline.setEnd(1f);
 			}
 
-			if (spline.mStartT != spline.mEndT) {
+			if (spline.getStart() != spline.getEnd()) {
 				splinesArg.add(spline);
 				this.branches[i].getRenderStructs(splinesArg, pointsArg, 
-						                          spline.mStartT, 
-						                          spline.mEndT, zoomLvl);
+						                          spline.getStart(), 
+						                          spline.getEnd(), zoomLvl);
 			}
 		}
 	}

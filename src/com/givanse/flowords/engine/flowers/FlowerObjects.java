@@ -20,6 +20,8 @@ import java.nio.FloatBuffer;
 import java.util.Vector;
 import com.givanse.flowords.R;
 import com.givanse.flowords.engine.HelperShader;
+import com.givanse.flowords.engine.flowers.Spline.KNOT_ID;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -97,7 +99,7 @@ public final class FlowerObjects {
 	}
 
 	/**
-	 * Sets spline control points based on given parameters.
+	 * Sets spline control knots based on given parameters.
 	 */
 	private void genArc(Spline spline, PointF startPos, PointF dir,
 			            float length, PointF normal, boolean straightEnd) {
@@ -107,44 +109,46 @@ public final class FlowerObjects {
 		final float NORMAL_FACTOR = 0.27614237f;
 		final float normalLen = length * NORMAL_FACTOR;
 
-		// Initially set all control points to startPos.
-		for (PointF point : spline.mPoints) {
-			point.set(startPos);
+		// Initially set all control knots to startPos.
+		for (KNOT_ID knotId : KNOT_ID.values()) {
+			spline.getKnot(knotId).set(startPos);
 		}
 		// Move second control point into target direction plus same length in
 		// normal direction.
-		spline.mPoints[1].offset((dir.x + normal.x) * normalLen,
-				(dir.y + normal.y) * normalLen);
+		spline.getKnot(KNOT_ID.SECOND)
+		      .offset((dir.x + normal.x) * normalLen, 
+		    		  (dir.y + normal.y) * normalLen);
 		// Move third control point to (startPos + (length - normalLen) * dir).
-		spline.mPoints[2].offset(dir.x * (length - normalLen), dir.y
-				* (length - normalLen));
+		spline.getKnot(KNOT_ID.THIRD)
+			  .offset(dir.x * (length - normalLen), 
+					  dir.y * (length - normalLen));
 		// If straight end is not requested move third control point among
 		// normal.
 		if (!straightEnd) {
-			spline.mPoints[2]
-					.offset(normal.x * normalLen, normal.y * normalLen);
+			spline.getKnot(KNOT_ID.THIRD)
+				  .offset(normal.x * normalLen, normal.y * normalLen);
 		}
 		// Set last control point to (startPos + dir * length).
-		spline.mPoints[3].offset(dir.x * length, dir.y * length);
+		spline.getKnot(KNOT_ID.FOURTH)
+		      .offset(dir.x * length, dir.y * length);
 	}
 
 	/**
 	 * Sets branch values based on given parameters.
 	 */
-	private void genBranch(Branch branch, PointF startPos, int startDir,
-			               int rotateDir, float len) {
+	private void setBranchVals(Branch branch, PointF startPos, int startDir,
+			               	   int rotateDir, float len) {
 
 		float maxBranchWidth = Branch.WIDTH_MIN + 
 							   this.zoomLvl *
-							   (Branch.WIDTH_MAX - 
-						       Branch.WIDTH_MIN);
+							   (Branch.WIDTH_MAX - Branch.WIDTH_MIN);
 		PointF dir = mDirections[(8 + startDir) % 8];
 		PointF normal = mDirections[(8 + startDir - 2 * rotateDir) % 8];
 		Spline spline = branch.getNextSpline();
-		spline.mWidthStart = maxBranchWidth;
-		spline.mWidthEnd = 0f;
+		spline.setWidthStart(maxBranchWidth);
+		spline.setWidthEnd(0f);
 		genArc(spline, startPos, dir, len, normal, false);
-		startPos = spline.mPoints[3];
+		startPos = spline.getKnot(KNOT_ID.FOURTH);
 
 		float rand = FlowerObjects.rand(0, 3);
 		if (rand < 1) {
@@ -154,16 +158,16 @@ public final class FlowerObjects {
 			point.setRandomRotationCos();
 		}
 		if (rand >= 1) {
-			spline.mWidthEnd = maxBranchWidth / 2;
+			spline.setWidthEnd(maxBranchWidth / 2);
 			dir = mDirections[(8 + startDir + 2 * rotateDir) % 8];
 			normal = mDirections[(8 + startDir) % 8];
 			spline = branch.getNextSpline();
-			spline.mWidthStart = maxBranchWidth / 2;
-			spline.mWidthEnd = 0f;
+			spline.setWidthStart(maxBranchWidth / 2);
+			spline.setWidthEnd(0f);
 			genArc(spline, startPos, dir, len, normal, false);
 
 			Point point = branch.getNextPoint();
-			point.setPosition(spline.mPoints[3]);
+			point.setPosition(spline.getKnot(KNOT_ID.FOURTH));
 			point.setRandomRotationSin();
 			point.setRandomRotationCos();
 		}
@@ -171,12 +175,12 @@ public final class FlowerObjects {
 			dir = mDirections[(8 + startDir - rotateDir) % 8];
 			normal = mDirections[(8 + startDir + rotateDir) % 8];
 			spline = branch.getNextSpline();
-			spline.mWidthStart = maxBranchWidth / 2;
-			spline.mWidthEnd = 0f;
+			spline.setWidthStart(maxBranchWidth / 2);
+			spline.setWidthEnd(0f);
 			genArc(spline, startPos, dir, len * .5f, normal, false);
 
 			Point point = branch.getNextPoint();
-			point.setPosition(spline.mPoints[3]);
+			point.setPosition(spline.getKnot(KNOT_ID.FOURTH));
 			point.setRandomRotationSin();
 			point.setRandomRotationCos();
 		}
@@ -185,11 +189,11 @@ public final class FlowerObjects {
 	/**
 	 * Sets spline to straight line between (start, start + length * dir).
 	 */
-	private void genLine(Spline spline, PointF start, PointF dir,
-			             float length) {
-		for (int i = 0; i < 4; ++i) {
+	private void setSplineStraight(Spline spline, 
+			                       PointF start, PointF dir, float length) {
+		for (int i = 0; i < Spline.KNOTS_TOTAL; ++i) {
 			float t = (i * length) / 3;
-			PointF point = spline.mPoints[i];
+			PointF point = spline.getKnot(i);
 			point.set(start);
 			point.offset(dir.x * t, dir.y * t);
 		}
@@ -246,8 +250,7 @@ public final class FlowerObjects {
 		// TODO: it might be best to do scaling during rendering instead.
 		final float rootWidth = Flower.ROOT_WIDTH_MIN +
 								this.zoomLvl * 
-								(Flower.ROOT_WIDTH_MAX - 
-								Flower.ROOT_WIDTH_MIN);
+								(Flower.ROOT_WIDTH_MAX - Flower.ROOT_WIDTH_MIN);
 
 		PointF targetPos = flower.mTargetPosition;
 		PointF currentPos = flower.mCurrentPosition;
@@ -285,7 +288,8 @@ public final class FlowerObjects {
 					PointF dir = mDirections[i];
 					PointF normal = mDirections[(8 + i - 2 * k) % 8];
 					Spline spline = element.getNextSpline();
-					spline.mWidthStart = spline.mWidthEnd = rootWidth;
+					spline.setWidthStart(rootWidth);
+					spline.setWidthEnd(rootWidth);
 					genArc(spline, currentPos, dir, splineLen, normal,
 							i == minDirIndex);
 
@@ -294,29 +298,30 @@ public final class FlowerObjects {
 						int branchDir = Math.random() < 0.5 ? -k : k;
 						float branchLen = Math.min(splineLen, .5f) * 
 								          FlowerObjects.rand(.6f, .8f);
-						genBranch(b, currentPos, i + branchDir, branchDir,
+						setBranchVals(b, currentPos, i + branchDir, branchDir,
 								  branchLen);
 					}
 
-					currentPos.set(spline.mPoints[3]);
+					currentPos.set(spline.getKnot(KNOT_ID.FOURTH));
 				}
 				currentDirIdx = minDirIndex;
 			} else {
 				PointF dir = mDirections[currentDirIdx];
 				Spline spline = element.getNextSpline();
-				spline.mWidthStart = spline.mWidthEnd = rootWidth;
-				genLine(spline, currentPos, dir, splineLen);
-
+				spline.setWidthStart(rootWidth);
+				spline.setWidthEnd(rootWidth);
+				setSplineStraight(spline, currentPos, dir, splineLen);
+				
 				if (Math.random() < mBranchPropability) {
 					Branch b = element.getCurrentBranch();
 					int branchDir = Math.random() < 0.5 ? -1 : 1;
 					float branchLen = Math.min(splineLen, .5f) * 
 							          FlowerObjects.rand(.6f, .8f);
-					genBranch(b, currentPos, currentDirIdx + branchDir,
+					setBranchVals(b, currentPos, currentDirIdx + branchDir,
 							  branchDir, branchLen);
 				}
 
-				currentPos.set(spline.mPoints[3]);
+				currentPos.set(spline.getKnot(KNOT_ID.FOURTH));
 			}
 
 			additionTime += element.getDuration();
@@ -473,9 +478,9 @@ public final class FlowerObjects {
 
 		for (Spline spline : splines) {
 			int visiblePointCount = 0;
-			for (int i = 0; i < 4; ++i) {
-				float x = spline.mPoints[i].x - offset.x;
-				float y = spline.mPoints[i].y - offset.y;
+			for (int i = 0; i < Spline.KNOTS_TOTAL; ++i) {
+				float x = spline.getKnot(i).x - offset.x;
+				float y = spline.getKnot(i).y - offset.y;
 				controlPts[i * 2 + 0] = x;
 				controlPts[i * 2 + 1] = y;
 				if (Math.abs(x) < boundX && Math.abs(y) < boundY) {
@@ -484,13 +489,13 @@ public final class FlowerObjects {
 			}
 			if (visiblePointCount != 0) {
 				GLES20.glUniform2fv(uControlPts, 4, controlPts, 0);
-				GLES20.glUniform2f(uWidth, spline.mWidthStart, spline.mWidthEnd);
-				GLES20.glUniform2f(uBounds, spline.mStartT, spline.mEndT);
+				GLES20.glUniform2f(uWidth, spline.getWidthStart(), spline.getWidthEnd());
+				GLES20.glUniform2f(uBounds, spline.getStart(), spline.getEnd());
 
-				if (spline.mStartT != 0f || spline.mEndT != 1f) {
-					int startIdx = (int) Math.floor(spline.mStartT *
+				if (spline.getStart() != 0f || spline.getEnd() != 1f) {
+					int startIdx = (int) Math.floor(spline.getStart() *
 							             (mSplineVertexCount - 1)) * 2;
-					int endIdx = 2 + (int) Math.ceil(spline.mEndT * 
+					int endIdx = 2 + (int) Math.ceil(spline.getEnd() * 
 							     (mSplineVertexCount - 1)) * 2;
 					GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 
 										startIdx,

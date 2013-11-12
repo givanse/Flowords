@@ -3,7 +3,7 @@ package com.givanse.flowords.engine.flowers;
 import java.util.Vector;
 
 /**
- * Branch element for handling branch data. Namely splines and points that
+ * Branch element for handling branch data. Namely splines and knots that
  * create a branch.
  */
 class Branch {
@@ -43,7 +43,7 @@ class Branch {
 	}
 
 	/**
-	 * Getter for splines and points this branch holds. Parameters startT
+	 * Getter for splines and knots this branch holds. Parameters startT
 	 * and endT are values between [0, 1] plus additionally startT < endT.
 	 */
 	public void getRenderStructs(Vector<Spline> splines,
@@ -54,17 +54,14 @@ class Branch {
 			Spline spline = this.mBranchSplines[i];
 			switch (i) {
 			case 0:
-				spline.mStartT = startT > 0f ? Math.min(startT * 2, 1f) : 
-					                           0f;
-				spline.mEndT = endT < 1f ? Math.min(endT * 2, 1f) : 1f;
+				spline.setStart(startT > 0f ? Math.min(startT * 2, 1f) : 0f);
+				spline.setEnd(endT < 1f ? Math.min(endT * 2, 1f) : 1f);
 				break;
 			default:
-				spline.mStartT = startT > 0f ? 
-						         Math.max((startT - .5f) * 2, 0f) : 
-						         0f;
-				spline.mEndT = endT < 1f ? 
-						       Math.max((endT - .5f) * 2, 0f) : 
-						       1f;
+				spline.setStart(startT > 0f ? 
+						        Math.max((startT - .5f) * 2, 0f) : 0f);
+				spline.setEnd(endT < 1f ? 
+						      Math.max((endT - .5f) * 2, 0f) : 1f);
 				break;
 			}
 			splines.add(spline);
@@ -76,7 +73,7 @@ class Branch {
 				                   zoomLvl *
 				                   (Flower.POINT_SCALE_MAX -
 				                   Flower.POINT_SCALE_MIN);
-		// Iterate over points.
+		// Iterate over knots.
 		for (int i = 0; i < this.pointCount; ++i) {
 			Point point = this.mBranchPoints[i];
 			float scale = endT - startT;
