@@ -48,7 +48,7 @@ public final class FlowerObjects {
 	// Texture rendering buffer.
 	private ByteBuffer mBufferTexture;
 
-	private final Vector<Point> pointsList = new Vector<Point>();
+	private final Vector<Knot> pointsList = new Vector<Knot>();
 	private final Vector<Spline> splinesList = new Vector<Spline>();
 	private Flower[] flowersList = new Flower[0];
 
@@ -133,7 +133,7 @@ public final class FlowerObjects {
 
 		float rand = Util.random(0, 3);
 		if (rand < 1) {
-			Point point = branch.getNextPoint();
+			Knot point = branch.getNextPoint();
 			point.setPosition(startPos);
 			point.setRandomRotationSin();
 			point.setRandomRotationCos();
@@ -147,7 +147,7 @@ public final class FlowerObjects {
 			spline.setWidthEnd(0f);
 			genArc(spline, startPos, dir, len, normal, false);
 
-			Point point = branch.getNextPoint();
+			Knot point = branch.getNextPoint();
 			point.setPosition(spline.getKnot(KNOT_ID.FOURTH));
 			point.setRandomRotationSin();
 			point.setRandomRotationCos();
@@ -160,7 +160,7 @@ public final class FlowerObjects {
 			spline.setWidthEnd(0f);
 			genArc(spline, startPos, dir, len * .5f, normal, false);
 
-			Point point = branch.getNextPoint();
+			Knot point = branch.getNextPoint();
 			point.setPosition(spline.getKnot(KNOT_ID.FOURTH));
 			point.setRandomRotationSin();
 			point.setRandomRotationCos();
@@ -183,7 +183,7 @@ public final class FlowerObjects {
 	/**
 	 * Renders flower textures.
 	 */
-	private void renderFlowers(Vector<Point> flowersList, float[] color,
+	private void renderFlowers(Vector<Knot> flowersList, float[] color,
 			                   PointF offset) {
 
 		this.mShaderTexture.useProgram();
@@ -203,7 +203,7 @@ public final class FlowerObjects {
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
 		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mFlowerTextureId[0]);
 
-		for (Point point : flowersList) {
+		for (Knot point : flowersList) {
 			final float rotationM[] = { point.getRotationCos(), 
 										point.getRotationSin(),
 					                    -point.getRotationSin(), 

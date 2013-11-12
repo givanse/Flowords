@@ -2,26 +2,26 @@ package com.givanse.flowords.engine.flowers;
 
 import android.graphics.PointF;
 
-class Point {
+class Knot {
 
-	private final PointF mPosition = new PointF();
-	private float mRotationSin;
-	private float mRotationCos;
-	private float mScale;
+	private final PointF position = new PointF();
+	private float rotationSin;
+	private float rotationCos;
+	private float scale;
 	
 	/* PRIVATE METHODS */
 	
 	private void setRotationCos(float rotation) {
-		this.mRotationCos = (float) Math.cos(rotation);
+		this.rotationCos = (float) Math.cos(rotation);
 	}
 	
 	private void setRotationSin(float rotation) {
-		this.mRotationSin = (float) Math.sin(rotation);
+		this.rotationSin = (float) Math.sin(rotation);
 	}
 	
 	/* PUBLIC METHODS */
 	public float getRotationCos() {
-		return mRotationCos;
+		return rotationCos;
 	}
 	
 	public void setRandomRotationCos() {
@@ -29,7 +29,7 @@ class Point {
 	}
 	
 	public float getRotationSin() {
-		return mRotationSin;
+		return rotationSin;
 	}
 	
 	public void setRandomRotationSin() {
@@ -37,19 +37,19 @@ class Point {
 	}
 	
 	public float getScale() {
-		return mScale;
+		return scale;
 	}
 	
 	public void setScale(float mScale) {
-		this.mScale = mScale;
+		this.scale = mScale;
 	}
 
 	public PointF getPosition() {
-		return mPosition;
+		return position;
 	}
 	
 	public void setPosition(PointF p) {
-		this.mPosition.set(p);
+		this.position.set(p);
 	}
 	
 }

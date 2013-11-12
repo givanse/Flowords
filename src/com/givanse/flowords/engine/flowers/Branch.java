@@ -3,93 +3,95 @@ package com.givanse.flowords.engine.flowers;
 import java.util.Vector;
 
 /**
- * Branch element for handling branch data. Namely splines and knots that
- * create a branch.
+ * A Branch is made of Splines and Knots.
  */
 class Branch {
 
 	public static final float WIDTH_MAX = 0.1f;
     public static final float WIDTH_MIN = 0.05f;
     
-	private int pointCount;
-	private final Point[] mBranchPoints = new Point[2];
+    private static final int POINTS_TOTAL = 2;
+    private static final int SPLINES_TOTAL = 3;
+    
+	private int pointIndex;
+	private final Knot[] knots = new Knot[Branch.POINTS_TOTAL];
+	
 	private int splineCount;
-	private final Spline[] mBranchSplines = new Spline[3];
+	private final Spline[] splines = new Spline[Branch.SPLINES_TOTAL];
 
 	/**
 	 * Default constructor.
 	 */
 	public Branch() {
-		for (int i = 0; i < this.mBranchSplines.length; ++i) {
-			this.mBranchSplines[i] = new Spline();
+		for (int i = 0; i < this.splines.length; ++i) {
+			this.splines[i] = new Spline();
 		}
-		for (int i = 0; i < mBranchPoints.length; ++i) {
-			this.mBranchPoints[i] = new Point();
+		for (int i = 0; i < knots.length; ++i) {
+			this.knots[i] = new Knot();
 		}
 	}
 
 	/**
-	 * Returns next point structure.
+	 * Returns next the next Knot.
 	 */
-	public Point getNextPoint() {
-		return this.mBranchPoints[this.pointCount++];
+	public Knot getNextPoint() {
+		return this.knots[this.pointIndex++];
 	}
 
 	/**
-	 * Returns next splien structure.
+	 * Returns next the Spline.
 	 */
 	public Spline getNextSpline() {
-		return this.mBranchSplines[this.splineCount++];
+		return this.splines[this.splineCount++];
 	}
 
 	/**
-	 * Getter for splines and knots this branch holds. Parameters startT
-	 * and endT are values between [0, 1] plus additionally startT < endT.
+	 * Getter for splines and knots this branch holds.
 	 */
-	public void getRenderStructs(Vector<Spline> splines,
-			                     Vector<Point> points, 
-			                     float startT, float endT, float zoomLvl) {
+	public void getSplinesKnots(Vector<Spline> splinesArg, 
+								Vector<Knot> knotsArg, 
+			                    float startT, float endT, float zoomLvl) {
 		// First iterate over splines.
 		for (int i = 0; i < this.splineCount; ++i) {
-			Spline spline = this.mBranchSplines[i];
+			Spline spline = this.splines[i];
 			switch (i) {
-			case 0:
+			case 0: // first spline only
 				spline.setStart(startT > 0f ? Math.min(startT * 2, 1f) : 0f);
 				spline.setEnd(endT < 1f ? Math.min(endT * 2, 1f) : 1f);
 				break;
-			default:
+			default: // every other spline
 				spline.setStart(startT > 0f ? 
 						        Math.max((startT - .5f) * 2, 0f) : 0f);
 				spline.setEnd(endT < 1f ? 
 						      Math.max((endT - .5f) * 2, 0f) : 1f);
 				break;
 			}
-			splines.add(spline);
+			splinesArg.add(spline);
 		}
+		
 		// Scale factor is calculated from current zoom level.
 		// TODO: scaling might be best done during rendering.
-		final float PT_SCALE_FACTOR = 
-				                   Flower.POINT_SCALE_MIN +
-				                   zoomLvl *
-				                   (Flower.POINT_SCALE_MAX -
-				                   Flower.POINT_SCALE_MIN);
+		final float scaleFACTOR = Flower.POINT_SCALE_MIN +
+				                  zoomLvl *
+				                  (Flower.POINT_SCALE_MAX - 
+				                  Flower.POINT_SCALE_MIN);
 		// Iterate over knots.
-		for (int i = 0; i < this.pointCount; ++i) {
-			Point point = this.mBranchPoints[i];
+		for (int i = 0; i < this.pointIndex; ++i) {
+			Knot point = this.knots[i];
 			float scale = endT - startT;
 			if (this.splineCount == 1) {
 				scale = scale < 1f ? Math.max((scale - .5f) * 2, 0f) : 1f;
 			}
-			point.setScale(scale * PT_SCALE_FACTOR);
-			points.add(point);
+			point.setScale(scale * scaleFACTOR);
+			knotsArg.add(point);
 		}
 	}
 
 	/**
-	 * Resets branch to initial state.
+	 * Resets the Branch to initial state.
 	 */
 	public void reset() {
-		this.splineCount = this.pointCount = 0;
+		this.splineCount = this.pointIndex = 0;
 	}
 	
 }

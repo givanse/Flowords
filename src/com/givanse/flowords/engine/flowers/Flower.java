@@ -63,7 +63,7 @@ class Flower {
 	 * rendering time used for deciding which root element is fading in.
 	 */
 	public void getRenderStructs(Vector<Spline> splines,
-			                     Vector<Point> points, long time, float zoomLvl) {
+			                     Vector<Knot> points, long time, float zoomLvl) {
 		Root lastElement = roots.get(rootsCount - 1);
 		float t = (float) (time - lastElement.getStartTime()) / 
 				  lastElement.getDuration();
