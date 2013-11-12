@@ -3,21 +3,23 @@ package com.givanse.flowords.engine.flowers;
 import java.util.Vector;
 
 /**
- * Root element for handling root related data. Root element consists of
- * splines for actual root and branch elements.
+ * Root element consists of splines for actual root and branch elements.
  */
 class Root {
 
-	private final Branch[] branches = new Branch[5];
-	private int mRootSplineCount;
-	private final Spline[] splines = new Spline[5];
-	private long mStartTime, mDuration;
+	private static final int BRANCHES_TOTAL = 5;
+	private static final int SPLINES_TOTAL = 5;
+	
+	private int rootIndex;
+	private final Branch[] branches = new Branch[Root.BRANCHES_TOTAL];
+	private final Spline[] splines = new Spline[Root.SPLINES_TOTAL];
+	private long startTime, duration;
 
 	/**
 	 * Default constructor.
 	 */
 	public Root() {
-		for (int i = 0; i < 5; ++i) {
+		for (int i = 0; i < Root.BRANCHES_TOTAL; ++i) {
 			this.splines[i] = new Spline();
 			this.branches[i] = new Branch();
 		}
@@ -27,29 +29,29 @@ class Root {
 	 * Returns branch for current root spline.
 	 */
 	public Branch getCurrentBranch() {
-		return this.branches[this.mRootSplineCount - 1];
+		return this.branches[this.rootIndex - 1];
 	}
 
 	/**
 	 * Returns next spline structure.
 	 */
 	public Spline getNextSpline() {
-		this.branches[this.mRootSplineCount].reset();
-		return this.splines[this.mRootSplineCount++];
+		this.branches[this.rootIndex].reset();
+		return this.splines[this.rootIndex++];
 	}
 
 	/**
-	 * Getter for spline and point structs for rendering. Values startT and
-	 * endT are between [0, 1] plus additionally startT <= endT.
+	 * Getter for spline and point structs for rendering.
 	 */
 	public void getRenderStructs(Vector<Spline> splinesArg,
-			                     Vector<Knot> pointsArg, float startT, 
-			                     float endT, float zoomLvl) {
-		for (int i = 0; i < this.mRootSplineCount; ++i) {
+			                     Vector<Knot> pointsArg, 
+			                     float startT, float endT, float zoomLvl) {
+		
+		for (int i = 0; i < this.rootIndex; ++i) {
 			Spline spline = this.splines[i];
 			if (startT != 0f || endT != 1f) {
-				float localStartT = (float) i / this.mRootSplineCount;
-				float localEndT = (float) (i + 1) / this.mRootSplineCount;
+				float localStartT = (float) i / this.rootIndex;
+				float localEndT = (float) (i + 1) / this.rootIndex;
 				spline.setStart(Math.min(Math.max((startT - localStartT) / 
 						                  (localEndT - localStartT), 0f), 1f));
 				spline.setEnd(Math.min(Math.max((endT - localStartT) / 
@@ -72,23 +74,23 @@ class Root {
 	 * Resets root element to its initial state.
 	 */
 	public void reset() {
-		this.mRootSplineCount = 0;
-		this.mStartTime = this.mDuration = 0;
+		this.rootIndex = 0;
+		this.startTime = this.duration = 0;
 	}
 
 	public void setStartTime(long startTime) {
-		this.mStartTime = startTime;
+		this.startTime = startTime;
 	}
 	
 	public void setDuration(long duration) {
-		this.mDuration = duration;
+		this.duration = duration;
 	}
 	
 	public long getStartTime() {
-		return this.mStartTime;
+		return this.startTime;
 	}
 	
 	public long getDuration() {
-		return this.mDuration;
+		return this.duration;
 	}
 }

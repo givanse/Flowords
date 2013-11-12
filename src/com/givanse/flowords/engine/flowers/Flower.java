@@ -11,13 +11,14 @@ class Flower {
 
     public static final float POINT_SCALE_MAX = .24f;
     public static final float POINT_SCALE_MIN = .12f;
-    public static final int ROOT_ELEMENT_COUNT = 6;
     public static final float ROOT_WIDTH_MAX = 0.12f;
     public static final float ROOT_WIDTH_MIN = 0.06f;
 
+    private static final int ROOTS_TOTAL = 6;
+    
 	private float[] color = new float[4];
 	private int dirIndex;
-	private int rootsCount;
+	private int rootsIndex;
 	private final Vector<Root> roots = new Vector<Root>();
 	private final PointF currentPosition = new PointF();
 	private final PointF targetPosition = new PointF();
@@ -26,8 +27,8 @@ class Flower {
 	 * Default constructor.
 	 */
 	public Flower() {
-		for (int i = 0; i < Flower.ROOT_ELEMENT_COUNT; ++i) {
-			roots.add(new Root());
+		for (int i = 0; i < Flower.ROOTS_TOTAL; ++i) {
+			this.roots.add(new Root());
 		}
 	}
 
@@ -36,10 +37,10 @@ class Flower {
 	 * root element.
 	 */
 	public Root getLastRootElement() {
-		if (rootsCount == 0) {
-			return getNextRootElement();
+		if (rootsIndex == 0) {
+			return this.getNextRootElement();
 		} else {
-			return roots.get(rootsCount - 1);
+			return this.roots.get(this.rootsIndex - 1);
 		}
 	}
 
@@ -47,35 +48,39 @@ class Flower {
 	 * Returns next root element.
 	 */
 	public Root getNextRootElement() {
-		Root element;
-		if (rootsCount < roots.size()) {
-			element = roots.get(rootsCount++);
+		Root root;
+		if (this.rootsIndex < this.roots.size()) {
+			root = this.roots.get(this.rootsIndex++);
 		} else {
-			element = roots.remove(0);
-			roots.add(element);
+			root = this.roots.remove(0);
+			this.roots.add(root);
 		}
-		element.reset();
-		return element;
+		root.reset();
+		return root;
 	}
 
 	/**
 	 * Getter for spline and point structures for rendering. Time is current
 	 * rendering time used for deciding which root element is fading in.
 	 */
-	public void getRenderStructs(Vector<Spline> splines,
-			                     Vector<Knot> points, long time, float zoomLvl) {
-		Root lastElement = roots.get(rootsCount - 1);
+	public void getRenderStructs(Vector<Spline> splinesArg, 
+								 Vector<Knot> knotsArg, 
+								 long time, float zoomLvl) {
+		Root lastElement = this.roots.get(this.rootsIndex - 1);
 		float t = (float) (time - lastElement.getStartTime()) / 
-				  lastElement.getDuration();
-		for (int i = 0; i < rootsCount; ++i) {
-			Root element = roots.get(i);
-			if (i == rootsCount - 1) {
-				element.getRenderStructs(splines, points, 0f, t, zoomLvl);
-			} else if (i == 0 && rootsCount == roots.size()) {
-				element.getRenderStructs(splines, points, t, 1f, zoomLvl);
+				          lastElement.getDuration();
+		for (int i = 0; i < this.rootsIndex; ++i) {
+			Root root = this.roots.get(i);
+			
+			float startT, endT;
+			if (i == this.rootsIndex - 1) {
+				startT = 0f; endT = t;
+			} else if (i == 0 && this.rootsIndex == this.roots.size()) {
+				startT = t; endT = 1f;
 			} else {
-				element.getRenderStructs(splines, points, 0f, 1f, zoomLvl);
+				startT = 0f; endT = 1f;
 			}
+			root.getRenderStructs(splinesArg, knotsArg, startT, endT, zoomLvl);
 		}
 	}
 
@@ -83,9 +88,9 @@ class Flower {
 	 * Resets this flower element to its initial state.
 	 */
 	public void reset() {
-		rootsCount = 0;
-		setDirIndex(0);
-		currentPosition.set(0, 0);
+		this.rootsIndex = 0;
+		this.setDirIndex(0);
+		this.setCurrentPosition(0, 0);
 	}
 
 	public PointF getTargetPosition() {
@@ -110,5 +115,9 @@ class Flower {
 
 	public PointF getCurrentPosition() {
 		return currentPosition;
+	}
+	
+	public void setCurrentPosition(float x, float y) {
+		this.currentPosition.set(x, y);
 	}
 }

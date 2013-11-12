@@ -3,7 +3,7 @@ package com.givanse.flowords.engine.flowers;
 import android.graphics.PointF;
 
 /**
- * This spline is made of 4 knots (Spline.KNOTS_TOTAL).
+ * This spline is made of 4 points (Spline.POINTS_TOTAL).
  * 
  * Spline (mathematics): en.wikipedia.org/wiki/Spline_%28mathematics%29
  */
@@ -12,10 +12,10 @@ class Spline {
 	public static final float WIDTH_MAX = Flower.ROOT_WIDTH_MAX;
 	public static final float WIDTH_MIN = Flower.ROOT_WIDTH_MIN;
 	
-	protected static final int KNOTS_TOTAL = 4;
-	protected enum KNOT_ID {FIRST, SECOND, THIRD, FOURTH};
+	protected static final int POINTS_TOTAL = 4;
+	protected enum POINT_ID {FIRST, SECOND, THIRD, FOURTH};
 	
-	private final PointF knots[] = new PointF[Spline.KNOTS_TOTAL];
+	private final PointF points[] = new PointF[Spline.POINTS_TOTAL];
 	
 	/**
 	 * 0 <= startT, endT <= 1 
@@ -28,8 +28,8 @@ class Spline {
 	private float widthEnd;
 
 	public Spline() {
-		for (int i = 0; i < Spline.KNOTS_TOTAL; i++) {
-			this.knots[i] = new PointF();
+		for (int i = 0; i < Spline.POINTS_TOTAL; i++) {
+			this.points[i] = new PointF();
 		}
 	}
 
@@ -79,11 +79,25 @@ class Spline {
 		this.widthEnd = widthEnd;
 	}
 	
-	public PointF getKnot(int knotId) {
-		return this.knots[knotId];
+	public PointF getPoint(int pointId) {
+		return this.points[pointId];
 	}
 	
-	public PointF getKnot(KNOT_ID knotId) {
-		return this.knots[knotId.ordinal()];
+	public PointF getPoint(POINT_ID pointId) {
+		return this.points[pointId.ordinal()];
 	}
+	
+
+	/**
+	 * Sets spline to straight line between (start, start + length * dir).
+	 */
+	public void setStraight(PointF start, PointF direction, float length) {
+		for (int i = 0; i < Spline.POINTS_TOTAL; ++i) {
+			float t = (i * length) / 3; // TODO: magic number
+			PointF point = this.points[i];
+			point.set(start);
+			point.offset(direction.x * t, direction.y * t);
+		}
+	}
+	
 }
