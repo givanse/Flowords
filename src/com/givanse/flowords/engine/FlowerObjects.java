@@ -198,119 +198,6 @@ public final class FlowerObjects {
 	}
 
 	/**
-	 * Renders flowers into scene.
-	 * 
-	 * @param offset
-	 *            Global offset value.
-	 */
-	public void onDrawFrame(PointF offset) {
-		GLES20.glEnable(GLES20.GL_BLEND);
-		GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-
-		long renderTime = SystemClock.uptimeMillis();
-		for (int i = 0; i < mFlowerElements.length; ++i) {
-			mContainerPoint.clear();
-			mContainerSpline.clear();
-
-			ElementFlower flower = mFlowerElements[i];
-			update(flower, renderTime, offset);
-			flower.getRenderStructs(mContainerSpline, 
-									mContainerPoint,
-									renderTime);
-			renderSplines(mContainerSpline, flower.mColor, offset);
-			renderFlowers(mContainerPoint, flower.mColor, offset);
-		}
-
-		GLES20.glDisable(GLES20.GL_BLEND);
-	}
-
-	/**
-	 * Called once underlying surface size has changed.
-	 * 
-	 * @param width
-	 *            Surface width.
-	 * @param height
-	 *            Surface height.
-	 */
-	public void onSurfaceChanged(int width, int height) {
-		mAspectRatio.x = (float) Math.min(width, height) / width;
-		mAspectRatio.y = (float) Math.min(width, height) / height;
-		for (int i = 0; i < 8; ++i) {
-			PointF dir = mDirections[i];
-			dir.set(directions[i * 2 + 0], directions[i * 2 + 1]);
-			float lenInv = 1f / dir.length();
-			dir.x *= mAspectRatio.x * lenInv;
-			dir.y *= mAspectRatio.y * lenInv;
-		}
-		for (ElementFlower flower : mFlowerElements) {
-			flower.reset();
-		}
-	}
-
-	/**
-	 * Called once Surface has been created.
-	 * 
-	 * @param context
-	 *            Context to read resources from.
-	 */
-	public void onSurfaceCreated(Context context) {
-		this.mShaderSpline.setProgram(
-				                  context.getString(R.string.shader_spline_vs),
-				                  context.getString(R.string.shader_spline_fs));
-		this.mShaderTexture.setProgram(
-				                 context.getString(R.string.shader_texture_vs),
-				                 context.getString(R.string.shader_texture_fs));
-
-		GLES20.glDeleteTextures(1, mFlowerTextureId, 0);
-		GLES20.glGenTextures(1, mFlowerTextureId, 0);
-		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mFlowerTextureId[0]);
-		GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S,
-				GLES20.GL_CLAMP_TO_EDGE);
-		GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T,
-				GLES20.GL_CLAMP_TO_EDGE);
-		GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
-				GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-		GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
-				GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-
-		Bitmap bitmap = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888);
-		bitmap.eraseColor(Color.BLACK);
-
-		Canvas canvas = new Canvas(bitmap);
-		Paint paint = new Paint();
-		paint.setStyle(Paint.Style.FILL);
-
-		int borderColor = Color.rgb((int) (.8f * 255), 0, 0);
-		int mainColor = Color.rgb(255, 0, 0);
-
-		float leafDist = 1.7f * 128 / 3f;
-		float leafPositions[] = new float[10];
-		for (int i = 0; i < 5; ++i) {
-			double r = Math.PI * 2 * i / 5;
-			leafPositions[i * 2 + 0] = 128 + (float) (Math.sin(r) * leafDist);
-			leafPositions[i * 2 + 1] = 128 + (float) (Math.cos(r) * leafDist);
-		}
-
-		paint.setColor(borderColor);
-		for (int i = 0; i < 5; ++i) {
-			canvas.drawCircle(leafPositions[i * 2 + 0],
-					leafPositions[i * 2 + 1], 48, paint);
-		}
-		paint.setColor(mainColor);
-		for (int i = 0; i < 5; ++i) {
-			canvas.drawCircle(leafPositions[i * 2 + 0],
-					leafPositions[i * 2 + 1], 36, paint);
-		}
-		paint.setColor(borderColor);
-		canvas.drawCircle(128, 128, 48, paint);
-		paint.setColor(Color.BLACK);
-		canvas.drawCircle(128, 128, 36, paint);
-
-		GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
-		bitmap.recycle();
-	}
-
-	/**
 	 * Generates random value between [min, max).
 	 */
 	private float rand(float min, float max) {
@@ -352,102 +239,6 @@ public final class FlowerObjects {
 			GLES20.glUniform1f(uScale, point.mScale);
 			GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 		}
-	}
-
-	/**
-	 * Renders splines.
-	 */
-	public void renderSplines(Vector<StructSpline> splines, 
-							  float[] color,
-							  PointF offset) {
-		this.mShaderSpline.useProgram();
-		int uControlPts = this.mShaderSpline.getHandleID("uControlPts");
-		int uWidth = this.mShaderSpline.getHandleID("uWidth");
-		int uBounds = this.mShaderSpline.getHandleID("uBounds");
-		int uColor = this.mShaderSpline.getHandleID("uColor");
-		int uAspectRatio = this.mShaderSpline.getHandleID("uAspectRatio");
-		int aSplinePos = this.mShaderSpline.getHandleID("aSplinePos");
-
-		GLES20.glUniform2f(uAspectRatio, mAspectRatio.x, mAspectRatio.y);
-		GLES20.glUniform4fv(uColor, 1, color, 0);
-		GLES20.glVertexAttribPointer(aSplinePos, 2, GLES20.GL_FLOAT, false, 0,
-									 mBufferSpline);
-		GLES20.glEnableVertexAttribArray(aSplinePos);
-
-		final float[] controlPts = new float[8];
-		float boundX = FlowerConstants.SPLINE_WIDTH_MIN +
-					   mZoomLevel * 
-					   (FlowerConstants.SPLINE_WIDTH_MAX - 
-					   FlowerConstants.SPLINE_WIDTH_MIN);
-		float boundY = 1f + boundX * mAspectRatio.y;
-		boundX = 1f + boundX * mAspectRatio.x;
-
-		for (StructSpline spline : splines) {
-			int visiblePointCount = 0;
-			for (int i = 0; i < 4; ++i) {
-				float x = spline.mPoints[i].x - offset.x;
-				float y = spline.mPoints[i].y - offset.y;
-				controlPts[i * 2 + 0] = x;
-				controlPts[i * 2 + 1] = y;
-				if (Math.abs(x) < boundX && Math.abs(y) < boundY) {
-					++visiblePointCount;
-				}
-			}
-			if (visiblePointCount != 0) {
-				GLES20.glUniform2fv(uControlPts, 4, controlPts, 0);
-				GLES20.glUniform2f(uWidth, spline.mWidthStart, spline.mWidthEnd);
-				GLES20.glUniform2f(uBounds, spline.mStartT, spline.mEndT);
-
-				if (spline.mStartT != 0f || spline.mEndT != 1f) {
-					int startIdx = (int) Math.floor(spline.mStartT *
-							             (mSplineVertexCount - 1)) * 2;
-					int endIdx = 2 + (int) Math.ceil(spline.mEndT * 
-							     (mSplineVertexCount - 1)) * 2;
-					GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 
-										startIdx,
-									    endIdx - startIdx);
-				} else {
-					GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 
-										0,
-										mSplineVertexCount * 2);
-				}
-			}
-		}
-	}
-
-	/**
-	 * Updates preference values.
-	 */
-	public void setPreferences(int flowerCount, float[][] flowerColors,
-							   int splineQuality, float branchPropability, 
-							   float zoomLevel) {
-		if (flowerCount != mFlowerElements.length) {
-			mFlowerElements = new ElementFlower[flowerCount];
-			for (int i = 0; i < mFlowerElements.length; ++i) {
-				mFlowerElements[i] = new ElementFlower();
-				mFlowerElements[i].mColor = flowerColors[i];
-			}
-		}
-		for (int i = 0; i < mFlowerElements.length; ++i) {
-			mFlowerElements[i].mColor = flowerColors[i];
-		}
-
-		if (mSplineVertexCount != splineQuality + 2) {
-			mSplineVertexCount = splineQuality + 2;
-			ByteBuffer bBuffer = 
-					      ByteBuffer.allocateDirect(4 * 4 * mSplineVertexCount);
-			mBufferSpline = bBuffer.order(ByteOrder.nativeOrder())
-								   .asFloatBuffer();
-			for (int i = 0; i < mSplineVertexCount; ++i) {
-				float t = (float) i / (mSplineVertexCount - 1);
-				mBufferSpline.put(t).put(1);
-				mBufferSpline.put(t).put(-1);
-			}
-			mBufferSpline.position(0);
-		}
-
-		mBranchPropability = branchPropability;
-		mZoomLevel = zoomLevel;
 	}
 
 	/**
@@ -533,6 +324,223 @@ public final class FlowerObjects {
 		}
 		flower.mCurrentDirIndex = currentDirIdx;
 	}
+
+    /**
+     * PUBLIC METHODS 
+     */
+
+	/**
+	 * Renders flowers into scene.
+	 * 
+	 * @param offset
+	 *            Global offset value.
+	 */
+	public void onDrawFrame(PointF offset) {
+		GLES20.glEnable(GLES20.GL_BLEND);
+		GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+
+		long renderTime = SystemClock.uptimeMillis();
+		for (int i = 0; i < mFlowerElements.length; ++i) {
+			mContainerPoint.clear();
+			mContainerSpline.clear();
+
+			ElementFlower flower = mFlowerElements[i];
+			update(flower, renderTime, offset);
+			flower.getRenderStructs(mContainerSpline, 
+									mContainerPoint,
+									renderTime);
+			renderSplines(mContainerSpline, flower.mColor, offset);
+			renderFlowers(mContainerPoint, flower.mColor, offset);
+		}
+
+		GLES20.glDisable(GLES20.GL_BLEND);
+	}
+	
+	/**
+	 * Called once underlying surface size has changed.
+	 * 
+	 * @param width
+	 *            Surface width.
+	 * @param height
+	 *            Surface height.
+	 */
+	public void onSurfaceChanged(int width, int height) {
+		mAspectRatio.x = (float) Math.min(width, height) / width;
+		mAspectRatio.y = (float) Math.min(width, height) / height;
+		for (int i = 0; i < 8; ++i) {
+			PointF dir = mDirections[i];
+			dir.set(directions[i * 2 + 0], directions[i * 2 + 1]);
+			float lenInv = 1f / dir.length();
+			dir.x *= mAspectRatio.x * lenInv;
+			dir.y *= mAspectRatio.y * lenInv;
+		}
+		for (ElementFlower flower : mFlowerElements) {
+			flower.reset();
+		}
+	}
+	
+	/**
+	 * Called once Surface has been created.
+	 * 
+	 * @param context
+	 *            Context to read resources from.
+	 */
+	public void onSurfaceCreated(Context context) {
+		this.mShaderSpline.setProgram(
+				                  context.getString(R.string.shader_spline_vs),
+				                  context.getString(R.string.shader_spline_fs));
+		this.mShaderTexture.setProgram(
+				                 context.getString(R.string.shader_texture_vs),
+				                 context.getString(R.string.shader_texture_fs));
+
+		GLES20.glDeleteTextures(1, mFlowerTextureId, 0);
+		GLES20.glGenTextures(1, mFlowerTextureId, 0);
+		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mFlowerTextureId[0]);
+		GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S,
+				GLES20.GL_CLAMP_TO_EDGE);
+		GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T,
+				GLES20.GL_CLAMP_TO_EDGE);
+		GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
+				GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+		GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
+				GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+
+		Bitmap bitmap = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888);
+		bitmap.eraseColor(Color.BLACK);
+
+		Canvas canvas = new Canvas(bitmap);
+		Paint paint = new Paint();
+		paint.setStyle(Paint.Style.FILL);
+
+		int borderColor = Color.rgb((int) (.8f * 255), 0, 0);
+		int mainColor = Color.rgb(255, 0, 0);
+
+		float leafDist = 1.7f * 128 / 3f;
+		float leafPositions[] = new float[10];
+		for (int i = 0; i < 5; ++i) {
+			double r = Math.PI * 2 * i / 5;
+			leafPositions[i * 2 + 0] = 128 + (float) (Math.sin(r) * leafDist);
+			leafPositions[i * 2 + 1] = 128 + (float) (Math.cos(r) * leafDist);
+		}
+
+		paint.setColor(borderColor);
+		for (int i = 0; i < 5; ++i) {
+			canvas.drawCircle(leafPositions[i * 2 + 0],
+					leafPositions[i * 2 + 1], 48, paint);
+		}
+		paint.setColor(mainColor);
+		for (int i = 0; i < 5; ++i) {
+			canvas.drawCircle(leafPositions[i * 2 + 0],
+					leafPositions[i * 2 + 1], 36, paint);
+		}
+		paint.setColor(borderColor);
+		canvas.drawCircle(128, 128, 48, paint);
+		paint.setColor(Color.BLACK);
+		canvas.drawCircle(128, 128, 36, paint);
+
+		GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
+		bitmap.recycle();
+	}
+
+	/**
+	 * Renders splines.
+	 */
+	public void renderSplines(Vector<StructSpline> splines, 
+							  float[] color,
+							  PointF offset) {
+		this.mShaderSpline.useProgram();
+		int uControlPts = this.mShaderSpline.getHandleID("uControlPts");
+		int uWidth = this.mShaderSpline.getHandleID("uWidth");
+		int uBounds = this.mShaderSpline.getHandleID("uBounds");
+		int uColor = this.mShaderSpline.getHandleID("uColor");
+		int uAspectRatio = this.mShaderSpline.getHandleID("uAspectRatio");
+		int aSplinePos = this.mShaderSpline.getHandleID("aSplinePos");
+
+		GLES20.glUniform2f(uAspectRatio, mAspectRatio.x, mAspectRatio.y);
+		GLES20.glUniform4fv(uColor, 1, color, 0);
+		GLES20.glVertexAttribPointer(aSplinePos, 2, GLES20.GL_FLOAT, false, 0,
+									 mBufferSpline);
+		GLES20.glEnableVertexAttribArray(aSplinePos);
+
+		final float[] controlPts = new float[8];
+		float boundX = FlowerConstants.SPLINE_WIDTH_MIN +
+					   mZoomLevel * 
+					   (FlowerConstants.SPLINE_WIDTH_MAX - 
+					   FlowerConstants.SPLINE_WIDTH_MIN);
+		float boundY = 1f + boundX * mAspectRatio.y;
+		boundX = 1f + boundX * mAspectRatio.x;
+
+		for (StructSpline spline : splines) {
+			int visiblePointCount = 0;
+			for (int i = 0; i < 4; ++i) {
+				float x = spline.mPoints[i].x - offset.x;
+				float y = spline.mPoints[i].y - offset.y;
+				controlPts[i * 2 + 0] = x;
+				controlPts[i * 2 + 1] = y;
+				if (Math.abs(x) < boundX && Math.abs(y) < boundY) {
+					++visiblePointCount;
+				}
+			}
+			if (visiblePointCount != 0) {
+				GLES20.glUniform2fv(uControlPts, 4, controlPts, 0);
+				GLES20.glUniform2f(uWidth, spline.mWidthStart, spline.mWidthEnd);
+				GLES20.glUniform2f(uBounds, spline.mStartT, spline.mEndT);
+
+				if (spline.mStartT != 0f || spline.mEndT != 1f) {
+					int startIdx = (int) Math.floor(spline.mStartT *
+							             (mSplineVertexCount - 1)) * 2;
+					int endIdx = 2 + (int) Math.ceil(spline.mEndT * 
+							     (mSplineVertexCount - 1)) * 2;
+					GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 
+										startIdx,
+									    endIdx - startIdx);
+				} else {
+					GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 
+										0,
+										mSplineVertexCount * 2);
+				}
+			}
+		}
+	}
+	
+    /**                                                                          
+     * Updates preference values.                                                
+     */                                                                          
+    public void setPreferences(int flowerCount, float[][] flowerColors,          
+                               int splineQuality, float branchPropability,          
+                               float zoomLevel) {                                
+        if (flowerCount != mFlowerElements.length) {                             
+            mFlowerElements = new ElementFlower[flowerCount];                    
+            for (int i = 0; i < mFlowerElements.length; ++i) {                   
+                mFlowerElements[i] = new ElementFlower();                        
+                mFlowerElements[i].mColor = flowerColors[i];                     
+            }                                                                    
+        }                                                                        
+        for (int i = 0; i < mFlowerElements.length; ++i) {                       
+            mFlowerElements[i].mColor = flowerColors[i];                         
+        }                                                                        
+                                                                                 
+        if (mSplineVertexCount != splineQuality + 2) {                           
+            mSplineVertexCount = splineQuality + 2;                              
+            ByteBuffer bBuffer =                                                 
+                          ByteBuffer.allocateDirect(4 * 4 * mSplineVertexCount); 
+            mBufferSpline = bBuffer.order(ByteOrder.nativeOrder())               
+                                   .asFloatBuffer();                             
+            for (int i = 0; i < mSplineVertexCount; ++i) {                       
+                float t = (float) i / (mSplineVertexCount - 1);                  
+                mBufferSpline.put(t).put(1);                                     
+                mBufferSpline.put(t).put(-1);                                    
+            }                                                                    
+            mBufferSpline.position(0);                                           
+        }                                                                        
+                                                                                 
+        mBranchPropability = branchPropability;                                  
+        mZoomLevel = zoomLevel;                                                  
+    }
+
+    /**
+     * INNER CLASSES
+     */
 
 	/**
 	 * Branch element for handling branch data. Namely splines and points that
