@@ -81,24 +81,6 @@ public final class FlowerObjects {
 	}
 
 	/**
-	 * Calculates distance between point1 and point2.
-	 */
-	private float distance(PointF point1, PointF point2) {
-		float dx = point1.x - point2.x;
-		float dy = point1.y - point2.y;
-		return (float) Math.sqrt(dx * dx + dy * dy);
-	}
-
-	/**
-	 * Calculates distance between point1 + point2 and point3.
-	 */
-	private float distance(PointF point1, PointF point2, PointF point3) {
-		float dx = point1.x + point2.x - point3.x;
-		float dy = point1.y + point2.y - point3.y;
-		return (float) Math.sqrt(dx * dx + dy * dy);
-	}
-
-	/**
 	 * Sets spline control knots based on given parameters.
 	 */
 	private void genArc(Spline spline, PointF startPos, PointF dir,
@@ -150,7 +132,7 @@ public final class FlowerObjects {
 		genArc(spline, startPos, dir, len, normal, false);
 		startPos = spline.getKnot(KNOT_ID.FOURTH);
 
-		float rand = FlowerObjects.rand(0, 3);
+		float rand = Util.rand(0, 3);
 		if (rand < 1) {
 			Point point = branch.getNextPoint();
 			point.setPosition(startPos);
@@ -200,13 +182,6 @@ public final class FlowerObjects {
 	}
 
 	/**
-	 * Generates random value between [min, max).
-	 */
-	public static float rand(float min, float max) {
-		return min + (float) (Math.random() * (max - min));
-	}
-
-	/**
 	 * Renders flower textures.
 	 */
 	private void renderFlowers(Vector<Point> flowersList, float[] color,
@@ -252,7 +227,7 @@ public final class FlowerObjects {
 								this.zoomLvl * 
 								(Flower.ROOT_WIDTH_MAX - Flower.ROOT_WIDTH_MIN);
 
-		PointF targetPos = flower.mTargetPosition;
+		PointF targetPos = flower.getTargetPosition();
 		PointF currentPos = flower.mCurrentPosition;
 		int currentDirIdx = flower.mCurrentDirIndex;
 		Root lastElement = flower.getLastRootElement();
@@ -262,24 +237,24 @@ public final class FlowerObjects {
 			element.setStartTime(additionTime);
 			element.setDuration(500 + (long) (Math.random() * 500));
 
-			targetPos.set(FlowerObjects.rand(-.8f, .8f), 
-					      FlowerObjects.rand(-.8f, .8f));
+			targetPos.set(Util.rand(-.8f, .8f), 
+					      Util.rand(-.8f, .8f));
 			targetPos.offset(offset.x, offset.y);
 
-			float minDist = distance(currentPos, mDirections[currentDirIdx],
+			float minDist = Util.getDistance(currentPos, mDirections[currentDirIdx],
 					                 targetPos);
 			int minDirIndex = currentDirIdx;
 			for (int i = 1; i < 8; ++i) {
 				PointF dir = mDirections[(currentDirIdx + i) % 8];
-				float dist = distance(currentPos, dir, targetPos);
+				float dist = Util.getDistance(currentPos, dir, targetPos);
 				if (dist < minDist) {
 					minDist = dist;
 					minDirIndex = (currentDirIdx + i) % 8;
 				}
 			}
 
-			final float splineLen = Math.max(FlowerObjects.rand(.3f, .5f),
-					distance(currentPos, targetPos) / 2f);
+			final float splineLen = Math.max(Util.rand(.3f, .5f),
+					Util.getDistance(currentPos, targetPos) / 2f);
 
 			if (minDirIndex != currentDirIdx) {
 				int k = minDirIndex > currentDirIdx ? 1 : -1;
@@ -297,7 +272,7 @@ public final class FlowerObjects {
 						Branch b = element.getCurrentBranch();
 						int branchDir = Math.random() < 0.5 ? -k : k;
 						float branchLen = Math.min(splineLen, .5f) * 
-								          FlowerObjects.rand(.6f, .8f);
+								          Util.rand(.6f, .8f);
 						setBranchVals(b, currentPos, i + branchDir, branchDir,
 								  branchLen);
 					}
@@ -316,7 +291,7 @@ public final class FlowerObjects {
 					Branch b = element.getCurrentBranch();
 					int branchDir = Math.random() < 0.5 ? -1 : 1;
 					float branchLen = Math.min(splineLen, .5f) * 
-							          FlowerObjects.rand(.6f, .8f);
+							          Util.rand(.6f, .8f);
 					setBranchVals(b, currentPos, currentDirIdx + branchDir,
 							  branchDir, branchLen);
 				}
