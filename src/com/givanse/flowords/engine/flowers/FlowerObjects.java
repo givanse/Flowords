@@ -146,13 +146,12 @@ public final class FlowerObjects {
 		genArc(spline, startPos, dir, len, normal, false);
 		startPos = spline.mPoints[3];
 
-		float rand = rand(0, 3);
+		float rand = FlowerObjects.rand(0, 3);
 		if (rand < 1) {
 			Point point = branch.getNextPoint();
-			point.mPosition.set(startPos);
-			final float rotation = rand(0, (float) (Math.PI * 2));
-			point.mRotationSin = (float) Math.sin(rotation);
-			point.mRotationCos = (float) Math.cos(rotation);
+			point.setPosition(startPos);
+			point.setRandomRotationSin();
+			point.setRandomRotationCos();
 		}
 		if (rand >= 1) {
 			spline.mWidthEnd = maxBranchWidth / 2;
@@ -164,10 +163,9 @@ public final class FlowerObjects {
 			genArc(spline, startPos, dir, len, normal, false);
 
 			Point point = branch.getNextPoint();
-			point.mPosition.set(spline.mPoints[3]);
-			final float rotation = rand(0, (float) (Math.PI * 2));
-			point.mRotationSin = (float) Math.sin(rotation);
-			point.mRotationCos = (float) Math.cos(rotation);
+			point.setPosition(spline.mPoints[3]);
+			point.setRandomRotationSin();
+			point.setRandomRotationCos();
 		}
 		if (rand >= 2) {
 			dir = mDirections[(8 + startDir - rotateDir) % 8];
@@ -178,10 +176,9 @@ public final class FlowerObjects {
 			genArc(spline, startPos, dir, len * .5f, normal, false);
 
 			Point point = branch.getNextPoint();
-			point.mPosition.set(spline.mPoints[3]);
-			final float rotation = rand(0, (float) (Math.PI * 2));
-			point.mRotationSin = (float) Math.sin(rotation);
-			point.mRotationCos = (float) Math.cos(rotation);
+			point.setPosition(spline.mPoints[3]);
+			point.setRandomRotationSin();
+			point.setRandomRotationCos();
 		}
 	}
 
@@ -201,7 +198,7 @@ public final class FlowerObjects {
 	/**
 	 * Generates random value between [min, max).
 	 */
-	private float rand(float min, float max) {
+	public static float rand(float min, float max) {
 		return min + (float) (Math.random() * (max - min));
 	}
 
@@ -229,15 +226,15 @@ public final class FlowerObjects {
 		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mFlowerTextureId[0]);
 
 		for (Point point : flowersList) {
-			final float rotationM[] = { point.mRotationCos, 
-										point.mRotationSin,
-					                    -point.mRotationSin, 
-					                    point.mRotationCos };
+			final float rotationM[] = { point.getRotationCos(), 
+										point.getRotationSin(),
+					                    -point.getRotationSin(), 
+					                    point.getRotationCos() };
 			GLES20.glUniformMatrix2fv(uRotationM, 1, false, rotationM, 0);
 			GLES20.glUniform2f(uOffset, 
-							   point.mPosition.x - offset.x,
-							   point.mPosition.y - offset.y);
-			GLES20.glUniform1f(uScale, point.mScale);
+							   point.getPosition().x - offset.x,
+							   point.getPosition().y - offset.y);
+			GLES20.glUniform1f(uScale, point.getScale());
 			GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 		}
 	}
@@ -255,14 +252,15 @@ public final class FlowerObjects {
 		PointF targetPos = flower.mTargetPosition;
 		PointF currentPos = flower.mCurrentPosition;
 		int currentDirIdx = flower.mCurrentDirIndex;
-		ElementRoot lastElement = flower.getLastRootElement();
+		Root lastElement = flower.getLastRootElement();
 		long additionTime = renderTime;
 		while (renderTime >= lastElement.getStartTime() + lastElement.getDuration()) {
-			ElementRoot element = flower.getNextRootElement();
+			Root element = flower.getNextRootElement();
 			element.setStartTime(additionTime);
 			element.setDuration(500 + (long) (Math.random() * 500));
 
-			targetPos.set(rand(-.8f, .8f), rand(-.8f, .8f));
+			targetPos.set(FlowerObjects.rand(-.8f, .8f), 
+					      FlowerObjects.rand(-.8f, .8f));
 			targetPos.offset(offset.x, offset.y);
 
 			float minDist = distance(currentPos, mDirections[currentDirIdx],
@@ -277,7 +275,7 @@ public final class FlowerObjects {
 				}
 			}
 
-			final float splineLen = Math.max(rand(.3f, .5f),
+			final float splineLen = Math.max(FlowerObjects.rand(.3f, .5f),
 					distance(currentPos, targetPos) / 2f);
 
 			if (minDirIndex != currentDirIdx) {
@@ -295,7 +293,7 @@ public final class FlowerObjects {
 						Branch b = element.getCurrentBranch();
 						int branchDir = Math.random() < 0.5 ? -k : k;
 						float branchLen = Math.min(splineLen, .5f) * 
-								          rand(.6f, .8f);
+								          FlowerObjects.rand(.6f, .8f);
 						genBranch(b, currentPos, i + branchDir, branchDir,
 								  branchLen);
 					}
@@ -312,7 +310,8 @@ public final class FlowerObjects {
 				if (Math.random() < mBranchPropability) {
 					Branch b = element.getCurrentBranch();
 					int branchDir = Math.random() < 0.5 ? -1 : 1;
-					float branchLen = Math.min(splineLen, .5f) * rand(.6f, .8f);
+					float branchLen = Math.min(splineLen, .5f) * 
+							          FlowerObjects.rand(.6f, .8f);
 					genBranch(b, currentPos, currentDirIdx + branchDir,
 							  branchDir, branchLen);
 				}

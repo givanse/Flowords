@@ -11,20 +11,20 @@ class Branch {
 	public static final float WIDTH_MAX = 0.1f;
     public static final float WIDTH_MIN = 0.05f;
     
-	public int mBranchPointCount;
+	private int pointCount;
 	private final Point[] mBranchPoints = new Point[2];
-	public int mBranchSplineCount;
+	private int splineCount;
 	private final Spline[] mBranchSplines = new Spline[3];
 
 	/**
 	 * Default constructor.
 	 */
 	public Branch() {
-		for (int i = 0; i < mBranchSplines.length; ++i) {
-			mBranchSplines[i] = new Spline();
+		for (int i = 0; i < this.mBranchSplines.length; ++i) {
+			this.mBranchSplines[i] = new Spline();
 		}
 		for (int i = 0; i < mBranchPoints.length; ++i) {
-			mBranchPoints[i] = new Point();
+			this.mBranchPoints[i] = new Point();
 		}
 	}
 
@@ -32,14 +32,14 @@ class Branch {
 	 * Returns next point structure.
 	 */
 	public Point getNextPoint() {
-		return mBranchPoints[mBranchPointCount++];
+		return this.mBranchPoints[this.pointCount++];
 	}
 
 	/**
 	 * Returns next splien structure.
 	 */
 	public Spline getNextSpline() {
-		return mBranchSplines[mBranchSplineCount++];
+		return this.mBranchSplines[this.splineCount++];
 	}
 
 	/**
@@ -50,8 +50,8 @@ class Branch {
 			                     Vector<Point> points, 
 			                     float startT, float endT, float zoomLvl) {
 		// First iterate over splines.
-		for (int i = 0; i < mBranchSplineCount; ++i) {
-			Spline spline = mBranchSplines[i];
+		for (int i = 0; i < this.splineCount; ++i) {
+			Spline spline = this.mBranchSplines[i];
 			switch (i) {
 			case 0:
 				spline.mStartT = startT > 0f ? Math.min(startT * 2, 1f) : 
@@ -77,13 +77,13 @@ class Branch {
 				                   (Flower.POINT_SCALE_MAX -
 				                   Flower.POINT_SCALE_MIN);
 		// Iterate over points.
-		for (int i = 0; i < mBranchPointCount; ++i) {
-			Point point = mBranchPoints[i];
+		for (int i = 0; i < this.pointCount; ++i) {
+			Point point = this.mBranchPoints[i];
 			float scale = endT - startT;
-			if (mBranchSplineCount == 1) {
+			if (this.splineCount == 1) {
 				scale = scale < 1f ? Math.max((scale - .5f) * 2, 0f) : 1f;
 			}
-			point.mScale = scale * PT_SCALE_FACTOR;
+			point.setScale(scale * PT_SCALE_FACTOR);
 			points.add(point);
 		}
 	}
@@ -92,7 +92,7 @@ class Branch {
 	 * Resets branch to initial state.
 	 */
 	public void reset() {
-		mBranchSplineCount = mBranchPointCount = 0;
+		this.splineCount = this.pointCount = 0;
 	}
 	
 }

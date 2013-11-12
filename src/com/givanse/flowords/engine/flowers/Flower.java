@@ -20,7 +20,7 @@ class Flower {
 	public int mCurrentDirIndex;
 	public final PointF mCurrentPosition = new PointF();
 	private int mRootElementCount;
-	private final Vector<ElementRoot> mRootElements = new Vector<ElementRoot>();
+	private final Vector<Root> mRootElements = new Vector<Root>();
 	public final PointF mTargetPosition = new PointF();
 
 	/**
@@ -28,7 +28,7 @@ class Flower {
 	 */
 	public Flower() {
 		for (int i = 0; i < Flower.ROOT_ELEMENT_COUNT; ++i) {
-			mRootElements.add(new ElementRoot());
+			mRootElements.add(new Root());
 		}
 	}
 
@@ -36,7 +36,7 @@ class Flower {
 	 * Returns last active root element. If there are none, returns next
 	 * root element.
 	 */
-	public ElementRoot getLastRootElement() {
+	public Root getLastRootElement() {
 		if (mRootElementCount == 0) {
 			return getNextRootElement();
 		} else {
@@ -47,8 +47,8 @@ class Flower {
 	/**
 	 * Returns next root element.
 	 */
-	public ElementRoot getNextRootElement() {
-		ElementRoot element;
+	public Root getNextRootElement() {
+		Root element;
 		if (mRootElementCount < mRootElements.size()) {
 			element = mRootElements.get(mRootElementCount++);
 		} else {
@@ -65,11 +65,11 @@ class Flower {
 	 */
 	public void getRenderStructs(Vector<Spline> splines,
 			                     Vector<Point> points, long time, float zoomLvl) {
-		ElementRoot lastElement = mRootElements.get(mRootElementCount - 1);
+		Root lastElement = mRootElements.get(mRootElementCount - 1);
 		float t = (float) (time - lastElement.getStartTime()) / 
 				  lastElement.getDuration();
 		for (int i = 0; i < mRootElementCount; ++i) {
-			ElementRoot element = mRootElements.get(i);
+			Root element = mRootElements.get(i);
 			if (i == mRootElementCount - 1) {
 				element.getRenderStructs(splines, points, 0f, t, zoomLvl);
 			} else if (i == 0 && mRootElementCount == mRootElements.size()) {
