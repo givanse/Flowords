@@ -133,7 +133,7 @@ public final class FlowerObjects {
 
 		float rand = Util.random(0, 3);
 		if (rand < 1) {
-			Knot point = branch.getNextPoint();
+			Knot point = branch.getNextKnot();
 			point.setPosition(startPos);
 			point.setRandomRotationSin();
 			point.setRandomRotationCos();
@@ -147,7 +147,7 @@ public final class FlowerObjects {
 			spline.setWidthEnd(0f);
 			genArc(spline, startPos, dir, len, normal, false);
 
-			Knot point = branch.getNextPoint();
+			Knot point = branch.getNextKnot();
 			point.setPosition(spline.getKnot(KNOT_ID.FOURTH));
 			point.setRandomRotationSin();
 			point.setRandomRotationCos();
@@ -160,7 +160,7 @@ public final class FlowerObjects {
 			spline.setWidthEnd(0f);
 			genArc(spline, startPos, dir, len * .5f, normal, false);
 
-			Knot point = branch.getNextPoint();
+			Knot point = branch.getNextKnot();
 			point.setPosition(spline.getKnot(KNOT_ID.FOURTH));
 			point.setRandomRotationSin();
 			point.setRandomRotationCos();

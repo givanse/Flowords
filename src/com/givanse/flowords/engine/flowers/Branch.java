@@ -10,11 +10,11 @@ class Branch {
 	public static final float WIDTH_MAX = 0.1f;
     public static final float WIDTH_MIN = 0.05f;
     
-    private static final int POINTS_TOTAL = 2;
+    private static final int KNOTS_TOTAL = 2;
     private static final int SPLINES_TOTAL = 3;
     
-	private int pointIndex;
-	private final Knot[] knots = new Knot[Branch.POINTS_TOTAL];
+	private int knotsIndex;
+	private final Knot[] knots = new Knot[Branch.KNOTS_TOTAL];
 	
 	private int splineCount;
 	private final Spline[] splines = new Spline[Branch.SPLINES_TOTAL];
@@ -34,8 +34,8 @@ class Branch {
 	/**
 	 * Returns next the next Knot.
 	 */
-	public Knot getNextPoint() {
-		return this.knots[this.pointIndex++];
+	public Knot getNextKnot() {
+		return this.knots[this.knotsIndex++];
 	}
 
 	/**
@@ -76,14 +76,14 @@ class Branch {
 				                  (Flower.POINT_SCALE_MAX - 
 				                  Flower.POINT_SCALE_MIN);
 		// Iterate over knots.
-		for (int i = 0; i < this.pointIndex; ++i) {
-			Knot point = this.knots[i];
+		for (int i = 0; i < this.knotsIndex; ++i) {
+			Knot knot = this.knots[i];
 			float scale = endT - startT;
 			if (this.splineCount == 1) {
 				scale = scale < 1f ? Math.max((scale - .5f) * 2, 0f) : 1f;
 			}
-			point.setScale(scale * scaleFACTOR);
-			knotsArg.add(point);
+			knot.setScale(scale * scaleFACTOR);
+			knotsArg.add(knot);
 		}
 	}
 
@@ -91,7 +91,7 @@ class Branch {
 	 * Resets the Branch to initial state.
 	 */
 	public void reset() {
-		this.splineCount = this.pointIndex = 0;
+		this.splineCount = this.knotsIndex = 0;
 	}
 	
 }
