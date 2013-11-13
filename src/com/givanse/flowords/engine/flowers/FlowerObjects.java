@@ -169,12 +169,12 @@ public final class FlowerObjects {
 			                   PointF offset) {
 
 		this.shaderFlowerTexture.useProgram();
-		int uAspectRatio = this.shaderFlowerTexture.getHandleID("uAspectRatio");
-		int uOffset = this.shaderFlowerTexture.getHandleID("uOffset");
-		int uScale = this.shaderFlowerTexture.getHandleID("uScale");
-		int uRotationM = this.shaderFlowerTexture.getHandleID("uRotationM");
-		int uColor = this.shaderFlowerTexture.getHandleID("uColor");
-		int aPosition = this.shaderFlowerTexture.getHandleID("aPosition");
+		int uAspectRatio = this.shaderFlowerTexture.getAUHandleId("uAspectRatio");
+		int uOffset = this.shaderFlowerTexture.getAUHandleId("uOffset");
+		int uScale = this.shaderFlowerTexture.getAUHandleId("uScale");
+		int uRotationM = this.shaderFlowerTexture.getAUHandleId("uRotationM");
+		int uColor = this.shaderFlowerTexture.getAUHandleId("uColor");
+		int aPosition = this.shaderFlowerTexture.getAUHandleId("aPosition");
 
 		GLES20.glUniform2f(uAspectRatio, aspectRatio.x, aspectRatio.y);
 		GLES20.glUniform4fv(uColor, 1, color, 0);
@@ -428,12 +428,12 @@ public final class FlowerObjects {
 							  float[] color,
 							  PointF offset) {
 		this.shaderSpline.useProgram();
-		int uControlPts = this.shaderSpline.getHandleID("uControlPts");
-		int uWidth = this.shaderSpline.getHandleID("uWidth");
-		int uBounds = this.shaderSpline.getHandleID("uBounds");
-		int uColor = this.shaderSpline.getHandleID("uColor");
-		int uAspectRatio = this.shaderSpline.getHandleID("uAspectRatio");
-		int aSplinePos = this.shaderSpline.getHandleID("aSplinePos");
+		int uControlPts = this.shaderSpline.getAUHandleId("uControlPts");
+		int uWidth = this.shaderSpline.getAUHandleId("uWidth");
+		int uBounds = this.shaderSpline.getAUHandleId("uBounds");
+		int uColor = this.shaderSpline.getAUHandleId("uColor");
+		int uAspectRatio = this.shaderSpline.getAUHandleId("uAspectRatio");
+		int aSplinePos = this.shaderSpline.getAUHandleId("aSplinePos");
 
 		GLES20.glUniform2f(uAspectRatio, 
 				           this.aspectRatio.x, this.aspectRatio.y);

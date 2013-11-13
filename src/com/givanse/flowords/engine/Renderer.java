@@ -131,11 +131,11 @@ public final class Renderer implements GLSurfaceView.Renderer {
 
 		// Render background gradient.
 		this.shdrBckndGradient.useProgram();
-		int uAspectRatio = this.shdrBckndGradient.getHandleID("uAspectRatio");
-		int uOffset = this.shdrBckndGradient.getHandleID("uOffset");
-		int uLineWidth = this.shdrBckndGradient.getHandleID("uLineWidth");
-		int aPosition = this.shdrBckndGradient.getHandleID("aPosition");
-		int aColor = this.shdrBckndGradient.getHandleID("aColor");
+		int uAspectRatio = this.shdrBckndGradient.getAUHandleId("uAspectRatio");
+		int uOffset = this.shdrBckndGradient.getAUHandleId("uOffset");
+		int uLineWidth = this.shdrBckndGradient.getAUHandleId("uLineWidth");
+		int aPosition = this.shdrBckndGradient.getAUHandleId("aPosition");
+		int aColor = this.shdrBckndGradient.getAUHandleId("aColor");
 
 		float aspectX = (float) Math.min(mWidth, mHeight) / mHeight;
 		float aspectY = (float) Math.min(mWidth, mHeight) / mWidth;
@@ -162,7 +162,7 @@ public final class Renderer implements GLSurfaceView.Renderer {
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
 		GLES20.glViewport(0, 0, mWidth, mHeight);
 		this.shdrCopyOffscreen.useProgram();
-		aPosition = this.shdrCopyOffscreen.getHandleID("aPosition");
+		aPosition = this.shdrCopyOffscreen.getAUHandleId("aPosition");
 		GLES20.glVertexAttribPointer(aPosition, 2, GLES20.GL_BYTE, false, 0,
 				buffScreenVertices);
 		GLES20.glEnableVertexAttribArray(aPosition);
