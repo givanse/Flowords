@@ -129,49 +129,67 @@ public final class Renderer implements GLSurfaceView.Renderer {
 		this.helperFBO.bind();
 		this.helperFBO.bindTexture(0);
 
-		// Render background gradient.
-		this.shdrBckndGradient.useProgram();
-		int uAspectRatio = this.shdrBckndGradient.getAUHandleId("uAspectRatio");
-		int uOffset = this.shdrBckndGradient.getAUHandleId("uOffset");
-		int uLineWidth = this.shdrBckndGradient.getAUHandleId("uLineWidth");
-		int aPosition = this.shdrBckndGradient.getAUHandleId("aPosition");
-		int aColor = this.shdrBckndGradient.getAUHandleId("aColor");
+		this.renderBackgroundGradient();
 
-		float aspectX = (float) Math.min(mWidth, mHeight) / mHeight;
-		float aspectY = (float) Math.min(mWidth, mHeight) / mWidth;
-		GLES20.glUniform2f(uAspectRatio, aspectX, aspectY);
-		GLES20.glUniform2f(uOffset, mOffsetFinal.x, mOffsetFinal.y);
-		GLES20.glUniform2f(uLineWidth, 
-						   aspectX * 40f / this.helperFBO.getWidth(),
-				           aspectY * 40f / this.helperFBO.getHeight());
-		GLES20.glVertexAttribPointer(aPosition, 2, GLES20.GL_BYTE, false, 0,
-				                     buffScreenVertices);
-		GLES20.glEnableVertexAttribArray(aPosition);
-		
-		int numCompPerVertexAttr = 4;
-		GLES20.glVertexAttribPointer(aColor, numCompPerVertexAttr, 
-									 GLES20.GL_FLOAT, false, 0,
-				                     buffBckdColors);
-		GLES20.glEnableVertexAttribArray(aColor);
-		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-
-		// Render scene.
+		/* Render scene */
 		this.mFlowerObjects.drawFrame(mOffsetFinal);
 
 		// Copy FBO to screen buffer.
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
-		GLES20.glViewport(0, 0, mWidth, mHeight);
+		GLES20.glViewport(0, 0, this.mWidth, this.mHeight);
 		this.shdrCopyOffscreen.useProgram();
-		aPosition = this.shdrCopyOffscreen.getAUHandleId("aPosition");
-		GLES20.glVertexAttribPointer(aPosition, 2, GLES20.GL_BYTE, false, 0,
-				buffScreenVertices);
-		GLES20.glEnableVertexAttribArray(aPosition);
+		int aPositionHndl = this.shdrCopyOffscreen.getAUHandleId("aPosition");
+		GLES20.glVertexAttribPointer(aPositionHndl, 2, // TODO: 2 
+									 GLES20.GL_BYTE, false, 0,
+									 this.buffScreenVertices);
+		GLES20.glEnableVertexAttribArray(aPositionHndl);
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 
-				             this.helperFBO.getTexture(0));
-		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+        		             this.helperFBO.getTexture(0));
+		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4); // TODO: 0, 4
 	}
 
+	public void renderBackgroundGradient() {
+		this.shdrBckndGradient.useProgram();
+		int uAspectRatio = this.shdrBckndGradient.getAUHandleId("uAspectRatio");
+		float aspectX = (float) Math.min(mWidth, mHeight) / mHeight;
+		float aspectY = (float) Math.min(mWidth, mHeight) / mWidth;
+		int uOffset = this.shdrBckndGradient.getAUHandleId("uOffset");
+		GLES20.glUniform2f(uAspectRatio, aspectX, aspectY);
+		GLES20.glUniform2f(uOffset, mOffsetFinal.x, mOffsetFinal.y);
+		
+		int uLineWidth = this.shdrBckndGradient.getAUHandleId("uLineWidth");
+		GLES20.glUniform2f(uLineWidth, 
+						   aspectX * 40f / this.helperFBO.getWidth(),
+				           aspectY * 40f / this.helperFBO.getHeight());
+		
+		/* Pass in position information */
+		int aPositionHndl = this.shdrBckndGradient.getAUHandleId("aPosition");
+		int vertexSize = 2;         /* Attribute - coordinate: XY, 2 elements */
+		GLES20.glVertexAttribPointer(aPositionHndl, 
+									 vertexSize, 
+									 GLES20.GL_BYTE, 
+									 false, 
+									 0,                       /* stryde bytes */
+									 this.buffScreenVertices);
+		GLES20.glEnableVertexAttribArray(aPositionHndl);
+		
+		/* Pass in color information */
+		int aColorHndl = this.shdrBckndGradient.getAUHandleId("aColor");
+		vertexSize = 4;                /* Attribute - color: RGBA, 4 elements */
+		GLES20.glVertexAttribPointer(aColorHndl, 
+				 					 vertexSize, 
+								     GLES20.GL_FLOAT, 
+								     false, 
+								     0,                       /* stryde bytes */
+								     this.buffBckdColors);
+		GLES20.glEnableVertexAttribArray(aColorHndl);
+		
+		/* this.buffBckdColors     - 4 color attributes */
+		/* this.buffScreenVertices - 4 vertices         */
+		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+	}
+	
 	@Override
 	public void onSurfaceChanged(GL10 unused, int width, int height) {
 		// If shader compiler is not supported set viewport size only.
