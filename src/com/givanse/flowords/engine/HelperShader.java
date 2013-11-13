@@ -23,39 +23,37 @@ import android.util.Log;
  */
 public final class HelperShader {
 
-	// Shader program handle.
-	private int mProgram = -1;
-	// HashMap for storing uniform/attribute handles.
-	private final HashMap<String, Integer> mShaderHandleMap = 
-			                                     new HashMap<String, Integer>();
+	private int mProgram = -1;                       /* Shader program handle */ 
+	private final HashMap<String, Integer> /* Store uniform/attribute handles */
+	                          shaderHandlesMap = new HashMap<String, Integer>();
 
 	/**
 	 * Get id for given handle name. This method checks for both attribute and
 	 * uniform handles.
 	 * 
-	 * @param name
+	 * @param handleName
 	 *            Name of handle.
 	 * @return Id for given handle or -1 if none found.
 	 */
-	public int getHandleID(String name) {
-		if (mShaderHandleMap.containsKey(name)) {
-			return mShaderHandleMap.get(name);
+	public int getAUHandleId(String handleName) {
+		if (this.shaderHandlesMap.containsKey(handleName)) {
+			return this.shaderHandlesMap.get(handleName);
 		}
 		
-		int handle = GLES20.glGetAttribLocation(mProgram, name);
+		int handle = GLES20.glGetAttribLocation(this.mProgram, handleName);
 		if (handle == -1) {
-			handle = GLES20.glGetUniformLocation(mProgram, name);
+			handle = GLES20.glGetUniformLocation(this.mProgram, handleName);
 		}
 		
 		if (handle == -1) {
-			// TODO: disable this line.
+			// TODO: log disable this line.
 			// One should never leave log messages but am not going to follow
 			// this rule. This line comes handy if you see repeating 'not found'
 			// messages on LogCat - usually for typos otherwise annoying to
 			// spot from shader code.
-			Log.d("GlslShader", "Could not get attrib location for " + name);
+			Log.d("GlslShader", "Could not get attrib location for " + handleName);
 		} else {
-			mShaderHandleMap.put(name, handle);
+			this.shaderHandlesMap.put(handleName, handle);
 		}
 		
 		return handle;
@@ -69,10 +67,10 @@ public final class HelperShader {
 	 *            List of handle names.
 	 * @return array of handle ids.
 	 */
-	public int[] getHandlesIDs(String... names) {
+	public int[] getHandlesIds(String... names) {
 		int[] res = new int[names.length];
 		for (int i = 0; i < names.length; ++i) {
-			res[i] = getHandleID(names[i]);
+			res[i] = getAUHandleId(names[i]);
 		}
 		return res;
 	}
@@ -82,24 +80,27 @@ public final class HelperShader {
 	 * 
 	 * @param shaderType
 	 *            Type of shader to compile
-	 * @param source
+	 * @param shaderSource
 	 *            String presentation for shader
 	 * @return id for compiled shader
 	 */
-	private int compileShader(int shaderType, String source) {
-		int shader = GLES20.glCreateShader(shaderType);
-		if (shader != 0) {
-			GLES20.glShaderSource(shader, source);
-			GLES20.glCompileShader(shader);
-			int[] compiled = new int[1];
-			GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0);
-			if (compiled[0] == 0) {
-				String error = GLES20.glGetShaderInfoLog(shader);
-				GLES20.glDeleteShader(shader);
+	private int compileShader(int shaderType, String shaderSource) {
+		int shaderHandle = GLES20.glCreateShader(shaderType);
+		if (shaderHandle != 0) {
+			GLES20.glShaderSource(shaderHandle, shaderSource);
+			GLES20.glCompileShader(shaderHandle);
+			int[] compileStatus = new int[1];
+			GLES20.glGetShaderiv(shaderHandle, GLES20.GL_COMPILE_STATUS, 
+								 compileStatus, 0);
+			if (compileStatus[0] == 0) {
+				String error = GLES20.glGetShaderInfoLog(shaderHandle);
+				GLES20.glDeleteShader(shaderHandle);
 				throw new RuntimeException(error);
 			}
+		} else if (shaderHandle == 0) {
+		    throw new RuntimeException("Error creating vertex shader.");
 		}
-		return shader;
+		return shaderHandle;
 	}
 
 	/**
@@ -114,32 +115,38 @@ public final class HelperShader {
 	 *            String presentation for fragment shader
 	 */
 	public void setProgram(String vertexSource, String fragmentSource) {
-		int vertexShader = compileShader(GLES20.GL_VERTEX_SHADER, 
-										 vertexSource);
-		int fragmentShader = compileShader(GLES20.GL_FRAGMENT_SHADER,
-										   fragmentSource);
-		int program = GLES20.glCreateProgram();
-		if (program != 0) {
-			GLES20.glAttachShader(program, vertexShader);
-			GLES20.glAttachShader(program, fragmentShader);
-			GLES20.glLinkProgram(program);
+		int vertexShader = compileShader(GLES20.GL_VERTEX_SHADER,
+				                         vertexSource);
+		int fragmentShader = compileShader(GLES20.GL_FRAGMENT_SHADER, 
+				                           fragmentSource);
+		
+		int programHandle = GLES20.glCreateProgram();
+		if (programHandle != 0) {
+			GLES20.glAttachShader(programHandle, vertexShader);
+			GLES20.glAttachShader(programHandle, fragmentShader);
+			GLES20.glLinkProgram(programHandle);
+			
 			int[] linkStatus = new int[1];
-			GLES20.glGetProgramiv(program, GLES20.GL_LINK_STATUS, linkStatus, 0);
+			GLES20.glGetProgramiv(programHandle, GLES20.GL_LINK_STATUS, 
+								  linkStatus, 0);
 			if (linkStatus[0] != GLES20.GL_TRUE) {
-				String error = GLES20.glGetProgramInfoLog(program);
-				GLES20.glDeleteProgram(program);
+				String error = GLES20.glGetProgramInfoLog(programHandle);
+				GLES20.glDeleteProgram(programHandle);
 				throw new RuntimeException(error);
 			}
+		} else if (programHandle == 0) {
+		    throw new RuntimeException("Error creating program.");
 		}
-		mProgram = program;
-		mShaderHandleMap.clear();
+		
+		this.mProgram = programHandle;
+		this.shaderHandlesMap.clear();
 	}
 
 	/**
 	 * Activates this shader program.
 	 */
 	public void useProgram() {
-		GLES20.glUseProgram(mProgram);
+		GLES20.glUseProgram(this.mProgram);
 	}
 
 }
