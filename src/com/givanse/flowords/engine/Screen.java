@@ -16,4 +16,6 @@ public class Screen {
 		                                          1,  1,        /* North East */
 		                                          1, -1 };      /* South East */
 	
+	public static final int VERTICES_TOTAL = 4;
+	
 }

@@ -63,7 +63,7 @@ class Flower {
 	 * Getter for spline and point structures for rendering. Time is current
 	 * rendering time used for deciding which root element is fading in.
 	 */
-	public void getRenderStructs(Vector<Spline> splinesArg, 
+	public void setForRenderSplinesKnots(Vector<Spline> splinesArg, 
 								 Vector<Knot> knotsArg, 
 								 long time, float zoomLvl) {
 		Root lastElement = this.roots.get(this.rootsIndex - 1);
@@ -80,7 +80,8 @@ class Flower {
 			} else {
 				startT = 0f; endT = 1f;
 			}
-			root.getRenderStructs(splinesArg, knotsArg, startT, endT, zoomLvl);
+			root.setForRenderSplinesKnots(splinesArg, knotsArg, 
+					                      startT, endT, zoomLvl);
 		}
 	}
 

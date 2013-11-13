@@ -285,11 +285,82 @@ public final class FlowerObjects {
 		}
 		flower.setDirIndex(currentDirIdx);
 	}
+	
+	/**
+	 * Renders splines.
+	 */
+	private void renderSplines(Vector<Spline> splines, 
+							   float[] color,
+							   PointF offset) {
+		this.shaderSpline.useProgram();
+		int uControlPts = this.shaderSpline.getAUHandleId("uControlPts");
+		int uWidth = this.shaderSpline.getAUHandleId("uWidth");
+		int uBounds = this.shaderSpline.getAUHandleId("uBounds");
+		int uColor = this.shaderSpline.getAUHandleId("uColor");
+		int uAspectRatio = this.shaderSpline.getAUHandleId("uAspectRatio");
+		int aSplinePos = this.shaderSpline.getAUHandleId("aSplinePos");
 
+		GLES20.glUniform2f(uAspectRatio, 
+				           this.aspectRatio.x, this.aspectRatio.y);
+		GLES20.glUniform4fv(uColor, 1, color, 0);
+		GLES20.glVertexAttribPointer(aSplinePos, 2, GLES20.GL_FLOAT, false, 0,
+									 this.bufferSpline);
+		GLES20.glEnableVertexAttribArray(aSplinePos);
+
+		final float[] controlPts = new float[8];
+		float boundX = Spline.WIDTH_MIN +
+					   this.zoomLvl * 
+					   (Spline.WIDTH_MAX - 
+					    Spline.WIDTH_MIN);
+		float boundY = 1f + boundX * this.aspectRatio.y;
+		boundX = 1f + boundX * this.aspectRatio.x;
+
+		for (Spline spline : splines) {
+			int visiblePointCount = 0;
+			for (int i = 0; i < Spline.CTRL_POINTS_TOTAL; ++i) {
+				float x = spline.getCtrlPoint(i).x - offset.x;
+				float y = spline.getCtrlPoint(i).y - offset.y;
+				controlPts[i * 2 + 0] = x;
+				controlPts[i * 2 + 1] = y;
+				if (Math.abs(x) < boundX && Math.abs(y) < boundY) {
+					++visiblePointCount;
+				}
+			}
+			if (visiblePointCount != 0) {
+				GLES20.glUniform2fv(uControlPts, 4, controlPts, 0);
+				GLES20.glUniform2f(uWidth, 
+						          spline.getWidthStart(), spline.getWidthEnd());
+				GLES20.glUniform2f(uBounds, spline.getStart(), spline.getEnd());
+
+				if (spline.getStart() != 0f || spline.getEnd() != 1f) {
+					int startIdx = (int) Math.floor(spline.getStart() *
+							             (splineVertexCount - 1)) * 2;
+					int endIdx = 2 + (int) Math.ceil(spline.getEnd() * 
+							     (splineVertexCount - 1)) * 2;
+					GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 
+										startIdx,
+									    endIdx - startIdx);
+				} else {
+					GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 
+										0,
+										splineVertexCount * 2);
+				}
+			}
+		}
+	}
+	
+	private void rebuildFlowers(int flowerCount, float[][] flowerColors) {
+		this.flowersList = new Flower[flowerCount];                    
+        for (int i = 0; i < flowersList.length; i++) {                   
+            flowersList[i] = new Flower();                        
+            flowersList[i].setColor(flowerColors[i]);                     
+        }
+	}
+	
     /**
      * PUBLIC METHODS 
      */
-
+	
 	/**
 	 * Renders flowersList into scene.
 	 * 
@@ -301,18 +372,19 @@ public final class FlowerObjects {
 		GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 
 		long renderTime = SystemClock.uptimeMillis();
-		for (int i = 0; i < flowersList.length; i++) {
-			knotsList.clear();
-			splinesList.clear();
+		for (int i = 0; i < this.flowersList.length; i++) {
+			this.knotsList.clear();
+			this.splinesList.clear();
 
-			Flower flower = flowersList[i];
+			Flower flower = this.flowersList[i];
 			this.update(flower, renderTime, offset);
-			flower.getRenderStructs(splinesList, 
-									knotsList,
+			flower.setForRenderSplinesKnots(this.splinesList, 
+									this.knotsList,
 									renderTime,
 									this.zoomLvl);
-			this.renderSplines(splinesList, flower.getColor(), offset);
-			this.renderFlowersTextures(knotsList, flower.getColor(), offset);
+			this.renderSplines(this.splinesList, flower.getColor(), offset);
+			this.renderFlowersTextures(
+					                 this.knotsList, flower.getColor(), offset);
 		}
 
 		GLES20.glDisable(GLES20.GL_BLEND);
@@ -352,7 +424,7 @@ public final class FlowerObjects {
 			flower.reset();
 		}
 	}
-	
+
 	/**
 	 * Called once Surface has been created.
 	 * 
@@ -419,77 +491,6 @@ public final class FlowerObjects {
 
 		GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
 		bitmap.recycle();
-	}
-
-	/**
-	 * Renders splines.
-	 */
-	public void renderSplines(Vector<Spline> splines, 
-							  float[] color,
-							  PointF offset) {
-		this.shaderSpline.useProgram();
-		int uControlPts = this.shaderSpline.getAUHandleId("uControlPts");
-		int uWidth = this.shaderSpline.getAUHandleId("uWidth");
-		int uBounds = this.shaderSpline.getAUHandleId("uBounds");
-		int uColor = this.shaderSpline.getAUHandleId("uColor");
-		int uAspectRatio = this.shaderSpline.getAUHandleId("uAspectRatio");
-		int aSplinePos = this.shaderSpline.getAUHandleId("aSplinePos");
-
-		GLES20.glUniform2f(uAspectRatio, 
-				           this.aspectRatio.x, this.aspectRatio.y);
-		GLES20.glUniform4fv(uColor, 1, color, 0);
-		GLES20.glVertexAttribPointer(aSplinePos, 2, GLES20.GL_FLOAT, false, 0,
-									 this.bufferSpline);
-		GLES20.glEnableVertexAttribArray(aSplinePos);
-
-		final float[] controlPts = new float[8];
-		float boundX = Spline.WIDTH_MIN +
-					   this.zoomLvl * 
-					   (Spline.WIDTH_MAX - 
-					    Spline.WIDTH_MIN);
-		float boundY = 1f + boundX * this.aspectRatio.y;
-		boundX = 1f + boundX * this.aspectRatio.x;
-
-		for (Spline spline : splines) {
-			int visiblePointCount = 0;
-			for (int i = 0; i < Spline.CTRL_POINTS_TOTAL; ++i) {
-				float x = spline.getCtrlPoint(i).x - offset.x;
-				float y = spline.getCtrlPoint(i).y - offset.y;
-				controlPts[i * 2 + 0] = x;
-				controlPts[i * 2 + 1] = y;
-				if (Math.abs(x) < boundX && Math.abs(y) < boundY) {
-					++visiblePointCount;
-				}
-			}
-			if (visiblePointCount != 0) {
-				GLES20.glUniform2fv(uControlPts, 4, controlPts, 0);
-				GLES20.glUniform2f(uWidth, 
-						          spline.getWidthStart(), spline.getWidthEnd());
-				GLES20.glUniform2f(uBounds, spline.getStart(), spline.getEnd());
-
-				if (spline.getStart() != 0f || spline.getEnd() != 1f) {
-					int startIdx = (int) Math.floor(spline.getStart() *
-							             (splineVertexCount - 1)) * 2;
-					int endIdx = 2 + (int) Math.ceil(spline.getEnd() * 
-							     (splineVertexCount - 1)) * 2;
-					GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 
-										startIdx,
-									    endIdx - startIdx);
-				} else {
-					GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 
-										0,
-										splineVertexCount * 2);
-				}
-			}
-		}
-	}
-	
-	private void rebuildFlowers(int flowerCount, float[][] flowerColors) {
-		this.flowersList = new Flower[flowerCount];                    
-        for (int i = 0; i < flowersList.length; i++) {                   
-            flowersList[i] = new Flower();                        
-            flowersList[i].setColor(flowerColors[i]);                     
-        }
 	}
 	
     /**                                                                          

@@ -38,9 +38,7 @@ public final class Renderer implements GLSurfaceView.Renderer {
 	
 	private static final int UPDATE_RATE = 5000;              /* Milliseconds */
 	private static final int BYTES_PER_FLOAT = 4;
-	private static final int VERTEX_ATTRIBUTES = 4;            /* Color: RGBA */
-		                          /* bckdTop, bckdBottom, bckdTop, bckdBottom */
-	private static final int BCKD_COLOR_PREFERENCES = 4;
+	private static final int VERTEX_COLOR_ATTRIBUTES = 4;      /* Color: RGBA */
 	
 	/* Buffers */
 								  /* Vertex buffer for full scene coordinates */
@@ -78,12 +76,12 @@ public final class Renderer implements GLSurfaceView.Renderer {
 
 		/** 
 		 * Create background color float buffer
-		 *   vertex attributes * background color preferences * bytes per float
+		 * 4 colored vertices (screen corners), 2 top, 2 bottom
 		 */
 		ByteBuffer byteBuff = ByteBuffer.allocateDirect(
-				                               Renderer.VERTEX_ATTRIBUTES *
-											   Renderer.BCKD_COLOR_PREFERENCES *
-				                               Renderer.BYTES_PER_FLOAT);
+				                              Renderer.VERTEX_COLOR_ATTRIBUTES *
+											  Screen.VERTICES_TOTAL *
+				                              Renderer.BYTES_PER_FLOAT);
 		this.buffBckdColors = byteBuff.order(ByteOrder.nativeOrder())
 				                      .asFloatBuffer();
 	}

@@ -48,9 +48,10 @@ class Branch {
 	/**
 	 * Getter for splines and knots this branch holds.
 	 */
-	public void getSplinesKnots(Vector<Spline> splinesArg, 
-								Vector<Knot> knotsArg, 
-			                    float startT, float endT, float zoomLvl) {
+	public void setForRenderSplinesKnots(Vector<Spline> splinesArg, 
+								         Vector<Knot> knotsArg, 
+			                             float startT, float endT, 
+			                             float zoomLvl) {
 		// First iterate over splines.
 		for (int i = 0; i < this.splineCount; ++i) {
 			Spline spline = this.splines[i];
@@ -71,7 +72,7 @@ class Branch {
 		
 		// Scale factor is calculated from current zoom level.
 		// TODO: scaling might be best done during rendering.
-		final float scaleFACTOR = Flower.POINT_SCALE_MIN +
+		final float scaleFactor = Flower.POINT_SCALE_MIN +
 				                  zoomLvl *
 				                  (Flower.POINT_SCALE_MAX - 
 				                  Flower.POINT_SCALE_MIN);
@@ -82,7 +83,7 @@ class Branch {
 			if (this.splineCount == 1) {
 				scale = scale < 1f ? Math.max((scale - .5f) * 2, 0f) : 1f;
 			}
-			knot.setScale(scale * scaleFACTOR);
+			knot.setScale(scale * scaleFactor);
 			knotsArg.add(knot);
 		}
 	}

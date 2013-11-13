@@ -43,9 +43,10 @@ class Root {
 	/**
 	 * Getter for spline and point structs for rendering.
 	 */
-	public void getRenderStructs(Vector<Spline> splinesArg,
-			                     Vector<Knot> pointsArg, 
-			                     float startT, float endT, float zoomLvl) {
+	public void setForRenderSplinesKnots(Vector<Spline> splinesArg,
+			                             Vector<Knot> pointsArg, 
+			                             float startT, float endT, 
+			                             float zoomLvl) {
 		
 		for (int i = 0; i < this.rootIndex; ++i) {
 			Spline spline = this.splines[i];
@@ -63,7 +64,7 @@ class Root {
 
 			if (spline.getStart() != spline.getEnd()) {
 				splinesArg.add(spline);
-				this.branches[i].getSplinesKnots(splinesArg, pointsArg, 
+				this.branches[i].setForRenderSplinesKnots(splinesArg, pointsArg, 
 						                          spline.getStart(), 
 						                          spline.getEnd(), zoomLvl);
 			}
