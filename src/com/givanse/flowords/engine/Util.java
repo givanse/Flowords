@@ -1,8 +1,9 @@
-package com.givanse.flowords.engine.flowers;
+package com.givanse.flowords.engine;
 
+import android.graphics.Color;
 import android.graphics.PointF;
 
-class Util {
+public class Util {
 
 	/**
 	 * Calculates distance between point1 and point2.
@@ -27,5 +28,18 @@ class Util {
 	 */
 	public static float random(float min, float max) {
 		return min + (float) (Math.random() * (max - min));
+	}
+	
+
+	/**
+	 * Converts a color value to an array of floats.
+	 */
+	public static float[] getColor(int value) {
+		float[] retVal = new float[4];
+		retVal[0] = (float) Color.red(value) / 255;
+		retVal[1] = (float) Color.green(value) / 255;
+		retVal[2] = (float) Color.blue(value) / 255;
+		retVal[3] = (float) Color.alpha(value) / 255;
+		return retVal;
 	}
 }

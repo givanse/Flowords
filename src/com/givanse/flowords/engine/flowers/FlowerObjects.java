@@ -20,6 +20,8 @@ import java.nio.FloatBuffer;
 import java.util.Vector;
 import com.givanse.flowords.R;
 import com.givanse.flowords.engine.HelperShader;
+import com.givanse.flowords.engine.Screen;
+import com.givanse.flowords.engine.Util;
 import com.givanse.flowords.engine.flowers.Spline.POINT_ID;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -47,9 +49,8 @@ public final class FlowerObjects {
 											   -1, -1, 
 										       -1,  0, 
 										       -1,  1 };
-	private final static int MOV_DIR_TOTAL = 8;     /* 4 vertices and 4 edges */
 	private final PointF[] movDirections = 
-			                            new PointF[FlowerObjects.MOV_DIR_TOTAL];
+			                            new PointF[Screen.DIRECTIONS_TOTAL];
 
 	private final Vector<Knot> knotsList = new Vector<Knot>();
 	private final Vector<Spline> splinesList = new Vector<Spline>();
@@ -73,9 +74,11 @@ public final class FlowerObjects {
 	 * Default constructor.
 	 */
 	public FlowerObjects() {
-		// TODO: 8
-		final byte[] textureCoordinates = { -1, 1, -1, -1, 1, 1, 1, -1 };
-		this.bufferTexture = ByteBuffer.allocateDirect(2 * 4); // TODO: 8
+		/* Not intuitive at all, but both arrays are equal. */
+		//final byte[] textureCoordinates = { -1, 1, -1, -1, 1, 1, 1, -1 };
+		final byte[] textureCoordinates = Screen.COORDINATES;
+		this.bufferTexture = 
+				           ByteBuffer.allocateDirect(textureCoordinates.length);
 		this.bufferTexture.put(textureCoordinates).position(0);
 		
 		for (int i = 0; i < movDirections.length; ++i) {
@@ -346,7 +349,7 @@ public final class FlowerObjects {
 		/**
 		 * Adjust baseCoords to the new aspect ratio.
 		 */
-		for (int i = 0; i < FlowerObjects.MOV_DIR_TOTAL; i++) {
+		for (int i = 0; i < Screen.DIRECTIONS_TOTAL; i++) {
 			PointF direction = this.movDirections[i];
 			/* Use base directions, read in pairs */
 			direction.set(FlowerObjects.baseCoords[i * 2 + 0], 

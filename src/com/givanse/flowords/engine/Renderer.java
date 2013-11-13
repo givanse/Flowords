@@ -40,7 +40,6 @@ public final class Renderer implements GLSurfaceView.Renderer {
 	private Context mContext;
 	// FBO for offscreen rendering.
 	private HelperFrameBufferObject helperFBO = new HelperFrameBufferObject();
-	// Actual flower renderer instance.
 	private FlowerObjects mFlowerObjects = new FlowerObjects();
 	// Scroll offset value.
 	private final PointF mOffsetScroll = new PointF();
@@ -55,7 +54,7 @@ public final class Renderer implements GLSurfaceView.Renderer {
 	private final int updateRate = 5000; // milliseconds 
 	
 	private FloatBuffer buffBckdColors;         // Buffer for background colors.
-	private ByteBuffer mScreenVertices;//Vertex buffer for full scene coordinates.
+	private ByteBuffer screenVertices;//Vertex buffer for full scene coordinates.
 	
 	// Shader for rendering background gradient.
 	private final HelperShader mShaderBackground = new HelperShader();
@@ -73,28 +72,25 @@ public final class Renderer implements GLSurfaceView.Renderer {
 	public Renderer(Context context) {
 		mContext = context;
 
-		// Create screen coordinates buffer.
-		final byte screenCoords[] = { -1, 1, -1, -1, 1, 1, 1, -1 }; // 8
-		mScreenVertices = ByteBuffer.allocateDirect(2 * 4); // 8
-		mScreenVertices.put(screenCoords).position(0);
+		screenVertices = ByteBuffer.allocateDirect(Screen.DIRECTIONS_TOTAL);
+		screenVertices.put(Screen.COORDINATES).position(0);
 
-		// Create background color float buffer.
-		ByteBuffer bBuf = ByteBuffer.allocateDirect(4 * 4 * 4); // 64
-		buffBckdColors = bBuf.order(ByteOrder.nativeOrder()).asFloatBuffer();
-	}
-
-	/**
-	 * Retrieves color value from preferences with given key.
-	 */
-	private float[] getColor(int keyId, SharedPreferences prefs) {
-		String key = mContext.getString(keyId);
-		int value = prefs.getInt(key, Color.CYAN);
-		float[] retVal = new float[4];
-		retVal[0] = (float) Color.red(value) / 255;
-		retVal[1] = (float) Color.green(value) / 255;
-		retVal[2] = (float) Color.blue(value) / 255;
-		retVal[3] = (float) Color.alpha(value) / 255;
-		return retVal;
+		/** 
+		 * Create background color float buffer.
+		 * vertex attributes * user preferences * ???
+		 * 
+		 * 	 vertex attributes (color definition)
+		 *   	red, green, blue, alpha
+		 *   	total = 4
+		 *   user preferences 
+		 *   	bckdTop, bckdBottom, bckdTop, bckdBottom
+		 *   	total = 4
+		 *   TODO: ???
+		 *   	total = 4
+		 */
+		ByteBuffer byteBuff = ByteBuffer.allocateDirect(4 * 4 * 4);
+		buffBckdColors = byteBuff.order(ByteOrder.nativeOrder())
+				                 .asFloatBuffer();
 	}
 
 	@Override
@@ -115,6 +111,7 @@ public final class Renderer implements GLSurfaceView.Renderer {
 			mOffsetDst.x = -1f + (float) (Math.random() * 2f);
 			mOffsetDst.y = -1f + (float) (Math.random() * 2f);
 		}
+		
 		// Calculate final offset values.
 		float t = (float) (time - mOffsetTime) / this.updateRate;
 		t = t * t * (3 - 2 * t);
@@ -148,9 +145,12 @@ public final class Renderer implements GLSurfaceView.Renderer {
 						   aspectX * 40f / this.helperFBO.getWidth(),
 				           aspectY * 40f / this.helperFBO.getHeight());
 		GLES20.glVertexAttribPointer(aPosition, 2, GLES20.GL_BYTE, false, 0,
-				                     mScreenVertices);
+				                     screenVertices);
 		GLES20.glEnableVertexAttribArray(aPosition);
-		GLES20.glVertexAttribPointer(aColor, 4, GLES20.GL_FLOAT, false, 0,
+		
+		int numCompPerVertexAttr = 4;
+		GLES20.glVertexAttribPointer(aColor, numCompPerVertexAttr, 
+									 GLES20.GL_FLOAT, false, 0,
 				                     buffBckdColors);
 		GLES20.glEnableVertexAttribArray(aColor);
 		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
@@ -164,7 +164,7 @@ public final class Renderer implements GLSurfaceView.Renderer {
 		this.mShaderCopy.useProgram();
 		aPosition = this.mShaderCopy.getHandleID("aPosition");
 		GLES20.glVertexAttribPointer(aPosition, 2, GLES20.GL_BYTE, false, 0,
-				mScreenVertices);
+				screenVertices);
 		GLES20.glEnableVertexAttribArray(aPosition);
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 
@@ -280,10 +280,18 @@ public final class Renderer implements GLSurfaceView.Renderer {
 			flowerColors[1] = ColorSchemes.SPRING_PLANT_2;
 			break;
 		default:
-			bckdTop = getColor(R.string.key_colors_bg_top, prefs);
-			bckdBottom = getColor(R.string.key_colors_bg_bottom, prefs);
-			flowerColors[0] = getColor(R.string.key_colors_flower_1, prefs);
-			flowerColors[1] = getColor(R.string.key_colors_flower_2, prefs);
+			bckdTop = Util.getColor(
+				 prefs.getInt(mContext.getString(R.string.key_colors_bg_top),
+				 Color.BLACK));
+			bckdBottom = Util.getColor(
+				 prefs.getInt(mContext.getString(R.string.key_colors_bg_bottom),
+				 Color.BLACK));
+			flowerColors[0] = Util.getColor(
+				 prefs.getInt(mContext.getString(R.string.key_colors_flower_1),
+				 Color.WHITE));
+			flowerColors[1] = Util.getColor(
+				 prefs.getInt(mContext.getString(R.string.key_colors_flower_2),
+				 Color.WHITE));
 			break;
 		}
 
