@@ -27,6 +27,7 @@ class Knot {
 	}
 	
 	public void setRandomRotationCos() {
+        /* Random, matrix rotation */
 		this.setRotationCos(Util.random(0, (float) (Math.PI * 2)));
 	}
 	
@@ -35,6 +36,7 @@ class Knot {
 	}
 	
 	public void setRandomRotationSin() {
+        /* Random, matrix rotation */
 		this.setRotationSin(Util.random(0, (float) (Math.PI * 2)));
 	}
 	

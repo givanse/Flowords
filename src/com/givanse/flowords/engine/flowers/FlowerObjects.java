@@ -174,10 +174,7 @@ public final class FlowerObjects {
 		}
 	}
 
-	/**
-	 * Renders flower textures.
-	 */
-	private void renderFlowers(Vector<Knot> flowersList, float[] color,
+	private void renderFlowersTextures(Vector<Knot> knotsArg, float[] color,
 			                   PointF offset) {
 
 		this.shaderFlowerTexture.useProgram();
@@ -197,16 +194,16 @@ public final class FlowerObjects {
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
 		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, flowerTextureId[0]);
 
-		for (Knot point : flowersList) {
-			final float rotationM[] = { point.getRotationCos(), 
-										point.getRotationSin(),
-					                    -point.getRotationSin(), 
-					                    point.getRotationCos() };
+		for (Knot knot: knotsArg) {
+			final float rotationM[] = { knot.getRotationCos(), 
+										knot.getRotationSin(),
+					                    -knot.getRotationSin(), 
+					                    knot.getRotationCos() };
 			GLES20.glUniformMatrix2fv(uRotationM, 1, false, rotationM, 0);
 			GLES20.glUniform2f(uOffset, 
-							   point.getPosition().x - offset.x,
-							   point.getPosition().y - offset.y);
-			GLES20.glUniform1f(uScale, point.getScale());
+							   knot.getPosition().x - offset.x,
+							   knot.getPosition().y - offset.y);
+			GLES20.glUniform1f(uScale, knot.getScale());
 			GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 		}
 	}
@@ -324,7 +321,7 @@ public final class FlowerObjects {
 									renderTime,
 									this.zoomLvl);
 			this.renderSplines(splinesList, flower.getColor(), offset);
-			this.renderFlowers(knotsList, flower.getColor(), offset);
+			this.renderFlowersTextures(knotsList, flower.getColor(), offset);
 		}
 
 		GLES20.glDisable(GLES20.GL_BLEND);
