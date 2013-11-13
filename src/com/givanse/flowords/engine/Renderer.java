@@ -36,10 +36,21 @@ import android.widget.Toast;
  */
 public final class Renderer implements GLSurfaceView.Renderer {
 	
+	private static final int UPDATE_RATE = 5000;              /* Milliseconds */
+	private static final int BYTES_PER_FLOAT = 4;
+	private static final int VERTEX_ATTRIBUTES = 4;            /* Color: RGBA */
+		                          /* bckdTop, bckdBottom, bckdTop, bckdBottom */
+	private static final int BCKD_COLOR_PREFERENCES = 4;
+	
+	/* Buffers */
+	private HelperFrameBufferObject helperFBO = new HelperFrameBufferObject();
+	private FloatBuffer buffBckdColors;       /* Buffer for background colors */
+    							  /* Vertex buffer for full scene coordinates */
+	private ByteBuffer buffScreenVertices; 
+	
 	// Current context.
 	private Context mContext;
 	// FBO for offscreen rendering.
-	private HelperFrameBufferObject helperFBO = new HelperFrameBufferObject();
 	private FlowerObjects mFlowerObjects = new FlowerObjects();
 	// Scroll offset value.
 	private final PointF mOffsetScroll = new PointF();
@@ -51,10 +62,6 @@ public final class Renderer implements GLSurfaceView.Renderer {
 
 	// Animated offset time value for iterating between src and dst.
 	private long mOffsetTime;
-	private final int updateRate = 5000; // milliseconds 
-	
-	private FloatBuffer buffBckdColors;         // Buffer for background colors.
-	private ByteBuffer screenVertices;//Vertex buffer for full scene coordinates.
 	
 	// Shader for rendering background gradient.
 	private final HelperShader mShaderBackground = new HelperShader();
@@ -70,27 +77,22 @@ public final class Renderer implements GLSurfaceView.Renderer {
 	 * Default constructor.
 	 */
 	public Renderer(Context context) {
-		mContext = context;
+		this.mContext = context;
 
-		screenVertices = ByteBuffer.allocateDirect(Screen.DIRECTIONS_TOTAL);
-		screenVertices.put(Screen.COORDINATES).position(0);
+		this.buffScreenVertices = 
+				         ByteBuffer.allocateDirect(Screen.VERTEX_COORDS.length);
+		this.buffScreenVertices.put(Screen.VERTEX_COORDS).position(0);
 
 		/** 
-		 * Create background color float buffer.
-		 * vertex attributes * user preferences * ???
-		 * 
-		 * 	 vertex attributes (color definition)
-		 *   	red, green, blue, alpha
-		 *   	total = 4
-		 *   user preferences 
-		 *   	bckdTop, bckdBottom, bckdTop, bckdBottom
-		 *   	total = 4
-		 *   TODO: ???
-		 *   	total = 4
+		 * Create background color float buffer
+		 *   vertex attributes * background color preferences * bytes per float
 		 */
-		ByteBuffer byteBuff = ByteBuffer.allocateDirect(4 * 4 * 4);
-		buffBckdColors = byteBuff.order(ByteOrder.nativeOrder())
-				                 .asFloatBuffer();
+		ByteBuffer byteBuff = ByteBuffer.allocateDirect(
+				                               Renderer.VERTEX_ATTRIBUTES *
+											   Renderer.BCKD_COLOR_PREFERENCES *
+				                               Renderer.BYTES_PER_FLOAT);
+		this.buffBckdColors = byteBuff.order(ByteOrder.nativeOrder())
+				                      .asFloatBuffer();
 	}
 
 	@Override
@@ -105,7 +107,7 @@ public final class Renderer implements GLSurfaceView.Renderer {
 		// Update offset.
 		long time = SystemClock.uptimeMillis();
 		// If time passed generate new target.
-		if (time - mOffsetTime > this.updateRate) {
+		if (time - mOffsetTime > Renderer.UPDATE_RATE) {
 			mOffsetTime = time;
 			mOffsetSrc.set(mOffsetDst);
 			mOffsetDst.x = -1f + (float) (Math.random() * 2f);
@@ -113,7 +115,7 @@ public final class Renderer implements GLSurfaceView.Renderer {
 		}
 		
 		// Calculate final offset values.
-		float t = (float) (time - mOffsetTime) / this.updateRate;
+		float t = (float) (time - mOffsetTime) / Renderer.UPDATE_RATE;
 		t = t * t * (3 - 2 * t);
 		mOffsetFinal.x = mOffsetScroll.x + mOffsetSrc.x + t *
 				    (mOffsetDst.x - mOffsetSrc.x);
@@ -145,7 +147,7 @@ public final class Renderer implements GLSurfaceView.Renderer {
 						   aspectX * 40f / this.helperFBO.getWidth(),
 				           aspectY * 40f / this.helperFBO.getHeight());
 		GLES20.glVertexAttribPointer(aPosition, 2, GLES20.GL_BYTE, false, 0,
-				                     screenVertices);
+				                     buffScreenVertices);
 		GLES20.glEnableVertexAttribArray(aPosition);
 		
 		int numCompPerVertexAttr = 4;
@@ -164,7 +166,7 @@ public final class Renderer implements GLSurfaceView.Renderer {
 		this.mShaderCopy.useProgram();
 		aPosition = this.mShaderCopy.getHandleID("aPosition");
 		GLES20.glVertexAttribPointer(aPosition, 2, GLES20.GL_BYTE, false, 0,
-				screenVertices);
+				buffScreenVertices);
 		GLES20.glEnableVertexAttribArray(aPosition);
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 

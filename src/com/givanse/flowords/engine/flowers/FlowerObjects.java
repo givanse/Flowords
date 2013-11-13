@@ -40,17 +40,8 @@ public final class FlowerObjects {
 
 	private final PointF aspectRatio = new PointF();
 	
-	/* Flower movement directions */
-	private static final float[] baseCoords = { 0,  1,  /* Cartesian square   */
-   											    1,  1,  /* centered at (0, 0) */
-											    1,  0, 
-											    1, -1, 
-											    0, -1, 
-											   -1, -1, 
-										       -1,  0, 
-										       -1,  1 };
-	private final PointF[] movDirections = 
-			                            new PointF[Screen.DIRECTIONS_TOTAL];
+	/* Flower movement directions, coords are stored in pairs */
+	private final PointF[] movDirections = new PointF[Screen.COORDS.length / 2];
 
 	private final Vector<Knot> knotsList = new Vector<Knot>();
 	private final Vector<Spline> splinesList = new Vector<Spline>();
@@ -76,7 +67,7 @@ public final class FlowerObjects {
 	public FlowerObjects() {
 		/* Not intuitive at all, but both arrays are equal. */
 		//final byte[] textureCoordinates = { -1, 1, -1, -1, 1, 1, 1, -1 };
-		final byte[] textureCoordinates = Screen.COORDINATES;
+		final byte[] textureCoordinates = Screen.VERTEX_COORDS;
 		this.bufferTexture = 
 				           ByteBuffer.allocateDirect(textureCoordinates.length);
 		this.bufferTexture.put(textureCoordinates).position(0);
@@ -344,13 +335,13 @@ public final class FlowerObjects {
 		this.aspectRatio.y = (float) Math.min(width, height) / height;
 		
 		/**
-		 * Adjust baseCoords to the new aspect ratio.
+		 * Adjust COORDS to the new aspect ratio.
 		 */
-		for (int i = 0; i < Screen.DIRECTIONS_TOTAL; i++) {
+		for (int i = 0; i < this.movDirections.length; i++) {
 			PointF direction = this.movDirections[i];
-			/* Use base directions, read in pairs */
-			direction.set(FlowerObjects.baseCoords[i * 2 + 0], 
-					      FlowerObjects.baseCoords[i * 2 + 1]);
+			/* Use base directions, read COORDS in pairs */
+			direction.set(Screen.COORDS[i * 2 + 0], 
+					      Screen.COORDS[i * 2 + 1]);
 			
 			/* Scale directions to the new aspect ratio */
 			float lenInv = 1f / direction.length();
