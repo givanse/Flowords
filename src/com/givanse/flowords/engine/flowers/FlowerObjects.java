@@ -22,7 +22,7 @@ import com.givanse.flowords.R;
 import com.givanse.flowords.engine.HelperShader;
 import com.givanse.flowords.engine.Screen;
 import com.givanse.flowords.engine.Util;
-import com.givanse.flowords.engine.flowers.Spline.POINT_ID;
+import com.givanse.flowords.engine.flowers.Spline.CTRL_POINT;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -98,26 +98,26 @@ public final class FlowerObjects {
 		final float normalLen = length * NORMAL_FACTOR;
 
 		// Initially set all control knots to startPos.
-		for (POINT_ID knotId : POINT_ID.values()) {
-			splineArg.getPoint(knotId).set(startPosArg);
+		for (CTRL_POINT knotId : CTRL_POINT.values()) {
+			splineArg.getCtrlPoint(knotId).set(startPosArg);
 		}
 		// Move second control point into target direction plus same length in
 		// normal direction.
-		splineArg.getPoint(POINT_ID.SECOND)
+		splineArg.getCtrlPoint(CTRL_POINT.TWO)
 		      .offset((dir.x + normal.x) * normalLen, 
 		    		  (dir.y + normal.y) * normalLen);
 		// Move third control point to (startPos + (length - normalLen) * dir).
-		splineArg.getPoint(POINT_ID.THIRD)
+		splineArg.getCtrlPoint(CTRL_POINT.THREE)
 			  .offset(dir.x * (length - normalLen), 
 					  dir.y * (length - normalLen));
 		// If straight end is not requested move third control point among
 		// normal.
 		if (!straightEnd) {
-			splineArg.getPoint(POINT_ID.THIRD)
+			splineArg.getCtrlPoint(CTRL_POINT.THREE)
 				  .offset(normal.x * normalLen, normal.y * normalLen);
 		}
 		// Set last control point to (startPos + dir * length).
-		splineArg.getPoint(POINT_ID.FOURTH)
+		splineArg.getCtrlPoint(CTRL_POINT.FOUR)
 		      .offset(dir.x * length, dir.y * length);
 	}
 
@@ -136,7 +136,7 @@ public final class FlowerObjects {
 		spline.setWidthStart(maxBranchWidth);
 		spline.setWidthEnd(0f);
 		genArc(spline, startPos, dir, len, normal, false);
-		startPos = spline.getPoint(POINT_ID.FOURTH);
+		startPos = spline.getCtrlPoint(CTRL_POINT.FOUR);
 
 		float rand = Util.random(0, 3);
 		if (rand < 1) {
@@ -155,7 +155,7 @@ public final class FlowerObjects {
 			genArc(spline, startPos, dir, len, normal, false);
 
 			Knot point = branchArg.getNextKnot();
-			point.setPosition(spline.getPoint(POINT_ID.FOURTH));
+			point.setPosition(spline.getCtrlPoint(CTRL_POINT.FOUR));
 			point.setRandomRotationSin();
 			point.setRandomRotationCos();
 		}
@@ -168,7 +168,7 @@ public final class FlowerObjects {
 			genArc(spline, startPos, dir, len * .5f, normal, false);
 
 			Knot point = branchArg.getNextKnot();
-			point.setPosition(spline.getPoint(POINT_ID.FOURTH));
+			point.setPosition(spline.getCtrlPoint(CTRL_POINT.FOUR));
 			point.setRandomRotationSin();
 			point.setRandomRotationCos();
 		}
@@ -267,7 +267,7 @@ public final class FlowerObjects {
 								  branchLen);
 					}
 
-					currentPos.set(spline.getPoint(POINT_ID.FOURTH));
+					currentPos.set(spline.getCtrlPoint(CTRL_POINT.FOUR));
 				}
 				currentDirIdx = minDirIndex;
 			} else {
@@ -286,7 +286,7 @@ public final class FlowerObjects {
 							  branchDir, branchLen);
 				}
 
-				currentPos.set(spline.getPoint(POINT_ID.FOURTH));
+				currentPos.set(spline.getCtrlPoint(CTRL_POINT.FOUR));
 			}
 
 			additionTime += element.getDuration();
@@ -376,6 +376,11 @@ public final class FlowerObjects {
 				                 context.getString(R.string.shader_texture_vs),
 				                 context.getString(R.string.shader_texture_fs));
 
+        /**
+          * Flower texture generation made with Bitmap, Canvas and Paint 
+          *   github.com/harism/android_wallpaper_flowers/
+          *   commit/42a0a124315f301db726287db1d0edb225d2ef4c
+          */
 		GLES20.glDeleteTextures(1, flowerTextureId, 0);
 		GLES20.glGenTextures(1, flowerTextureId, 0);
 		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, flowerTextureId[0]);
@@ -456,9 +461,9 @@ public final class FlowerObjects {
 
 		for (Spline spline : splines) {
 			int visiblePointCount = 0;
-			for (int i = 0; i < Spline.POINTS_TOTAL; ++i) {
-				float x = spline.getPoint(i).x - offset.x;
-				float y = spline.getPoint(i).y - offset.y;
+			for (int i = 0; i < Spline.CTRL_POINTS_TOTAL; ++i) {
+				float x = spline.getCtrlPoint(i).x - offset.x;
+				float y = spline.getCtrlPoint(i).y - offset.y;
 				controlPts[i * 2 + 0] = x;
 				controlPts[i * 2 + 1] = y;
 				if (Math.abs(x) < boundX && Math.abs(y) < boundY) {

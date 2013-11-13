@@ -3,7 +3,7 @@ package com.givanse.flowords.engine.flowers;
 import android.graphics.PointF;
 
 /**
- * This spline is made of 4 points (Spline.POINTS_TOTAL).
+ * This spline is made of 4 ctrlPoints (Spline.CTRL_POINTS_TOTAL).
  * 
  * Spline (mathematics): en.wikipedia.org/wiki/Spline_%28mathematics%29
  */
@@ -12,10 +12,10 @@ class Spline {
 	public static final float WIDTH_MAX = Flower.ROOT_WIDTH_MAX;
 	public static final float WIDTH_MIN = Flower.ROOT_WIDTH_MIN;
 	
-	protected static final int POINTS_TOTAL = 4;
-	protected enum POINT_ID {FIRST, SECOND, THIRD, FOURTH};
+	protected static final int CTRL_POINTS_TOTAL = 4;
+	protected enum CTRL_POINT {ONE, TWO, THREE, FOUR};
 	
-	private final PointF points[] = new PointF[Spline.POINTS_TOTAL];
+	private final PointF ctrlPoints[] = new PointF[Spline.CTRL_POINTS_TOTAL];
 	
 	/**
 	 * 0 <= startT, endT <= 1 
@@ -28,8 +28,8 @@ class Spline {
 	private float widthEnd;
 
 	public Spline() {
-		for (int i = 0; i < Spline.POINTS_TOTAL; i++) {
-			this.points[i] = new PointF();
+		for (int i = 0; i < Spline.CTRL_POINTS_TOTAL; i++) {
+			this.ctrlPoints[i] = new PointF();
 		}
 	}
 
@@ -79,12 +79,12 @@ class Spline {
 		this.widthEnd = widthEnd;
 	}
 	
-	public PointF getPoint(int pointId) {
-		return this.points[pointId];
+	public PointF getCtrlPoint(int pointId) {
+		return this.ctrlPoints[pointId];
 	}
 	
-	public PointF getPoint(POINT_ID pointId) {
-		return this.points[pointId.ordinal()];
+	public PointF getCtrlPoint(CTRL_POINT pointId) {
+		return this.ctrlPoints[pointId.ordinal()];
 	}
 	
 
@@ -92,11 +92,11 @@ class Spline {
 	 * Sets spline to straight line between (start, start + length * dir).
 	 */
 	public void setStraight(PointF start, PointF direction, float length) {
-		for (int i = 0; i < Spline.POINTS_TOTAL; ++i) {
+		for (int i = 0; i < Spline.CTRL_POINTS_TOTAL; ++i) {
 			float t = (i * length) / 3; // TODO: magic number
-			PointF point = this.points[i];
-			point.set(start);
-			point.offset(direction.x * t, direction.y * t);
+			PointF ctrlPoint = this.ctrlPoints[i];
+			ctrlPoint.set(start);
+			ctrlPoint.offset(direction.x * t, direction.y * t);
 		}
 	}
 	
