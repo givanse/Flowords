@@ -43,39 +43,34 @@ public final class Renderer implements GLSurfaceView.Renderer {
 	private static final int BCKD_COLOR_PREFERENCES = 4;
 	
 	/* Buffers */
+								  /* Vertex buffer for full scene coordinates */
+	private ByteBuffer buffScreenVertices; 
 	private HelperFrameBufferObject helperFBO = new HelperFrameBufferObject();
 	private FloatBuffer buffBckdColors;       /* Buffer for background colors */
-    							  /* Vertex buffer for full scene coordinates */
-	private ByteBuffer buffScreenVertices; 
-	
-	// Current context.
-	private Context mContext;
-	// FBO for offscreen rendering.
-	private FlowerObjects mFlowerObjects = new FlowerObjects();
-	// Scroll offset value.
-	private final PointF mOffsetScroll = new PointF();
 
+	/* Animated offset time value for iterating between src and dst */
+	private long offsetTime;
 	// Additional animated offset source and destination values.
-	private PointF mOffsetSrc = new PointF();
-	private PointF mOffsetDst = new PointF();
-	private final PointF mOffsetFinal = new PointF();
-
-	// Animated offset time value for iterating between src and dst.
-	private long mOffsetTime;
+	private PointF offsetSrc = new PointF();
+	private PointF offsetDst = new PointF();
+	private final PointF offsetFinal = new PointF();
+	private final PointF offsetScroll = new PointF();
 	
 	/* Shaders */
-	private final HelperShader shdrBckndGradient = new HelperShader();
 	                                    /* Copies offscreen texture on screen */
 	private final HelperShader shdrCopyOffscreen = new HelperShader();
-	private final boolean[] isShaderCompilerSupported = new boolean[1];
-		
-	private int mWidth, mHeight;                 /* Surface/Screen dimensions */
+	private final HelperShader shdrBckndGradient = new HelperShader();
+	
+	private final boolean[] isShaderCompilerSupported = new boolean[1];	
+	private int width, height;                 /* Surface/Screen dimensions */
+	private Context context;
+	private FlowerObjects flowerObjects = new FlowerObjects();
 	
 	/**
 	 * Default constructor.
 	 */
 	public Renderer(Context context) {
-		this.mContext = context;
+		this.context = context;
 
 		this.buffScreenVertices = 
 				         ByteBuffer.allocateDirect(Screen.VERTEX_COORDS.length);
@@ -96,7 +91,7 @@ public final class Renderer implements GLSurfaceView.Renderer {
 	@Override
 	public synchronized void onDrawFrame(GL10 unused) {
 		// If shader compiler is not supported, clear screen buffer only.
-		if (isShaderCompilerSupported[0] == false) {
+		if (this.isShaderCompilerSupported[0] == false) {
 			GLES20.glClearColor(0, 0, 0, 1);
 			GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 			return;
@@ -105,20 +100,20 @@ public final class Renderer implements GLSurfaceView.Renderer {
 		// Update offset.
 		long time = SystemClock.uptimeMillis();
 		// If time passed generate new target.
-		if (time - mOffsetTime > Renderer.UPDATE_RATE) {
-			mOffsetTime = time;
-			mOffsetSrc.set(mOffsetDst);
-			mOffsetDst.x = -1f + (float) (Math.random() * 2f);
-			mOffsetDst.y = -1f + (float) (Math.random() * 2f);
+		if (time - this.offsetTime > Renderer.UPDATE_RATE) {
+			this.offsetTime = time;
+			this.offsetSrc.set(this.offsetDst);
+			this.offsetDst.x = -1f + (float) (Math.random() * 2f);
+			this.offsetDst.y = -1f + (float) (Math.random() * 2f);
 		}
 		
 		// Calculate final offset values.
-		float t = (float) (time - mOffsetTime) / Renderer.UPDATE_RATE;
+		float t = (float) (time - this.offsetTime) / Renderer.UPDATE_RATE;
 		t = t * t * (3 - 2 * t);
-		mOffsetFinal.x = mOffsetScroll.x + mOffsetSrc.x + t *
-				    (mOffsetDst.x - mOffsetSrc.x);
-		mOffsetFinal.y = mOffsetScroll.y + mOffsetSrc.y + t *
-				    (mOffsetDst.y - mOffsetSrc.y);
+		this.offsetFinal.x = this.offsetScroll.x + this.offsetSrc.x + t *
+				              (this.offsetDst.x - this.offsetSrc.x);
+		this.offsetFinal.y = this.offsetScroll.y + this.offsetSrc.y + t *
+				              (this.offsetDst.y - this.offsetSrc.y);
 
 		// Disable unneeded rendering flags.
 		GLES20.glDisable(GLES20.GL_CULL_FACE);
@@ -132,11 +127,11 @@ public final class Renderer implements GLSurfaceView.Renderer {
 		this.renderBackgroundGradient();
 
 		/* Render scene */
-		this.mFlowerObjects.drawFrame(mOffsetFinal);
+		this.flowerObjects.drawFrame(this.offsetFinal);
 
 		// Copy FBO to screen buffer.
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
-		GLES20.glViewport(0, 0, this.mWidth, this.mHeight);
+		GLES20.glViewport(0, 0, this.width, this.height);
 		this.shdrCopyOffscreen.useProgram();
 		int aPositionHndl = this.shdrCopyOffscreen.getAUHandleId("aPosition");
 		GLES20.glVertexAttribPointer(aPositionHndl, 2, // TODO: 2 
@@ -146,17 +141,18 @@ public final class Renderer implements GLSurfaceView.Renderer {
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 
         		             this.helperFBO.getTexture(0));
-		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4); // TODO: 0, 4
+        /* this.buffScreenVertices - 4 vertices */
+		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 	}
 
 	public void renderBackgroundGradient() {
 		this.shdrBckndGradient.useProgram();
 		int uAspectRatio = this.shdrBckndGradient.getAUHandleId("uAspectRatio");
-		float aspectX = (float) Math.min(mWidth, mHeight) / mHeight;
-		float aspectY = (float) Math.min(mWidth, mHeight) / mWidth;
+		float aspectX = (float) Math.min(width, height) / height;
+		float aspectY = (float) Math.min(width, height) / width;
 		int uOffset = this.shdrBckndGradient.getAUHandleId("uOffset");
 		GLES20.glUniform2f(uAspectRatio, aspectX, aspectY);
-		GLES20.glUniform2f(uOffset, mOffsetFinal.x, mOffsetFinal.y);
+		GLES20.glUniform2f(uOffset, offsetFinal.x, offsetFinal.y);
 		
 		int uLineWidth = this.shdrBckndGradient.getAUHandleId("uLineWidth");
 		GLES20.glUniform2f(uLineWidth, 
@@ -198,10 +194,10 @@ public final class Renderer implements GLSurfaceView.Renderer {
 			return;
 		}
 
-		this.mWidth = width;
-		this.mHeight = height;
-		this.helperFBO.setTexturesPrefs(this.mWidth, this.mHeight, 1);
-		mFlowerObjects.onSurfaceChanged(this.helperFBO.getWidth(),
+		this.width = width;
+		this.height = height;
+		this.helperFBO.setTexturesPrefs(this.width, this.height, 1);
+		flowerObjects.onSurfaceChanged(this.helperFBO.getWidth(),
 									    this.helperFBO.getHeight());
 	}
 
@@ -213,11 +209,11 @@ public final class Renderer implements GLSurfaceView.Renderer {
 
 		// If not, show user an error message and return immediately.
 		if (isShaderCompilerSupported[0] == false) {
-			Handler handler = new Handler(mContext.getMainLooper());
+			Handler handler = new Handler(context.getMainLooper());
 			handler.post(new Runnable() {
 					@Override
 					public void run() {
-						Toast.makeText(mContext, 
+						Toast.makeText(context, 
 									   R.string.error_shader_compiler,
 							           Toast.LENGTH_LONG).show();
 					}
@@ -227,12 +223,12 @@ public final class Renderer implements GLSurfaceView.Renderer {
 		}
 
 		this.shdrCopyOffscreen.setProgram(
-				                   mContext.getString(R.string.shader_copy_vs),
-				                   mContext.getString(R.string.shader_copy_fs));
+				                   context.getString(R.string.shader_copy_vs),
+				                   context.getString(R.string.shader_copy_fs));
 		this.shdrBckndGradient.setProgram(
-				             mContext.getString(R.string.shader_background_vs),
-				             mContext.getString(R.string.shader_background_fs));
-		mFlowerObjects.onSurfaceCreated(mContext);
+				             context.getString(R.string.shader_background_vs),
+				             context.getString(R.string.shader_background_fs));
+		flowerObjects.onSurfaceCreated(context);
 	}
 
 	/**
@@ -245,7 +241,7 @@ public final class Renderer implements GLSurfaceView.Renderer {
 	 *            Offset value between [0, 1]
 	 */
 	public void setOffset(float xOffset, float yOffset) {
-		mOffsetScroll.set(xOffset * 2f, yOffset * 2f);
+		offsetScroll.set(xOffset * 2f, yOffset * 2f);
 	}
 
 	/**
@@ -256,20 +252,20 @@ public final class Renderer implements GLSurfaceView.Renderer {
 	 */
 	public synchronized void setPreferences(SharedPreferences prefs) {
 		// Get general preferences values.
-		String key = mContext.getString(R.string.key_general_flower_count);
+		String key = context.getString(R.string.key_general_flower_count);
 		int flowerCount = Integer.parseInt(prefs.getString(key, "2"));
 		
-		key = mContext.getString(R.string.key_general_spline_quality);
+		key = context.getString(R.string.key_general_spline_quality);
 		int splineQuality = prefs.getInt(key, 10);
 		
-		key = mContext.getString(R.string.key_general_branch_propability);
+		key = context.getString(R.string.key_general_branch_propability);
 		float branchPropability = (float) prefs.getInt(key, 5) / 10;
 		
-		key = mContext.getString(R.string.key_general_zoom);
+		key = context.getString(R.string.key_general_zoom);
 		float zoomLevel = (float) prefs.getInt(key, 4) / 10;
 
 		// Get color preference values.
-		key = mContext.getString(R.string.key_colors_scheme);
+		key = context.getString(R.string.key_colors_scheme);
 		int colorScheme = Integer.parseInt(prefs.getString(key, "1"));
 		float bckdTop[], bckdBottom[], flowerColors[][] = new float[2][];
 		switch (colorScheme) {
@@ -299,16 +295,16 @@ public final class Renderer implements GLSurfaceView.Renderer {
 			break;
 		default:
 			bckdTop = Util.getColor(
-				 prefs.getInt(mContext.getString(R.string.key_colors_bg_top),
+				 prefs.getInt(context.getString(R.string.key_colors_bg_top),
 				 Color.BLACK));
 			bckdBottom = Util.getColor(
-				 prefs.getInt(mContext.getString(R.string.key_colors_bg_bottom),
+				 prefs.getInt(context.getString(R.string.key_colors_bg_bottom),
 				 Color.BLACK));
 			flowerColors[0] = Util.getColor(
-				 prefs.getInt(mContext.getString(R.string.key_colors_flower_1),
+				 prefs.getInt(context.getString(R.string.key_colors_flower_1),
 				 Color.WHITE));
 			flowerColors[1] = Util.getColor(
-				 prefs.getInt(mContext.getString(R.string.key_colors_flower_2),
+				 prefs.getInt(context.getString(R.string.key_colors_flower_2),
 				 Color.WHITE));
 			break;
 		}
@@ -316,7 +312,7 @@ public final class Renderer implements GLSurfaceView.Renderer {
 		buffBckdColors.put(bckdTop).put(bckdBottom)
 					  .put(bckdTop).put(bckdBottom)
 				      .position(0);
-		mFlowerObjects.setPreferences(flowerCount, flowerColors, splineQuality,
+		flowerObjects.setPreferences(flowerCount, flowerColors, splineQuality,
 				                      branchPropability, zoomLevel);
 	}
 
