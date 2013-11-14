@@ -22,7 +22,7 @@ import com.givanse.flowords.R;
 import com.givanse.flowords.engine.HelperShader;
 import com.givanse.flowords.engine.Screen;
 import com.givanse.flowords.engine.Util;
-import com.givanse.flowords.engine.flowers.Spline.CTRL_POINT;
+import com.givanse.flowords.engine.flowers.Spline.CTRL_POINT_ID;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -78,41 +78,6 @@ public final class FlowerObjects {
 	}
 
 	/**
-	 * Sets spline control knots based on given parameters.
-	 */
-	private void genArc(Spline splineArg, PointF startPosArg, PointF dir,
-			            float length, PointF normal, boolean straightEnd) {
-
-		// Bezier curve circle estimation.
-		// 2 * (sqrt(2) - 1) / 3
-		 final float NORMAL_FACTOR = 0.27614237f;
-		final float normalLen = length * NORMAL_FACTOR;
-
-		// Initially set all control knots to startPos.
-		for (CTRL_POINT knotId : CTRL_POINT.values()) {
-			splineArg.getCtrlPoint(knotId).set(startPosArg);
-		}
-		// Move second control point into target direction plus same length in
-		// normal direction.
-		splineArg.getCtrlPoint(CTRL_POINT.TWO)
-		      .offset((dir.x + normal.x) * normalLen, 
-		    		  (dir.y + normal.y) * normalLen);
-		// Move third control point to (startPos + (length - normalLen) * dir).
-		splineArg.getCtrlPoint(CTRL_POINT.THREE)
-			  .offset(dir.x * (length - normalLen), 
-					  dir.y * (length - normalLen));
-		// If straight end is not requested move third control point among
-		// normal.
-		if (!straightEnd) {
-			splineArg.getCtrlPoint(CTRL_POINT.THREE)
-				  .offset(normal.x * normalLen, normal.y * normalLen);
-		}
-		// Set last control point to (startPos + dir * length).
-		splineArg.getCtrlPoint(CTRL_POINT.FOUR)
-		      .offset(dir.x * length, dir.y * length);
-	}
-
-	/**
 	 * Sets branch values based on given parameters.
 	 */
 	private void setBranchVals(Branch branchArg, PointF startPos, int startDir,
@@ -126,8 +91,8 @@ public final class FlowerObjects {
 		Spline spline = branchArg.getNextSpline();
 		spline.setWidthStart(maxBranchWidth);
 		spline.setWidthEnd(0f);
-		genArc(spline, startPos, dirPt, len, normalPt, false);
-		startPos = spline.getCtrlPoint(CTRL_POINT.FOUR);
+		spline.curveCtrlPoints(startPos, dirPt, len, normalPt, false);
+		startPos = spline.getCtrlPoint(CTRL_POINT_ID.FOUR);
 
 		float rand = Util.random(0, 3);
 		if (rand < 1) {
@@ -143,10 +108,10 @@ public final class FlowerObjects {
 			spline = branchArg.getNextSpline();
 			spline.setWidthStart(maxBranchWidth / 2);
 			spline.setWidthEnd(0f);
-			genArc(spline, startPos, dirPt, len, normalPt, false);
+			spline.curveCtrlPoints(startPos, dirPt, len, normalPt, false);
 
 			Knot point = branchArg.getNextKnot();
-			point.setPosition(spline.getCtrlPoint(CTRL_POINT.FOUR));
+			point.setPosition(spline.getCtrlPoint(CTRL_POINT_ID.FOUR));
 			point.setRandomRotationSin();
 			point.setRandomRotationCos();
 		}
@@ -156,10 +121,10 @@ public final class FlowerObjects {
 			spline = branchArg.getNextSpline();
 			spline.setWidthStart(maxBranchWidth / 2);
 			spline.setWidthEnd(0f);
-			genArc(spline, startPos, dirPt, len * .5f, normalPt, false);
+			spline.curveCtrlPoints(startPos, dirPt, len * .5f, normalPt, false);
 
 			Knot point = branchArg.getNextKnot();
-			point.setPosition(spline.getCtrlPoint(CTRL_POINT.FOUR));
+			point.setPosition(spline.getCtrlPoint(CTRL_POINT_ID.FOUR));
 			point.setRandomRotationSin();
 			point.setRandomRotationCos();
 		}
@@ -246,8 +211,8 @@ public final class FlowerObjects {
 					Spline spline = element.getNextSpline();
 					spline.setWidthStart(rootWidth);
 					spline.setWidthEnd(rootWidth);
-					genArc(spline, currentPos, dir, splineLen, normal,
-							i == minDirIndex);
+					spline.curveCtrlPoints(currentPos, dir, splineLen, 
+							      normal, i == minDirIndex);
 
 					if (Math.random() < branchPropability) {
 						Branch b = element.getCurrentBranch();
@@ -258,7 +223,7 @@ public final class FlowerObjects {
 								  branchLen);
 					}
 
-					currentPos.set(spline.getCtrlPoint(CTRL_POINT.FOUR));
+					currentPos.set(spline.getCtrlPoint(CTRL_POINT_ID.FOUR));
 				}
 				currentDirIdx = minDirIndex;
 			} else {
@@ -277,7 +242,7 @@ public final class FlowerObjects {
 							  branchDir, branchLen);
 				}
 
-				currentPos.set(spline.getCtrlPoint(CTRL_POINT.FOUR));
+				currentPos.set(spline.getCtrlPoint(CTRL_POINT_ID.FOUR));
 			}
 
 			additionTime += element.getDuration();

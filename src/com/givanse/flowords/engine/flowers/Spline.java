@@ -13,7 +13,7 @@ class Spline {
 	public static final float WIDTH_MIN = Flower.ROOT_WIDTH_MIN;
 	
 	protected static final int CTRL_POINTS_TOTAL = 4;
-	protected enum CTRL_POINT {ONE, TWO, THREE, FOUR};
+	protected enum CTRL_POINT_ID {ONE, TWO, THREE, FOUR};
 	
 	private final PointF ctrlPoints[] = new PointF[Spline.CTRL_POINTS_TOTAL];
 	
@@ -83,7 +83,7 @@ class Spline {
 		return this.ctrlPoints[pointId];
 	}
 	
-	public PointF getCtrlPoint(CTRL_POINT pointId) {
+	public PointF getCtrlPoint(CTRL_POINT_ID pointId) {
 		return this.ctrlPoints[pointId.ordinal()];
 	}
 	
@@ -100,4 +100,38 @@ class Spline {
 		}
 	}
 	
+	/**
+	 * Update the control points positions, curve like, based on 
+	 * the given parameters.
+	 */
+	public void curveCtrlPoints(PointF startPosArg, PointF dir, float length, 
+			                    PointF normalDir, boolean hasStraightEnd) {
+
+		// TODO: Bezier curve circle estimation.
+		final float normalFactor = 0.27614237491f;  /* 2 * (sqrt(2) - 1) / 3 */
+		final float normalLen = length * normalFactor;
+
+		// Initially set all control knots to startPos.
+		for (CTRL_POINT_ID ctrlPointId : CTRL_POINT_ID.values()) {
+			this.getCtrlPoint(ctrlPointId).set(startPosArg);
+		}
+		// Move second control point into target direction plus same length in
+		// normal direction.
+		this.getCtrlPoint(CTRL_POINT_ID.TWO)
+		    .offset((dir.x + normalDir.x) * normalLen, 
+		    		(dir.y + normalDir.y) * normalLen);
+		// Move third control point to (startPos + (length - normalLen) * dir).
+		this.getCtrlPoint(CTRL_POINT_ID.THREE)
+			.offset(dir.x * (length - normalLen), 
+					dir.y * (length - normalLen));
+		// If straight end is not requested move third control point among
+		// normal.
+		if (!hasStraightEnd) {
+			this.getCtrlPoint(CTRL_POINT_ID.THREE)
+				.offset(normalDir.x * normalLen, normalDir.y * normalLen);
+		}
+		// Set last control point to (startPos + dir * length).
+		this.getCtrlPoint(CTRL_POINT_ID.FOUR)
+		    .offset(dir.x * length, dir.y * length);
+	}
 }
