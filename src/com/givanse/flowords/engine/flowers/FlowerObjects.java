@@ -206,8 +206,8 @@ public final class FlowerObjects {
 				int k = minDirIndex > currentDirIdx ? 1 : -1;
 				for (int i = currentDirIdx + k; 
 					 i * k <= minDirIndex * k; i += 2 * k) {
-					PointF dir = directionPts[i];
-					PointF normal = directionPts[(8 + i - 2 * k) % 8];
+					PointF dir = this.directionPts[i];
+					PointF normal = this.directionPts[(8 + i - 2 * k) % 8];
 					Spline spline = element.getNextSpline();
 					spline.setWidthStart(rootWidth);
 					spline.setWidthEnd(rootWidth);

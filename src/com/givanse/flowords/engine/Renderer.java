@@ -230,7 +230,7 @@ public final class Renderer implements GLSurfaceView.Renderer {
 	}
 
 	/**
-	 * Sets scroll offset. Called from wallpaper engine once user scrolls
+	 * Sets scroll offset. Called from WallpaperEngine once user scrolls
 	 * between home screens.
 	 * 
 	 * @param xOffset
@@ -238,9 +238,9 @@ public final class Renderer implements GLSurfaceView.Renderer {
 	 * @param yOffset
 	 *            Offset value between [0, 1]
 	 */
-	public void setOffset(float xOffset, float yOffset) {
-		offsetScroll.set(xOffset * 2f, yOffset * 2f);
-	}
+	/*public void onOffsetsChanged(float xOffset, float yOffset) {
+		this.offsetScroll.set(xOffset * 2f, yOffset * 2f);
+	}*/
 
 	/**
 	 * Updates preference values from provided ShaderPrefence instance.

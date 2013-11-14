@@ -83,7 +83,8 @@ public final class FlowordsService extends WallpaperService {
 			super.onOffsetsChanged(xOffset, yOffset, 
                                    xOffsetStep, yOffsetStep,
 					               xPixelOffset, yPixelOffset);
-			mRenderer.setOffset(xOffset, yOffset);
+			// TODO: review relevance
+			// this.mRenderer.onOffsetsChanged(xOffset, yOffset);
 		}
 
 		@Override
