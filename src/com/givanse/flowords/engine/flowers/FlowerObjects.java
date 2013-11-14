@@ -41,7 +41,7 @@ public final class FlowerObjects {
 	private final PointF aspectRatio = new PointF();
 	
 	/* Flower movement directions, coords are stored in pairs */
-	private final PointF[] movDirections = new PointF[Screen.COORDS.length / 2];
+	private final PointF[] directionPts = new PointF[Screen.DIRS_TOTAL];
 
 	private final Vector<Knot> knotsList = new Vector<Knot>();
 	private final Vector<Spline> splinesList = new Vector<Spline>();
@@ -67,13 +67,13 @@ public final class FlowerObjects {
 	public FlowerObjects() {
 		/* Not intuitive at all, but both arrays are equal. */
 		//final byte[] textureCoordinates = { -1, 1, -1, -1, 1, 1, 1, -1 };
-		final byte[] textureCoordinates = Screen.VERTEX_COORDS;
+		final byte[] textureCoordinates = Screen.VERTICES_COORDS;
 		this.bufferTexture = 
 				           ByteBuffer.allocateDirect(textureCoordinates.length);
 		this.bufferTexture.put(textureCoordinates).position(0);
 		
-		for (int i = 0; i < movDirections.length; ++i) {
-			movDirections[i] = new PointF();
+		for (int i = 0; i < directionPts.length; ++i) {
+			directionPts[i] = new PointF();
 		}
 	}
 
@@ -121,12 +121,12 @@ public final class FlowerObjects {
 		float maxBranchWidth = Branch.WIDTH_MIN + 
 							   this.zoomLvl *
 							   (Branch.WIDTH_MAX - Branch.WIDTH_MIN);
-		PointF dir = movDirections[(8 + startDir) % 8];
-		PointF normal = movDirections[(8 + startDir - 2 * rotateDir) % 8];
+		PointF dirPt = directionPts[(8 + startDir) % 8];
+		PointF normalPt = directionPts[(8 + startDir - 2 * rotateDir) % 8];
 		Spline spline = branchArg.getNextSpline();
 		spline.setWidthStart(maxBranchWidth);
 		spline.setWidthEnd(0f);
-		genArc(spline, startPos, dir, len, normal, false);
+		genArc(spline, startPos, dirPt, len, normalPt, false);
 		startPos = spline.getCtrlPoint(CTRL_POINT.FOUR);
 
 		float rand = Util.random(0, 3);
@@ -138,12 +138,12 @@ public final class FlowerObjects {
 		}
 		if (rand >= 1) {
 			spline.setWidthEnd(maxBranchWidth / 2);
-			dir = movDirections[(8 + startDir + 2 * rotateDir) % 8];
-			normal = movDirections[(8 + startDir) % 8];
+			dirPt = directionPts[(8 + startDir + 2 * rotateDir) % 8];
+			normalPt = directionPts[(8 + startDir) % 8];
 			spline = branchArg.getNextSpline();
 			spline.setWidthStart(maxBranchWidth / 2);
 			spline.setWidthEnd(0f);
-			genArc(spline, startPos, dir, len, normal, false);
+			genArc(spline, startPos, dirPt, len, normalPt, false);
 
 			Knot point = branchArg.getNextKnot();
 			point.setPosition(spline.getCtrlPoint(CTRL_POINT.FOUR));
@@ -151,12 +151,12 @@ public final class FlowerObjects {
 			point.setRandomRotationCos();
 		}
 		if (rand >= 2) {
-			dir = movDirections[(8 + startDir - rotateDir) % 8];
-			normal = movDirections[(8 + startDir + rotateDir) % 8];
+			dirPt = directionPts[(8 + startDir - rotateDir) % 8];
+			normalPt = directionPts[(8 + startDir + rotateDir) % 8];
 			spline = branchArg.getNextSpline();
 			spline.setWidthStart(maxBranchWidth / 2);
 			spline.setWidthEnd(0f);
-			genArc(spline, startPos, dir, len * .5f, normal, false);
+			genArc(spline, startPos, dirPt, len * .5f, normalPt, false);
 
 			Knot point = branchArg.getNextKnot();
 			point.setPosition(spline.getCtrlPoint(CTRL_POINT.FOUR));
@@ -222,11 +222,11 @@ public final class FlowerObjects {
 					      Util.random(-.8f, .8f));
 			targetPos.offset(offset.x, offset.y);
 
-			float minDist = Util.getDistance(currentPos, movDirections[currentDirIdx],
+			float minDist = Util.getDistance(currentPos, directionPts[currentDirIdx],
 					                 targetPos);
 			int minDirIndex = currentDirIdx;
 			for (int i = 1; i < 8; ++i) {
-				PointF dir = movDirections[(currentDirIdx + i) % 8];
+				PointF dir = directionPts[(currentDirIdx + i) % 8];
 				float dist = Util.getDistance(currentPos, dir, targetPos);
 				if (dist < minDist) {
 					minDist = dist;
@@ -241,8 +241,8 @@ public final class FlowerObjects {
 				int k = minDirIndex > currentDirIdx ? 1 : -1;
 				for (int i = currentDirIdx + k; 
 					 i * k <= minDirIndex * k; i += 2 * k) {
-					PointF dir = movDirections[i];
-					PointF normal = movDirections[(8 + i - 2 * k) % 8];
+					PointF dir = directionPts[i];
+					PointF normal = directionPts[(8 + i - 2 * k) % 8];
 					Spline spline = element.getNextSpline();
 					spline.setWidthStart(rootWidth);
 					spline.setWidthEnd(rootWidth);
@@ -262,7 +262,7 @@ public final class FlowerObjects {
 				}
 				currentDirIdx = minDirIndex;
 			} else {
-				PointF dir = movDirections[currentDirIdx];
+				PointF dir = directionPts[currentDirIdx];
 				Spline spline = element.getNextSpline();
 				spline.setWidthStart(rootWidth);
 				spline.setWidthEnd(rootWidth);
@@ -407,18 +407,18 @@ public final class FlowerObjects {
 		this.aspectRatio.y = (float) Math.min(width, height) / height;
 		
 		/**
-		 * Adjust COORDS to the new aspect ratio.
+		 * Adjust BASE_COORDS to the new aspect ratio.
 		 */
-		for (int i = 0; i < this.movDirections.length; i++) {
-			PointF direction = this.movDirections[i];
-			/* Use base directions, read COORDS in pairs */
-			direction.set(Screen.COORDS[i * 2 + 0], 
-					      Screen.COORDS[i * 2 + 1]);
+		for (int i = 0; i < this.directionPts.length; i++) {
+			PointF directionPt = this.directionPts[i];
+			/* Use base directions, read BASE_COORDS in pairs */
+			directionPt.set(Screen.BASE_COORDS[i * 2 + 0], 
+					        Screen.BASE_COORDS[i * 2 + 1]);
 			
 			/* Scale directions to the new aspect ratio */
-			float lenInv = 1f / direction.length();
-			direction.x *= this.aspectRatio.x * lenInv;
-			direction.y *= this.aspectRatio.y * lenInv;
+			float lenInv = 1f / directionPt.length();
+			directionPt.x *= this.aspectRatio.x * lenInv;
+			directionPt.y *= this.aspectRatio.y * lenInv;
 		}
 		for (Flower flower : this.flowersList) {
 			flower.reset();

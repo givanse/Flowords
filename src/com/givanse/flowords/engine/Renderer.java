@@ -71,8 +71,8 @@ public final class Renderer implements GLSurfaceView.Renderer {
 		this.context = context;
 
 		this.buffScreenVertices = 
-				         ByteBuffer.allocateDirect(Screen.VERTEX_COORDS.length);
-		this.buffScreenVertices.put(Screen.VERTEX_COORDS).position(0);
+				         ByteBuffer.allocateDirect(Screen.VERTICES_COORDS.length);
+		this.buffScreenVertices.put(Screen.VERTICES_COORDS).position(0);
 
 		/** 
 		 * Create background color float buffer
