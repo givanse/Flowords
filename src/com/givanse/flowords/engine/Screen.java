@@ -22,6 +22,9 @@ public class Screen {
 		                                            1,  1,      /* North East */
 		                                            1, -1 };    /* South East */
 	
+	                                /* Attribute - coordinate: XY, 2 elements */
+	public static final int VERTEX_SIZE_COORDS = 2;
+	
 	public static final int VERTICES_TOTAL = 4;
 	public static final int EDGES_TOTAL = 4;
 	public static final int DIRS_TOTAL = Screen.VERTICES_TOTAL + 

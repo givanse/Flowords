@@ -19,48 +19,29 @@ import android.opengl.GLES20;
 /**
  * Helper class for handling frame buffer objects.
  */
-public final class HelperFrameBufferObject {
+public final class HelperFrameBuffer {
 
-	// Optional depth buffer handle.
-	private int mDepthBufferHandle = -1;
-	// FBO handle.
-	private int mFrameBufferHandle = -1;
-	// Optional stencil buffer handle.
-	private int mStencilBufferHandle = -1;
-	// Generated texture handles.
-	private int[] mTextureHandles = {};
-	// FBO textures and depth buffer size.
-	private int mWidth, mHeight;
-
-	/**
-	 * Binds this FBO into use and adjusts viewport to FBO size.
-	 */
-	public void bind() {
-		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, mFrameBufferHandle);
-		GLES20.glViewport(0, 0, mWidth, mHeight);
+	private int depthBufferHandle = -1;       /* Optional depth buffer handle */
+	private int frameBufferHandle = -1;            /* The actual frame buffer */
+	private int stencilBufferHandle = -1;   /* Optional stencil buffer handle */
+	private int[] textureHandles = {};
+	
+	public void bindFrameBuffer() {
+		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, this.frameBufferHandle);
 	}
 
 	/**
 	 * Bind certain texture into target texture. This method should be called
 	 * only after call to bind().
 	 * 
-	 * @param index
+	 * @param textureIndex
 	 *            Index of texture to bind.
 	 */
-	public void bindTexture(int index) {
+	public void bindTexture(int textureIndex) {
 		GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER,
 									  GLES20.GL_COLOR_ATTACHMENT0, 
 									  GLES20.GL_TEXTURE_2D,
-									  mTextureHandles[index], 0);
-	}
-
-	/**
-	 * Getter for FBO height.
-	 * 
-	 * @return FBO height in pixels.
-	 */
-	public int getHeight() {
-		return mHeight;
+									  this.textureHandles[textureIndex], 0);
 	}
 
 	/**
@@ -71,16 +52,7 @@ public final class HelperFrameBufferObject {
 	 * @return Texture id.
 	 */
 	public int getTexture(int index) {
-		return mTextureHandles[index];
-	}
-
-	/**
-	 * Getter for FBO width.
-	 * 
-	 * @return FBO width in pixels.
-	 */
-	public int getWidth() {
-		return mWidth;
+		return textureHandles[index];
 	}
 
 	/**
@@ -115,24 +87,21 @@ public final class HelperFrameBufferObject {
 	 *            FBO
 	 */
 	private void setTexturesPrefs(int width, int height, int textureCount,
-			boolean genDepthBuffer, boolean genStencilBuffer) {
+			                      boolean genDepthBuffer, 
+			                      boolean genStencilBuffer) {
 
-		reset(); // Just in case.
+		this.reset(); // Just in case.
 
-		// Store FBO size.
-		this.mWidth = width;
-		this.mHeight = height;
-
-		// Genereta FBO.
-		int handle[] = { 0 };
-		GLES20.glGenFramebuffers(1, handle, 0);
-		mFrameBufferHandle = handle[0];
-		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, mFrameBufferHandle);
-
-		// Generate textures.
-		mTextureHandles = new int[textureCount];
-		GLES20.glGenTextures(textureCount, mTextureHandles, 0);
-		for (int texture : mTextureHandles) {
+		/* Generate the frame buffer */
+		int handles[] = { 0 };
+		GLES20.glGenFramebuffers(handles.length, handles, 0);
+		this.frameBufferHandle = handles[0];
+		this.bindFrameBuffer();
+		
+		/* Generate textures */
+		this.textureHandles = new int[textureCount];
+		GLES20.glGenTextures(textureCount, this.textureHandles, 0);
+		for (int texture : this.textureHandles) {
 			GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texture);
 			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
 					               GLES20.GL_TEXTURE_WRAP_S, 
@@ -147,39 +116,39 @@ public final class HelperFrameBufferObject {
 								   GLES20.GL_TEXTURE_MAG_FILTER, 
 								   GLES20.GL_LINEAR);
 			GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, 
-								GLES20.GL_RGBA, this.mWidth, this.mHeight, 0, 
+								GLES20.GL_RGBA, width, height, 0, 
 								GLES20.GL_RGBA,
 								GLES20.GL_UNSIGNED_BYTE, null);
 		}
 
-		// Generate depth buffer.
+		/* Generate depth buffer */
 		if (genDepthBuffer) {
-			GLES20.glGenRenderbuffers(1, handle, 0);
-			mDepthBufferHandle = handle[0];
+			GLES20.glGenRenderbuffers(handles.length, handles, 0);
+			this.depthBufferHandle = handles[0];
 			GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER,
-									  mDepthBufferHandle);
+									  depthBufferHandle);
 			GLES20.glRenderbufferStorage(GLES20.GL_RENDERBUFFER,
 										 GLES20.GL_DEPTH_COMPONENT16, 
 										 width, height);
 			GLES20.glFramebufferRenderbuffer(GLES20.GL_FRAMEBUFFER,
 											 GLES20.GL_DEPTH_ATTACHMENT, 
 											 GLES20.GL_RENDERBUFFER,
-											 mDepthBufferHandle);
+											 depthBufferHandle);
 		}
 		
-		// Generate stencil buffer.
+		/* Generate stencil buffer */
 		if (genStencilBuffer) {
-			GLES20.glGenRenderbuffers(1, handle, 0);
-			mStencilBufferHandle = handle[0];
+			GLES20.glGenRenderbuffers(handles.length, handles, 0);
+			this.stencilBufferHandle = handles[0];
 			GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER,
-									  mStencilBufferHandle);
+									  stencilBufferHandle);
 			GLES20.glRenderbufferStorage(GLES20.GL_RENDERBUFFER,
 										 GLES20.GL_STENCIL_INDEX8, 
 										 width, height);
 			GLES20.glFramebufferRenderbuffer(GLES20.GL_FRAMEBUFFER,
 											 GLES20.GL_STENCIL_ATTACHMENT, 
 											 GLES20.GL_RENDERBUFFER,
-											 mStencilBufferHandle);
+											 stencilBufferHandle);
 		}
 	}
 
@@ -188,15 +157,20 @@ public final class HelperFrameBufferObject {
 	 * allocated during a call to init.
 	 */
 	public void reset() {
-		int[] handle = { mFrameBufferHandle };
-		GLES20.glDeleteFramebuffers(1, handle, 0);
-		handle[0] = mDepthBufferHandle;
-		GLES20.glDeleteRenderbuffers(1, handle, 0);
-		handle[0] = mStencilBufferHandle;
-		GLES20.glDeleteRenderbuffers(1, handle, 0);
-		GLES20.glDeleteTextures(mTextureHandles.length, mTextureHandles, 0);
-		mFrameBufferHandle = mDepthBufferHandle = mStencilBufferHandle = -1;
-		mTextureHandles = new int[0];
+		int[] handles = { this.frameBufferHandle };
+		GLES20.glDeleteFramebuffers(handles.length, handles, 0);
+		
+		handles[0] = this.depthBufferHandle;
+		GLES20.glDeleteRenderbuffers(handles.length, handles, 0);
+		
+		handles[0] = this.stencilBufferHandle;
+		GLES20.glDeleteRenderbuffers(handles.length, handles, 0);
+		
+		GLES20.glDeleteTextures(this.textureHandles.length, 
+				                this.textureHandles, 0);
+		this.frameBufferHandle = 
+		this.depthBufferHandle = this.stencilBufferHandle = -1;
+		this.textureHandles = new int[0];
 	}
 
 }

@@ -42,8 +42,8 @@ public final class Renderer implements GLSurfaceView.Renderer {
 	
 	/* Buffers */
 								  /* Vertex buffer for full scene coordinates */
-	private ByteBuffer buffScreenVertices; 
-	private HelperFrameBufferObject helperFBO = new HelperFrameBufferObject();
+	private ByteBuffer buffVerticesCoords; 
+	private HelperFrameBuffer helperFrameBffr = new HelperFrameBuffer();
 	private FloatBuffer buffBckdColors;       /* Buffer for background colors */
 
 	/* Animated offset time value for iterating between src and dst */
@@ -70,9 +70,9 @@ public final class Renderer implements GLSurfaceView.Renderer {
 	public Renderer(Context context) {
 		this.context = context;
 
-		this.buffScreenVertices = 
+		this.buffVerticesCoords = 
 				         ByteBuffer.allocateDirect(Screen.VERTICES_COORDS.length);
-		this.buffScreenVertices.put(Screen.VERTICES_COORDS).position(0);
+		this.buffVerticesCoords.put(Screen.VERTICES_COORDS).position(0);
 
 		/** 
 		 * Create background color float buffer
@@ -119,27 +119,30 @@ public final class Renderer implements GLSurfaceView.Renderer {
 		GLES20.glDisable(GLES20.GL_DEPTH_TEST);
 
 		// Set render target to FBO.
-		this.helperFBO.bind();
-		this.helperFBO.bindTexture(0);
+		this.helperFrameBffr.bindFrameBuffer();
+		this.helperFrameBffr.bindTexture(0); // TODO: textureID 0
 
 		this.renderBackgroundGradient();
-
-		/* Render scene */
-		this.flowerObjects.drawFrame(this.offsetFinal);
+		
+		this.flowerObjects.drawFrame(this.offsetFinal);       /* Render scene */
 
 		// Copy FBO to screen buffer.
-		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0); // TODO: handleID 0
 		GLES20.glViewport(0, 0, this.width, this.height);
+		
 		this.shdrCopyOffscreen.useProgram();
 		int aPositionHndl = this.shdrCopyOffscreen.getAUHandleId("aPosition");
-		GLES20.glVertexAttribPointer(aPositionHndl, 2, // TODO: 2 
-									 GLES20.GL_BYTE, false, 0,
-									 this.buffScreenVertices);
+		GLES20.glVertexAttribPointer(aPositionHndl,
+				  				     Screen.VERTEX_SIZE_COORDS,
+									 GLES20.GL_BYTE, 
+									 false, 
+									 0,
+									 this.buffVerticesCoords);
 		GLES20.glEnableVertexAttribArray(aPositionHndl);
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 
-        		             this.helperFBO.getTexture(0));
-        /* this.buffScreenVertices - 4 vertices */
+        		             this.helperFrameBffr.getTexture(0)); // TODO: id 0
+        /* this.buffVerticesCoords - 4 vertices */
 		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 	}
 
@@ -154,23 +157,22 @@ public final class Renderer implements GLSurfaceView.Renderer {
 		
 		int uLineWidth = this.shdrBckndGradient.getAUHandleId("uLineWidth");
 		GLES20.glUniform2f(uLineWidth, 
-						   aspectX * 40f / this.helperFBO.getWidth(),
-				           aspectY * 40f / this.helperFBO.getHeight());
+						   aspectX * 40f / this.width,
+				           aspectY * 40f / this.height);
 		
 		/* Pass in position information */
 		int aPositionHndl = this.shdrBckndGradient.getAUHandleId("aPosition");
-		int vertexSize = 2;         /* Attribute - coordinate: XY, 2 elements */
 		GLES20.glVertexAttribPointer(aPositionHndl, 
-									 vertexSize, 
+									 Screen.VERTEX_SIZE_COORDS, 
 									 GLES20.GL_BYTE, 
 									 false, 
 									 0,                       /* stryde bytes */
-									 this.buffScreenVertices);
+									 this.buffVerticesCoords);
 		GLES20.glEnableVertexAttribArray(aPositionHndl);
 		
 		/* Pass in color information */
 		int aColorHndl = this.shdrBckndGradient.getAUHandleId("aColor");
-		vertexSize = 4;                /* Attribute - color: RGBA, 4 elements */
+		int vertexSize = 4;            /* Attribute - color: RGBA, 4 elements */
 		GLES20.glVertexAttribPointer(aColorHndl, 
 				 					 vertexSize, 
 								     GLES20.GL_FLOAT, 
@@ -194,9 +196,8 @@ public final class Renderer implements GLSurfaceView.Renderer {
 
 		this.width = width;
 		this.height = height;
-		this.helperFBO.setTexturesPrefs(this.width, this.height, 1);
-		flowerObjects.onSurfaceChanged(this.helperFBO.getWidth(),
-									    this.helperFBO.getHeight());
+		this.helperFrameBffr.setTexturesPrefs(this.width, this.height, 1);
+		this.flowerObjects.onSurfaceChanged(this.width, this.height);
 	}
 
 	@Override
@@ -307,10 +308,10 @@ public final class Renderer implements GLSurfaceView.Renderer {
 			break;
 		}
 
-		buffBckdColors.put(bckdTop).put(bckdBottom)
+		this.buffBckdColors.put(bckdTop).put(bckdBottom)
 					  .put(bckdTop).put(bckdBottom)
 				      .position(0);
-		flowerObjects.setPreferences(flowerCount, flowerColors, splineQuality,
+		this.flowerObjects.setPreferences(flowerCount, flowerColors, splineQuality,
 				                      branchPropability, zoomLevel);
 	}
 
